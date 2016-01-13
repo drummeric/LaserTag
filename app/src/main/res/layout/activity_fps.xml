@@ -21,4 +21,13 @@
         android:adjustViewBounds="true"
         android:src="@drawable/reticle1"
         />
+    <android.widget.VerticalSeekBar
+        android:id="@+id/zoom_seek_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:paddingRight="50dp"
+        android:thumb="@drawable/circle"
+        />
 </RelativeLayout>

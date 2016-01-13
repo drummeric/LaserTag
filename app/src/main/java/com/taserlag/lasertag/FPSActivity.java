@@ -11,6 +11,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.SeekBar;
+import android.widget.VerticalSeekBar;
+
+import java.util.List;
 
 public class FPSActivity extends AppCompatActivity {
 
@@ -29,7 +33,8 @@ public class FPSActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         hideSystemUI();
-        // Get the Camera instance as the activity achieves full user focus
+
+        // initialize Camera and preview
         initializeCamera();
         mCamera = getCameraInstance();
         if (mCamera != null) {
@@ -37,6 +42,30 @@ public class FPSActivity extends AppCompatActivity {
             FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
             preview.addView(mPreview);
         }
+
+        // initialize VerticalSeekBar
+        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
+        mSeekBar.setProgress(0);
+
+        Camera.Parameters params = mCamera.getParameters();
+        if (params.isZoomSupported()) {
+            mSeekBar.setMax(params.getMaxZoom());
+        }
+
+        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                setZoom(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
     }
 
     @Override
@@ -111,8 +140,7 @@ public class FPSActivity extends AppCompatActivity {
     // This snippet hides the system bars.
     private void hideSystemUI() {
         // Set the IMMERSIVE flag.
-        // Set the content to appear und
-        // er the system bars so that the content
+        // Set the content to appear under the system bars so that the content
         // doesn't resize when the system bars hide and show.
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -124,12 +152,24 @@ public class FPSActivity extends AppCompatActivity {
     }
 
     // This snippet shows the system bars. It does this by removing all the flags
-// except for the ones that make the content appear under the system bars.
+    // except for the ones that make the content appear under the system bars.
     private void showSystemUI() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    public void setZoom(int zoom) {
+        // get Camera parameters
+        Camera.Parameters params = mCamera.getParameters();
+
+        if (params.isZoomSupported()) {
+            // set the focus mode
+            params.setZoom(zoom);
+            // set Camera parameters
+            mCamera.setParameters(params);
+        }
     }
 
 } //FPSActivity
