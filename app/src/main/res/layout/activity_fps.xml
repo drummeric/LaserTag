@@ -11,7 +11,7 @@
         android:layout_weight="1"
         />
     <ImageView
-        android:id="@+id/reticle"
+        android:id="@+id/reticle_image_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
@@ -27,7 +27,14 @@
         android:layout_height="200dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:paddingRight="50dp"
+        android:paddingRight="75dp"
         android:thumb="@drawable/circle"
+        />
+    <TextView
+        android:id="@+id/ammo_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AMMO"
+        android:textSize="50sp"
         />
 </RelativeLayout>

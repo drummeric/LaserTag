@@ -1,20 +1,20 @@
 package com.taserlag.lasertag;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.media.MediaPlayer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.VerticalSeekBar;
-
-import java.util.List;
 
 public class FPSActivity extends AppCompatActivity {
 
@@ -22,11 +22,15 @@ public class FPSActivity extends AppCompatActivity {
 
     private Camera mCamera;
     private CameraPreview mPreview;
+    private TextView mAmmo;
+    private int ammo = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fps);
+        mAmmo = (TextView) findViewById(R.id.ammo_text_view);
+        mAmmo.setText(Integer.toString(ammo));
     }
 
     @Override
@@ -170,6 +174,21 @@ public class FPSActivity extends AppCompatActivity {
             // set Camera parameters
             mCamera.setParameters(params);
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            shoot();
+        }
+        return true;
+    }
+
+    private void shoot() {
+        ammo = ammo - 1;
+        mAmmo.setText(Integer.toString(ammo));
+        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
+        mp.start();
     }
 
 } //FPSActivity
