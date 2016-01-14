@@ -37,4 +37,14 @@
         android:text="AMMO"
         android:textSize="50sp"
         />
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/map"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:paddingLeft="150dp"
+        android:paddingBottom="150dp"
+        />
 </RelativeLayout>
