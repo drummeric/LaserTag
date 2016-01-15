@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -37,8 +38,8 @@
         android:text="AMMO"
         android:textSize="50sp"
         />
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        android:name="com.google.android.gms.maps.MapFragment"
+    <fragment
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:id="@+id/map"
         android:layout_width="175dp"
         android:layout_height="175dp"
@@ -46,5 +47,7 @@
         android:layout_alignParentBottom="true"
         android:paddingLeft="150dp"
         android:paddingBottom="150dp"
+        map:mapType="normal"
+        map:uiMapToolbar="false"
         />
 </RelativeLayout>
