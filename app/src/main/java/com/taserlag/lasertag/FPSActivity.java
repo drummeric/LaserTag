@@ -60,7 +60,7 @@ public class FPSActivity extends AppCompatActivity implements OnMapReadyCallback
 
         // initialize Camera and preview
         initializeCamera();
-        //mCamera = getCameraInstance();
+        mCamera = getCameraInstance();
         if (mCamera != null) {
             mPreview = new CameraPreview(this, mCamera);
             FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
