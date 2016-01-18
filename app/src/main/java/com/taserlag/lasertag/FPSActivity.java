@@ -58,38 +58,14 @@ public class FPSActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onResume();
         hideSystemUI();
 
-        // initialize Camera and preview
-        initializeCamera();
-        mCamera = getCameraInstance();
-        if (mCamera != null) {
-            mPreview = new CameraPreview(this, mCamera);
-            FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-            preview.addView(mPreview);
+        // Check camera permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            // If permission not granted, request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        } else {
+            // Else initialize camera and seekbar
+            initializeCameraAndSeekbar();
         }
-
-        // initialize VerticalSeekBar
-        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
-        mSeekBar.setProgress(0);
-
-        Camera.Parameters params = mCamera.getParameters();
-        if (params.isZoomSupported()) {
-            mSeekBar.setMax(params.getMaxZoom());
-        }
-
-        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                setZoom(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
     }
 
     @Override
@@ -104,15 +80,11 @@ public class FPSActivity extends AppCompatActivity implements OnMapReadyCallback
             case MY_PERMISSIONS_REQUEST_CAMERA: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay!
-                    // Create an instance of Camera
-                    mCamera = getCameraInstance();
-
+                    // Camera permission was granted
+                    initializeCameraAndSeekbar();
                 } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    // Camera permission was denied
+                    // Exit the application
                     System.exit(0);
                 }
                 return;
@@ -140,30 +112,46 @@ public class FPSActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private void initializeCamera() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+    private void initializeCameraAndSeekbar() {
+        // Create an instance of camera
+        mCamera = getCameraInstance();
 
-                // No explanation needed, we can request the permission.
+        // Create preview of camera
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
 
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        // Initialize seekbar
+        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
+        mSeekBar.setProgress(0);
 
-                // MY_PERMISSIONS_REQUEST_CAMERA is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-
-        } else {
-            // Create an instance of Camera
-            mCamera = getCameraInstance();
+        Camera.Parameters params = mCamera.getParameters();
+        if (params.isZoomSupported()) {
+            mSeekBar.setMax(params.getMaxZoom());
         }
+
+        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                setZoom(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
     }
 
     private Camera getCameraInstance() {
         Camera c = null;
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            c = Camera.open(); // Attempt to get a Camera instance
         } catch (Exception e) {
-            Log.e("LaserTag", "Camera is not available", e);
-            // Camera is not available (in use or does not exist)
+            Log.e("LaserTag", "Camera is not available", e); // Camera is not available (in use or does not exist)
         }
         return c; // returns null if camera is unavailable
     }
