@@ -1,9 +1,10 @@
-package com.taserlag.lasertag;
+package com.taserlag.lasertag.activity;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.location.Location;
 import android.media.MediaPlayer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -17,11 +18,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.VerticalSeekBar;
 
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.taserlag.lasertag.camera.CameraPreview;
+import com.taserlag.lasertag.map.MapAssistant;
+import com.taserlag.lasertag.map.MapHandler;
+import com.taserlag.lasertag.R;
 
-public class FPSActivity extends AppCompatActivity {
+public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
@@ -30,7 +33,7 @@ public class FPSActivity extends AppCompatActivity {
     private CameraPreview mPreview;
     private TextView mAmmo;
     private int ammo = 10;
-    private MapStuff mapStuff;
+    private MapAssistant mapAss = MapAssistant.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +41,6 @@ public class FPSActivity extends AppCompatActivity {
         setContentView(R.layout.activity_fps);
         mAmmo = (TextView) findViewById(R.id.ammo_text_view);
         mAmmo.setText(Integer.toString(ammo));
-
-        // Check location permission
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // If permission not granted, request permission
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-        } else {
-            // Else initialize map
-            initializeMap();
-        }
     }
 
     @Override
@@ -61,6 +55,15 @@ public class FPSActivity extends AppCompatActivity {
         } else {
             // Else initialize camera and seekbar
             initializeCameraAndSeekbar();
+        }
+
+        // Check location permission
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // If permission not granted, request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+        } else {
+            // Else initialize map
+            MapAssistant.getInstance(this).initializeMap();
         }
     }
 
@@ -89,7 +92,7 @@ public class FPSActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // Location permission was granted
-                    initializeMap();
+                    MapAssistant.getInstance(this).initializeMap();
                 } else {
                     // Location permission was denied
                     // Exit the application
@@ -100,19 +103,17 @@ public class FPSActivity extends AppCompatActivity {
         }
     }
 
-    private void initializeMap() {
-        mapStuff = new MapStuff(this);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(mapStuff);
+    @Override
+    public void handleMapClick(LatLng latLng) {
+        Intent intent = new Intent(this, MapActivity.class);
+        startActivity(intent);
+    }
 
-        // Open MapActivity when clicked
-        mapStuff.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                Intent intent = new Intent(FPSActivity.this, MapActivity.class);
-                FPSActivity.this.startActivity(intent);
-            }
-        });
+    @Override
+    public void handleLocChanged(Location location) {
+        mapAss.clearGoogleMap();
+        mapAss.addMarker(location);
+        mapAss.animateCamera(location);
     }
 
     private void initializeCameraAndSeekbar() {
@@ -195,15 +196,6 @@ public class FPSActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
-    // This snippet shows the system bars. It does this by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    private void showSystemUI() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -218,5 +210,6 @@ public class FPSActivity extends AppCompatActivity {
         MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
         mp.start();
     }
+
 
 } // FPSActivity

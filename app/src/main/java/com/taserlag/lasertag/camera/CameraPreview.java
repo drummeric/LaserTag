@@ -1,4 +1,4 @@
-package com.taserlag.lasertag;
+package com.taserlag.lasertag.camera;
 
 import android.content.Context;
 import android.hardware.Camera;

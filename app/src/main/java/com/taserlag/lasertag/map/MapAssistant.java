@@ -1,4 +1,4 @@
-package com.taserlag.lasertag;
+package com.taserlag.lasertag.map;
 
 import android.Manifest;
 import android.app.Activity;
@@ -9,33 +9,33 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.taserlag.lasertag.R;
 
-public class MapStuff implements OnMapReadyCallback, LocationListener {
+public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
     private Activity activity;
     private GoogleMap googleMap;
     private LocationManager locationManager;
-    private GoogleMap.OnMapClickListener onMapClickListener;
+    private LatLng lastLoc;
+    private static MapAssistant instance;
 
-    public MapStuff(Activity activity) {
-        this.activity = activity;
-    }
-
-    public void setOnMapClickListener(GoogleMap.OnMapClickListener onMapClickListener) {
-        // Store OnMapClickListener to be set when map is ready
-        this.onMapClickListener = onMapClickListener;
-        // Set OnMapClickListener now (if possible)
-        if (googleMap != null) {
-            googleMap.setOnMapClickListener(onMapClickListener);
+    public static MapAssistant getInstance(Activity activity){
+        if (instance == null) {
+            instance = new MapAssistant();
         }
+
+        instance.activity = activity;
+        return instance;
     }
 
     @Override
@@ -65,18 +65,20 @@ public class MapStuff implements OnMapReadyCallback, LocationListener {
         }
 
         // Set OnMapClickListener after map is ready
-        setOnMapClickListener(onMapClickListener);
+        googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if(activity instanceof MapHandler)
+                    ((MapHandler) activity).handleMapClick(latLng);
+            }
+        });
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        googleMap.clear();
-        MarkerOptions mp = new MarkerOptions();
-        mp.position(latLng).title("Current Location").flat(false).icon(BitmapDescriptorFactory.fromResource(R.drawable.maps_arrow));
-        googleMap.addMarker(mp);
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18f);
-        googleMap.animateCamera(cameraUpdate);
+        if(activity instanceof MapHandler)
+            ((MapHandler) activity).handleLocChanged(location);
     }
 
     @Override
@@ -89,6 +91,30 @@ public class MapStuff implements OnMapReadyCallback, LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
+    }
+
+    public void initializeMap() {
+        if(activity instanceof FragmentActivity) {
+            SupportMapFragment mapFragment = (SupportMapFragment) ((FragmentActivity) activity).getSupportFragmentManager().findFragmentById(R.id.map);
+            mapFragment.getMapAsync(instance);
+        }
+    }
+
+    public void clearGoogleMap(){
+        googleMap.clear();
+    }
+
+    public void addMarker(Location location){
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions mp = new MarkerOptions();
+        mp.position(latLng).title("Current Location").flat(false).icon(BitmapDescriptorFactory.fromResource(R.drawable.maps_arrow));
+        googleMap.addMarker(mp);
+    }
+
+    public void animateCamera(Location location){
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18f);
+        googleMap.animateCamera(cameraUpdate);
     }
 
 } // MapStuff

@@ -1,19 +1,23 @@
-package com.taserlag.lasertag;
+package com.taserlag.lasertag.activity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 
-import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.taserlag.lasertag.map.MapAssistant;
+import com.taserlag.lasertag.map.MapHandler;
+import com.taserlag.lasertag.R;
 
-public class MapActivity extends FragmentActivity {
+public class MapActivity extends FragmentActivity implements MapHandler {
 
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
-    private MapStuff mapStuff;
+    private MapAssistant mapAss =  MapAssistant.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +30,7 @@ public class MapActivity extends FragmentActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
         } else {
             // Else initialize map
-            initializeMap();
+            MapAssistant.getInstance(this).initializeMap();
         }
     }
 
@@ -36,10 +40,15 @@ public class MapActivity extends FragmentActivity {
         hideSystemUI();
     }
 
-    private void initializeMap() {
-        mapStuff = new MapStuff(this);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(mapStuff);
+    @Override
+    public void handleMapClick(LatLng latLng) {
+        //no op
+    }
+
+    @Override
+    public void handleLocChanged(Location location) {
+        mapAss.clearGoogleMap();
+        mapAss.addMarker(location);
     }
 
     // This snippet hides the system bars.
@@ -54,15 +63,6 @@ public class MapActivity extends FragmentActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    // This snippet shows the system bars. It does this by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    private void showSystemUI() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
 } // MapActivity
