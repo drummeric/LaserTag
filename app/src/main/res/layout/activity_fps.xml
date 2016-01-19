@@ -28,7 +28,7 @@
         android:layout_height="200dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:paddingRight="75dp"
+        android:layout_marginRight="25dp"
         android:thumb="@drawable/circle"
         />
     <TextView
@@ -45,8 +45,8 @@
         android:layout_height="175dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
-        android:paddingLeft="150dp"
-        android:paddingBottom="150dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="10dp"
         map:mapType="normal"
         map:uiMapToolbar="false"
         />
