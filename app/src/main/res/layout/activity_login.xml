@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Laser Tag"
-        android:textSize="75dp"
+        android:textSize="75sp"
         android:layout_above="@+id/textPleaseSignIn"
         android:layout_centerHorizontal="true" />
 

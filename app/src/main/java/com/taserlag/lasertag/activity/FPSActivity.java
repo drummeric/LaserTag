@@ -39,7 +39,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private TextView mAmmo;
     private int ammo = 10;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
-    // REMOVE MAPEXPANDED
     private boolean mapExpanded = false;
 
     @Override
@@ -112,11 +111,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     @Override
     public void handleMapClick(LatLng latLng) {
-        // UNCOMMENT FOLLOWING TWO LINES
-        //Intent intent = new Intent(this, MapActivity.class);
-        //startActivity(intent);
-
-        // REMOVE EVERYTHING BELOW
         int width = 0;
         int height = 0;
         if (!mapExpanded) {
@@ -150,7 +144,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     public void handleLocChanged(Location location) {
         mapAss.clearGoogleMap();
         mapAss.addMarker(location);
-        // REMOVE IF STATEMENT
         if (!mapExpanded)
             mapAss.animateCamera(location);
     }
