@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.hardware.Camera;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;

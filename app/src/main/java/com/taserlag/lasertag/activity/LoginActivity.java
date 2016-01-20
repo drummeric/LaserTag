@@ -34,18 +34,9 @@ public class LoginActivity extends AppCompatActivity {
 
         usernameView = (EditText) findViewById(R.id.textUsername);
         passwordView = (EditText) findViewById(R.id.textPassword);
-
-        Button signInButton = (Button) findViewById(R.id.buttonSignin);
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
-
     }
 
-    private void attemptLogin() {
+    public void attemptLogin(View view) {
 
         // Reset errors.
         usernameView.setError(null);
@@ -76,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
             t.setGravity(Gravity.TOP,0,0);
             t.show();
         }else {
-            Intent intent = new Intent(this, FPSActivity.class);
+            Intent intent = new Intent(this, MainMenuActivity.class);
             startActivity(intent);
         }
 

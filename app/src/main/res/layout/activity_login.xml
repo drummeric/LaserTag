@@ -48,6 +48,7 @@
         style="?android:textAppearanceSmall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="attemptLogin"
         android:text="@string/action_sign_in"
         android:textStyle="bold"
         android:layout_centerVertical="true"
