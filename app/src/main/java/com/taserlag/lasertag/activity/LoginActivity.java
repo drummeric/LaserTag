@@ -10,18 +10,18 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.parse.LogInCallback;
+import com.parse.ParseException;
+import com.parse.ParseUser;
 import com.taserlag.lasertag.R;
 
 
 public class LoginActivity extends AppCompatActivity {
 
-    private String[] testCredentials = new String[]{
-            "fooname:hello", "barname:world"
-    };
+    // Valid credentials are: "fooname:hello", "barname:world"
 
     // UI references.
     private EditText usernameView;
@@ -59,29 +59,38 @@ public class LoginActivity extends AppCompatActivity {
             cancel = true;
         }
 
-
-        if (cancel || !validate(username, password)) {
-            usernameView.setText("");
-            passwordView.setText("");
-            Toast t = Toast.makeText(getApplicationContext(), "Invalid credentials",Toast.LENGTH_SHORT );
-            t.setGravity(Gravity.TOP,0,0);
-            t.show();
-        }else {
-            Intent intent = new Intent(this, MainMenuActivity.class);
-            startActivity(intent);
+        if (cancel) {
+            reset();
+        } else {
+            validate(username, password);
         }
-
     }
 
-    private boolean validate(String username, String password){
-        String credentials = username + ":" + password;
-        for (String s : testCredentials){
-            if(credentials.equals(s)){
-                return true;
+    private void validate(String username, String password){
+        ParseUser.logInInBackground(username, password, new LogInCallback() {
+            public void done(ParseUser user, ParseException e) {
+                if (user != null) {
+                    // Hooray! The user is logged in.
+                    login();
+                } else {
+                    // Signup failed. Look at the ParseException to see what happened.
+                    reset();
+                }
             }
-        }
-        return false;
+        });
     }
 
+    private void login() {
+        Intent intent = new Intent(this, MainMenuActivity.class);
+        startActivity(intent);
+    }
+
+    private void reset() {
+        usernameView.setText("");
+        passwordView.setText("");
+        Toast t = Toast.makeText(getApplicationContext(), "Invalid credentials",Toast.LENGTH_SHORT );
+        t.setGravity(Gravity.TOP,0,0);
+        t.show();
+    }
 
 }
