@@ -4,12 +4,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.view.View;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -23,11 +28,22 @@ import com.taserlag.lasertag.R;
 
 public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
+    private final int MAP_SIZE = 175;
+    private final int MAP_MARGIN = 10;
+    private final int MAP_ANIMATION_DURATION = 100;
+
     private Activity activity;
     private GoogleMap googleMap;
     private LocationManager locationManager;
-    private LatLng lastLoc;
+    private View mMapView;
     private static MapAssistant instance;
+
+    private boolean mapExpanded = false;
+    private int mapWidth;
+    private int mapHeight;
+    private int mapExpandedWidth;
+    private int mapExpandedHeight;
+    private int mapMargin;
 
     public static MapAssistant getInstance(Activity activity){
         if (instance == null) {
@@ -36,6 +52,10 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
         instance.activity = activity;
         return instance;
+    }
+
+    public boolean getMapExpanded() {
+        return mapExpanded;
     }
 
     @Override
@@ -97,7 +117,48 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         if(activity instanceof FragmentActivity) {
             SupportMapFragment mapFragment = (SupportMapFragment) ((FragmentActivity) activity).getSupportFragmentManager().findFragmentById(R.id.map);
             mapFragment.getMapAsync(instance);
+            mMapView = mapFragment.getView();
+
+            // Initialize map layout
+            calculateMapDimensions();
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(mapWidth, mapHeight);
+            layoutParams.setMargins(mapMargin, 0, 0, mapMargin);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            mMapView.setLayoutParams(layoutParams);
         }
+    }
+
+    private void calculateMapDimensions() {
+        // Convert MAP_SIZE to px
+        Resources r = activity.getResources();
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, MAP_SIZE, r.getDisplayMetrics());
+        mapWidth = Math.round(px);
+        mapHeight = Math.round(px);
+
+        // Get screen metrics
+        DisplayMetrics metrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+
+        // Convert MAP_MARGIN to px
+        px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, MAP_MARGIN, r.getDisplayMetrics());
+        mapExpandedWidth = Math.round(metrics.widthPixels - 2*px);
+        mapExpandedHeight = Math.round(metrics.heightPixels - 2*px);
+        mapMargin = Math.round(px);
+    }
+
+    public void maximizeMap() {
+        mapExpanded = true;
+        ResizeAnimation anim = new ResizeAnimation(mMapView, mapExpandedWidth, mapExpandedHeight);
+        anim.setDuration(MAP_ANIMATION_DURATION);
+        mMapView.startAnimation(anim);
+    }
+
+    public void minimizeMap() {
+        mapExpanded = false;
+        ResizeAnimation anim = new ResizeAnimation(mMapView, mapWidth, mapHeight);
+        anim.setDuration(MAP_ANIMATION_DURATION);
+        mMapView.startAnimation(anim);
     }
 
     public void clearGoogleMap(){

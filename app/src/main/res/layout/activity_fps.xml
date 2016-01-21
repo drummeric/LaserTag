@@ -41,12 +41,8 @@
     <fragment
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:id="@+id/map"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginBottom="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         map:mapType="normal"
         map:uiMapToolbar="false"
         />

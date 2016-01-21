@@ -1,20 +1,15 @@
 package com.taserlag.lasertag.activity;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.hardware.Camera;
 import android.location.Location;
 import android.media.MediaPlayer;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -22,13 +17,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.VerticalSeekBar;
 
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.map.ResizeAnimation;
 
 public class FPSActivity extends AppCompatActivity implements MapHandler {
 
@@ -40,7 +33,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private TextView mAmmo;
     private int ammo = 10;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
-    private boolean mapExpanded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,40 +104,18 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     @Override
     public void handleMapClick(LatLng latLng) {
-        int width = 0;
-        int height = 0;
-        if (!mapExpanded) {
-            // Get screen metrics
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-
-            // Convert 10dp to px
-            Resources r = getResources();
-            float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, r.getDisplayMetrics());
-
-            width = Math.round(metrics.widthPixels - 2*px);
-            height = Math.round(metrics.heightPixels - 2*px);
-            mapExpanded = true;
+        if (mapAss.getMapExpanded()) {
+            mapAss.minimizeMap();
         } else {
-            // Convert 175dp to px
-            Resources r = getResources();
-            float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 175, r.getDisplayMetrics());
-
-            width = Math.round(px);
-            height = Math.round(px);
-            mapExpanded = false;
+            mapAss.maximizeMap();
         }
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        ResizeAnimation anim = new ResizeAnimation(mapFragment.getView(), width, height);
-        anim.setDuration(100);
-        mapFragment.getView().startAnimation(anim);
     }
 
     @Override
     public void handleLocChanged(Location location) {
         mapAss.clearGoogleMap();
         mapAss.addMarker(location);
-        if (!mapExpanded)
+        if (!mapAss.getMapExpanded())
             mapAss.animateCamera(location);
     }
 
