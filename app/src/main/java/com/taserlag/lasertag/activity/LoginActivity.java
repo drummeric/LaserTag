@@ -6,7 +6,7 @@ public class LoginActivity extends ParseLoginDispatchActivity {
 
     @Override
     protected Class<?> getTargetClass() {
-        return MainMenuActivity.class;
+        return MenuActivity.class;
     }
 
 }
