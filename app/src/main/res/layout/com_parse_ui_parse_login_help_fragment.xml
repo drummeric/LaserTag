@@ -1,0 +1,54 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/com_parse_ui_vertical_margin"
+    android:paddingLeft="@dimen/com_parse_ui_horizontal_margin"
+    android:paddingRight="@dimen/com_parse_ui_horizontal_margin"
+    android:paddingBottom="@dimen/com_parse_ui_vertical_margin"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/app_logo"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo"
+        android:contentDescription="@string/com_parse_ui_logo_content_description" />
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.5"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/login_help_instructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="@string/com_parse_ui_login_help_instructions" />
+
+        <EditText
+            android:id="@+id/login_help_email_input"
+            style="@style/ParseLoginUI.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/com_parse_ui_xlarge_vertical_spacing"
+            android:hint="@string/com_parse_ui_login_help_email_input_hint"
+            android:inputType="textEmailAddress" />
+
+        <Button
+            android:id="@+id/login_help_submit"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/com_parse_ui_parse_login_button_background_selector"
+            android:textSize="18sp"
+            android:layout_marginTop="@dimen/com_parse_ui_xlarge_vertical_spacing"
+            android:textAllCaps="false"
+            android:text="@string/com_parse_ui_login_help_submit_button_label" />
+    </LinearLayout>
+
+</LinearLayout>
