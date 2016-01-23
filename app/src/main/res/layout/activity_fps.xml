@@ -40,16 +40,6 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         />
-    <fragment
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:id="@+id/map"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        map:mapType="normal"
-        map:uiMapToolbar="false"
-        />
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -70,5 +60,15 @@
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"
         android:onClick="swapWeapon"
+        />
+    <fragment
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:id="@+id/map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        map:mapType="normal"
+        map:uiMapToolbar="false"
         />
 </RelativeLayout>
