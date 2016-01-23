@@ -22,6 +22,10 @@ import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.shield.FastShield;
+import com.taserlag.lasertag.weapon.FastWeapon;
+import com.taserlag.lasertag.weapon.StrongWeapon;
 
 public class FPSActivity extends AppCompatActivity implements MapHandler {
 
@@ -31,15 +35,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private Camera mCamera;
     private CameraPreview mPreview;
     private TextView mAmmo;
-    private int ammo = 10;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
+    private Player player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fps);
+        player = new Player("Player", new FastWeapon(), new StrongWeapon(), new FastShield());
         mAmmo = (TextView) findViewById(R.id.ammo_text_view);
-        mAmmo.setText(Integer.toString(ammo));
+        updateGUI();
     }
 
     @Override
@@ -185,6 +190,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
         }
     }
 
+    private void updateGUI() {
+        mAmmo.setText(player.getActiveWeapon().getCurrentClipAmmo() + "|" + player.getActiveWeapon().getExcessAmmo());
+    }
+
     // This snippet hides the system bars.
     private void hideSystemUI() {
         // Set the IMMERSIVE flag.
@@ -208,10 +217,21 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     }
 
     private void shoot() {
-        ammo = ammo - 1;
-        mAmmo.setText(Integer.toString(ammo));
-        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
-        mp.start();
+        if (player.getActiveWeapon().fire()) {
+            updateGUI();
+            MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
+            mp.start();
+        }
+    }
+
+    public void reloadWeapon(View view) {
+        player.getActiveWeapon().reload();
+        updateGUI();
+    }
+
+    public void swapWeapon(View view) {
+        player.swapWeapon();
+        updateGUI();
     }
 
 } // FPSActivity

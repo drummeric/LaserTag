@@ -1,5 +1,7 @@
 package com.taserlag.lasertag.team;
 
+import com.taserlag.lasertag.player.Player;
+
 import java.util.List;
 
 public class GroupTeam extends Team{

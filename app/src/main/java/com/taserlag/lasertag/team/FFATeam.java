@@ -1,5 +1,7 @@
 package com.taserlag.lasertag.team;
 
+import com.taserlag.lasertag.player.Player;
+
 public class FFATeam extends Team{
 
     @Override

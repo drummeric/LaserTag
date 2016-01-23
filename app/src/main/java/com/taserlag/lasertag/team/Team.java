@@ -1,5 +1,7 @@
 package com.taserlag.lasertag.team;
 
+import com.taserlag.lasertag.player.Player;
+
 public abstract class Team {
 
     protected Player captain;
