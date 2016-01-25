@@ -41,6 +41,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:layout_weight="1"
+                    android:id="@+id/button_tdm"
                     android:text="Team Deathmatch"
                     android:textSize="15sp"
                     android:layout_gravity="center"/>
@@ -49,6 +50,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:layout_weight="1"
+                    android:id="@+id/button_ffa"
                     android:text="Free For All"
                     android:textSize="15sp"
                     android:layout_gravity="center"/>
@@ -57,6 +59,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:layout_weight="1"
+                    android:id="@+id/button_vip"
                     android:text="VIP"
                     android:textSize="15sp"
                     android:layout_gravity="center"/>
@@ -192,7 +195,6 @@
                         android:textSize="15sp"/>
 
                 </TableRow>
-
 
             </TableLayout>
 
