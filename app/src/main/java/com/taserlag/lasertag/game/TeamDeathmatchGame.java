@@ -3,7 +3,7 @@ package com.taserlag.lasertag.game;
 import com.taserlag.lasertag.team.GroupTeam;
 import com.taserlag.lasertag.team.Team;
 
-public class GroupTeamGame extends Game{
+public class TeamDeathmatchGame extends Game{
 
     @Override
     public boolean addTeam(Team team) {
@@ -13,5 +13,10 @@ public class GroupTeamGame extends Game{
         } else {
             return false;
         }
+    }
+
+    @Override
+    public String getGameType() {
+        return "Team Deathmatch";
     }
 }

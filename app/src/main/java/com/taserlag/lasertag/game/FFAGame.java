@@ -13,4 +13,9 @@ public class FFAGame extends Game{
             return false;
         }
     }
+
+    @Override
+    public String getGameType() {
+        return "Free for All";
+    }
 }

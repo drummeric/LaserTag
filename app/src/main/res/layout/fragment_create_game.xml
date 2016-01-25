@@ -204,7 +204,7 @@
                 android:layout_gravity="center"
                 android:text="Create Game"
                 android:id="@+id/button_create_game"
-                android:onClick="launchFPS"/>
+                android:onClick="showGameLobby"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

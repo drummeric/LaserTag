@@ -15,9 +15,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.parse.ParseUser;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.fragments.CreateGameFragment;
+import com.taserlag.lasertag.fragments.GameLobbyFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
 
-public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener{
+public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +66,13 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void showCreateGame(View view){
-        CreateGameFragment cg = new CreateGameFragment();
-        replaceFragment(R.id.menu_frame, cg, "create_game_fragment");
+        CreateGameFragment fragment = new CreateGameFragment();
+        replaceFragment(R.id.menu_frame, fragment, "create_game_fragment");
+    }
 
+    public void showGameLobby(View view){
+        GameLobbyFragment fragment = new GameLobbyFragment();
+        replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
     }
 
     private Fragment findFragmentByTag(String tag){

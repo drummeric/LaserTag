@@ -14,6 +14,11 @@ public class VIPGame extends Game{
         }
     }
 
+    @Override
+    public String getGameType() {
+        return "VIP";
+    }
+
     public boolean checkTeams(){
         for (Team t: teams){
             if (!t.hasCaptain()){
