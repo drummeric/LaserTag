@@ -1,6 +1,7 @@
 package com.taserlag.lasertag.fragments;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,37 +15,21 @@ import android.widget.Switch;
 
 import com.parse.ParseException;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.game.FFAGame;
+import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.game.GameType;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link CreateGameFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link CreateGameFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CreateGameFragment extends Fragment {
 
     private Button[] gameTypeButtons = new Button[3];
+
+    private GameType gameType = GameType.TDM;
+
+    private String gameID;
 
     private OnFragmentInteractionListener mListener;
 
     public CreateGameFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CreateGameFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CreateGameFragment newInstance(String param1, String param2) {
-        return new CreateGameFragment();
     }
 
     @Override
@@ -57,14 +42,25 @@ public class CreateGameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_game, container, false);
+
         gameTypeButtons[0] = (Button) view.findViewById(R.id.button_tdm);
+        gameTypeButtons[0].setText(GameType.TDM.toString());
+
         gameTypeButtons[1] = (Button) view.findViewById(R.id.button_ffa);
+        gameTypeButtons[1].setText(GameType.FFA.toString());
+
         gameTypeButtons[2] = (Button) view.findViewById(R.id.button_vip);
+        gameTypeButtons[2].setText(GameType.VIP.toString());
+
         TouchListener tl = new TouchListener();
 
-        gameTypeButtons[0].setOnTouchListener(tl);
-        gameTypeButtons[1].setOnTouchListener(tl);
-        gameTypeButtons[2].setOnTouchListener(tl);
+        for(Button b:gameTypeButtons){
+            b.setBackgroundResource(android.R.drawable.btn_default);
+            b.setOnTouchListener(tl);
+        }
+
+        gameTypeButtons[0].setBackgroundColor(Color.GRAY);
+
         return view;
     }
 
@@ -86,43 +82,56 @@ public class CreateGameFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
     private class TouchListener implements View.OnTouchListener{
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+
+            Button button = (Button) v;
+
             for(Button b:gameTypeButtons){
-                b.setPressed(false);
+                b.setBackgroundResource(android.R.drawable.btn_default);
             }
-            v.setPressed(true);
+            button.setBackgroundColor(Color.GRAY);
+
+            Spinner spinner = (Spinner) getView().findViewById(R.id.spinner_team_size);
+
+            if (button.getText().equals(GameType.FFA.toString())){
+                spinner.setEnabled(false);
+                spinner.setSelection(0); // 1 player team for FFA
+            } else {
+                spinner.setEnabled(true);
+            }
+
+            gameType = GameType.decodeType(button.getText().toString());
+
             return true;
         }
     }
 
     public void saveGame() {
-        FFAGame game = new FFAGame();
+        Game game = new Game();
+        game.setGameType(gameType);
         game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
         game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
         game.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
         game.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
+        game.setTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
         try {
             game.save();
+            gameID = game.getObjectId();
         } catch (ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getGameID(){
+        return gameID;
     }
 }

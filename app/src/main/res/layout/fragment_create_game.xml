@@ -153,7 +153,33 @@
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="10dp"
                 android:textSize="20sp"
-                android:text="Enable the desired options:" />
+                android:text="Set the desired options:" />
+
+            <TableLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <TableRow
+                    android:layout_marginBottom="15dp">
+
+                    <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:id="@+id/spinner_team_size"
+                        android:gravity="center"
+                        android:entries="@array/array_players"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:text="Maximum Number of Players per Team"
+                        android:textSize="15sp"/>
+                </TableRow>
+
+            </TableLayout>
 
             <TableLayout
                 android:layout_width="match_parent"
@@ -200,6 +226,7 @@
 
             </TableLayout>
 
+
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -208,5 +235,7 @@
                 android:id="@+id/button_create_game"
                 android:onClick="showGameLobby"/>
         </LinearLayout>
+
+
     </ScrollView>
 </LinearLayout>

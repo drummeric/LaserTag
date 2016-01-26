@@ -12,6 +12,7 @@ public class Player {
     private Weapon primaryWeapon;
     private Weapon secondaryWeapon;
     private boolean primaryWeaponActive = true;
+    private boolean captain = false;
 
     public Player(String name, Weapon primaryWeapon, Weapon secondaryWeapon, Shield shield) {
         this.name = name;
@@ -33,11 +34,19 @@ public class Player {
     }
 
     public void swapWeapon() {
-        if (primaryWeaponActive) {
-            primaryWeaponActive = false;
-        } else {
-            primaryWeaponActive  = true;
-        }
+        primaryWeaponActive = !primaryWeaponActive;
+    }
+
+    public void setCaptain() {
+        captain = true;
+    }
+
+    public void resetCaptain() {
+        captain = false;
+    }
+
+    public boolean isCaptain() {
+        return captain;
     }
 
 }

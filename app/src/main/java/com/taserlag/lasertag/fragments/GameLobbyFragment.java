@@ -12,11 +12,12 @@ import android.widget.TextView;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.game.FFAGame;
+import com.taserlag.lasertag.game.Game;
 
 public class GameLobbyFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
+    private String gameID;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -38,11 +39,10 @@ public class GameLobbyFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
 
         final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
-        ParseQuery<FFAGame> query = ParseQuery.getQuery(FFAGame.class);
-        query.orderByDescending("updatedAt");
+        ParseQuery<Game> query = ParseQuery.getQuery(Game.class);
         try {
-            FFAGame ffaGame = query.getFirst();
-            gameInfo.setText(ffaGame.toString());
+            Game game = query.get(gameID);
+            gameInfo.setText(game.toString());
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -86,5 +86,9 @@ public class GameLobbyFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    public void setGameID(String id){
+        gameID = id;
     }
 }

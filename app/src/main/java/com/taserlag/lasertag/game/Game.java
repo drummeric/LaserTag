@@ -2,41 +2,24 @@ package com.taserlag.lasertag.game;
 
 import com.parse.ParseClassName;
 import com.parse.ParseObject;
-import com.parse.ParseUser;
 import com.taserlag.lasertag.team.Team;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @ParseClassName("Game")
-public abstract class Game extends ParseObject {
+public class Game extends ParseObject {
 
-    protected List<Team> teams;
+    private Map<String,Team> teams = new HashMap<>();
 
-    private long currentTime;
+    public Game() {}
 
-    private long startTime = 0;
-
-    public Game() {
+    public String getGameType() {
+        return getString("gameType");
     }
 
-    public ParseUser getUser() {
-        return getUser();
-    }
-
-    public int getScore() {
-        return getInt("score");
-    }
-
-    public void setScore(int score) {
-        put("score", score);
-    }
-
-    public int getMinutes() {
-        return getInt("minutes");
-    }
-
-    public void setMinutes(int minutes) {
-        put("minutes", minutes);
+    public void setGameType(GameType gameType) {
+        put("gameType", gameType.toString());
     }
 
     public boolean getScoreEnabled() {
@@ -47,12 +30,36 @@ public abstract class Game extends ParseObject {
         put("scoreEnabled", scoreEnabled);
     }
 
+    public int getScore() {
+        return getInt("score");
+    }
+
+    public void setScore(int score) {
+        put("score", score);
+    }
+
     public boolean getTimeEnabled() {
         return getBoolean("timeEnabled");
     }
 
     public void setTimeEnabled(boolean timeEnabled) {
         put("timeEnabled", timeEnabled);
+    }
+
+    public int getMinutes() {
+        return getInt("minutes");
+    }
+
+    public void setMinutes(int minutes) {
+        put("minutes", minutes);
+    }
+
+    public int getTeamSize() {
+        return getInt("teamSize");
+    }
+
+    public void setTeamSize(int size) {
+        put("teamSize", size);
     }
 
     public boolean getPrivateMatch() {
@@ -71,44 +78,17 @@ public abstract class Game extends ParseObject {
         put("friendlyFire", friendlyFire);
     }
 
-    public abstract boolean addTeam(Team team);
-
-    public abstract String getGameType();
-
-    protected int findTeam(Team team){
-
-        return teams.indexOf(team);
-    }
-
-    public boolean checkTeams(){
-        for (Team t: teams){
-            if (!t.isValid()){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public boolean start(){
-        if (checkTeams()) {
-            startTime = System.currentTimeMillis();
-        } else {
+    public boolean addTeam(Team team){
+        if (teams.containsKey(team.getName())){
             return false;
         }
 
-        //do other start stuff
-
+        teams.put(team.getName(), team);
         return true;
     }
 
-    public long getTime(){
-        if (startTime != 0){
-            currentTime = System.currentTimeMillis() - startTime;
-            return currentTime;
-        } else {
-            return -1;
-        }
+    public boolean removeTeam(Team team){
+        return teams.remove(team.getName()) != null;
     }
 
     @Override
@@ -139,6 +119,10 @@ public abstract class Game extends ParseObject {
             description.append("enabled.");
         } else {
             description.append("disabled.");
+        }
+
+        if (!GameType.decodeType(getGameType()).equals(GameType.FFA)){
+            description.append(" The maximum team size is ").append(getTeamSize()).append(".");
         }
 
         return description.toString();
