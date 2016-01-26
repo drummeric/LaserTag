@@ -1,8 +1,10 @@
 package com.taserlag.lasertag.game;
 
+import com.parse.ParseClassName;
 import com.taserlag.lasertag.team.GroupTeam;
 import com.taserlag.lasertag.team.Team;
 
+@ParseClassName("VIPGame")
 public class VIPGame extends Game{
     @Override
     public boolean addTeam(Team team) {

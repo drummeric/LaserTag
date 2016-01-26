@@ -1,8 +1,10 @@
 package com.taserlag.lasertag.game;
 
+import com.parse.ParseClassName;
 import com.taserlag.lasertag.team.FFATeam;
 import com.taserlag.lasertag.team.Team;
 
+@ParseClassName("FFAGame")
 public class FFAGame extends Game{
     @Override
     public boolean addTeam(Team team) {

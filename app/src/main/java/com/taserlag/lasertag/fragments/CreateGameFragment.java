@@ -9,8 +9,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.Switch;
 
+import com.parse.ParseException;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.game.FFAGame;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -104,6 +108,21 @@ public class CreateGameFragment extends Fragment {
             }
             v.setPressed(true);
             return true;
+        }
+    }
+
+    public void saveGame() {
+        FFAGame game = new FFAGame();
+        game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
+        game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
+        game.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
+        game.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
+        game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
+        game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
+        try {
+            game.save();
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 }

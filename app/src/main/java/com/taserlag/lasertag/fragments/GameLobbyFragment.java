@@ -9,15 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.parse.ParseException;
+import com.parse.ParseQuery;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.game.Game;
-import com.taserlag.lasertag.game.TeamDeathmatchGame;
+import com.taserlag.lasertag.game.FFAGame;
 
 public class GameLobbyFragment extends Fragment {
-
-    //TODO: remove when games stored in database
-    private Game game = new TeamDeathmatchGame();
-
 
     private OnFragmentInteractionListener mListener;
 
@@ -40,8 +37,15 @@ public class GameLobbyFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
 
-        ((TextView) view.findViewById(R.id.text_game_info)).setText(game.toString());
-
+        final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
+        ParseQuery<FFAGame> query = ParseQuery.getQuery(FFAGame.class);
+        query.orderByDescending("updatedAt");
+        try {
+            FFAGame ffaGame = query.getFirst();
+            gameInfo.setText(ffaGame.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         return view;
     }
 

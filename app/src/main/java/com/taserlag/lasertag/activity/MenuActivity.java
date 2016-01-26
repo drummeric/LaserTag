@@ -71,6 +71,9 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void showGameLobby(View view){
+        CreateGameFragment cgf = (CreateGameFragment) getSupportFragmentManager().findFragmentByTag("create_game_fragment");
+        cgf.saveGame();
+
         GameLobbyFragment fragment = new GameLobbyFragment();
         replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
     }
