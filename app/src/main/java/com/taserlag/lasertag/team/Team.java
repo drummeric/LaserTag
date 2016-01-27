@@ -11,6 +11,10 @@ public class Team {
     private String name = "Team Name";
     private int maxTeamSize;
 
+    public Team(String name) {
+        this.name = name;
+    }
+
     public int getMaxTeamSize() {
         return maxTeamSize;
     }
@@ -25,6 +29,10 @@ public class Team {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
     }
 
     public boolean addPlayer(Player p){

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,11 +15,16 @@ import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.Team;
+
+import java.util.ArrayList;
 
 public class GameLobbyFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private String gameID;
+    private Game game;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -41,11 +48,36 @@ public class GameLobbyFragment extends Fragment {
         final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
         ParseQuery<Game> query = ParseQuery.getQuery(Game.class);
         try {
-            Game game = query.get(gameID);
+            game = query.get(gameID);
             gameInfo.setText(game.toString());
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
+        RecyclerView rv = (RecyclerView) view.findViewById(R.id.recycler_view_team);
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        rv.setLayoutManager(llm);
+
+        // TODO: Remove default teams
+        Team team1 = new Team("Team 1");
+        Team team2 = new Team("Team 2");
+        Team team3 = new Team("Team 3");
+        game.addTeam(team1);
+        game.addTeam(team2);
+        game.addTeam(team3);
+        team1.addPlayer(new Player("Player 1"));
+        team1.addPlayer(new Player("Player 2"));
+        team1.addPlayer(new Player("Player 3"));
+        team1.addPlayer(new Player("Player 4"));
+        team1.addPlayer(new Player("Player 5"));
+        team2.addPlayer(new Player("Player 6"));
+        team2.addPlayer(new Player("Player 7"));
+        team3.addPlayer(new Player("Player 8"));
+        team3.addPlayer(new Player("Player 9"));
+        team3.addPlayer(new Player("Player 10"));
+
+        TeamAdapter ta = new TeamAdapter(new ArrayList<>(game.getTeams().values()));
+        rv.setAdapter(ta);
         return view;
     }
 

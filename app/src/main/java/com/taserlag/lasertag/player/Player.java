@@ -14,6 +14,10 @@ public class Player {
     private boolean primaryWeaponActive = true;
     private boolean captain = false;
 
+    public Player(String name) {
+        this.name = name;
+    }
+
     public Player(String name, Weapon primaryWeapon, Weapon secondaryWeapon, Shield shield) {
         this.name = name;
         this.primaryWeapon = primaryWeapon;
@@ -27,6 +31,10 @@ public class Player {
         } else {
             return secondaryWeapon;
         }
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Shield getShield() {

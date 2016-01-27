@@ -4,13 +4,13 @@ import com.parse.ParseClassName;
 import com.parse.ParseObject;
 import com.taserlag.lasertag.team.Team;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ParseClassName("Game")
 public class Game extends ParseObject {
 
-    private Map<String,Team> teams = new HashMap<>();
+    private Map<String,Team> teams = new LinkedHashMap<>();
 
     public Game() {}
 
@@ -54,12 +54,12 @@ public class Game extends ParseObject {
         put("minutes", minutes);
     }
 
-    public int getTeamSize() {
-        return getInt("teamSize");
+    public int getMaxTeamSize() {
+        return getInt("maxTeamSize");
     }
 
-    public void setTeamSize(int size) {
-        put("teamSize", size);
+    public void setMaxTeamSize(int size) {
+        put("maxTeamSize", size);
     }
 
     public boolean getPrivateMatch() {
@@ -82,13 +82,17 @@ public class Game extends ParseObject {
         if (teams.containsKey(team.getName())){
             return false;
         }
-
+        team.setMaxTeamSize(getMaxTeamSize());
         teams.put(team.getName(), team);
         return true;
     }
 
     public boolean removeTeam(Team team){
         return teams.remove(team.getName()) != null;
+    }
+
+    public Map<String, Team> getTeams() {
+        return teams;
     }
 
     @Override
@@ -122,7 +126,7 @@ public class Game extends ParseObject {
         }
 
         if (!GameType.decodeType(getGameType()).equals(GameType.FFA)){
-            description.append(" The maximum team size is ").append(getTeamSize()).append(".");
+            description.append(" The maximum team size is ").append(getMaxTeamSize()).append(".");
         }
 
         return description.toString();

@@ -120,7 +120,7 @@ public class CreateGameFragment extends Fragment {
         game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
         game.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
         game.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
-        game.setTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
+        game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
         try {
