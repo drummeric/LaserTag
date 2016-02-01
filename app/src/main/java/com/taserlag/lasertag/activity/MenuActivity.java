@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.fragments.CreateGameFragment;
 import com.taserlag.lasertag.fragments.GameLobbyFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
@@ -71,7 +72,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void logOut(View view) {
-        //ParseUser.logOut();
+        LaserTagApplication.kinveyClient.user().logout().execute();
         Intent intent = new Intent(this, LoginActivity.class);
         finish();
         startActivity(intent);

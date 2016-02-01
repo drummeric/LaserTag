@@ -18,12 +18,12 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 
-public class LoginFragment extends Fragment {
+public class LoginSignupFragment extends Fragment {
 
-    private final String TAG = "LoginFragment";
+    private final String TAG = "LoginSignupFragment";
     private OnFragmentInteractionListener mListener;
 
-    public LoginFragment() {
+    public LoginSignupFragment() {
         // Required empty public constructor
     }
 
@@ -35,7 +35,7 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_login, container, false);
+        return inflater.inflate(R.layout.fragment_login_signup, container, false);
     }
 
     @Override
@@ -60,25 +60,40 @@ public class LoginFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public void performLogin() {
-        final EditText username = ((EditText) getView().findViewById(R.id.edit_text_login_username));
-        final EditText password = ((EditText) getView().findViewById(R.id.edit_text_login_password));
-        LaserTagApplication.kinveyClient.user().login(username.getText().toString(), password.getText().toString(), new KinveyUserCallback() {
+    public void performSignup() {
+        final EditText username = ((EditText) getView().findViewById(R.id.edit_text_signup_username));
+        final EditText password = ((EditText) getView().findViewById(R.id.edit_text_signup_password));
+        final EditText passwordConfirm = ((EditText) getView().findViewById(R.id.edit_text_signup_password_confirm));
+        final EditText email = ((EditText) getView().findViewById(R.id.edit_text_signup_email));
+        final EditText name = ((EditText) getView().findViewById(R.id.edit_text_signup_name));
+
+        if (!password.getText().toString().equals(passwordConfirm.getText().toString())) {
+            passwordConfirm.setError("Your passwords must match");
+            return;
+        }
+
+        LaserTagApplication.kinveyClient.user().create(username.getText().toString(), password.getText().toString(), new KinveyUserCallback() {
             @Override
             public void onFailure(Throwable t) {
-                Log.e(TAG, "Login Failure", t);
-                CharSequence text = "Wrong username or password.";
+                Log.e(TAG, "Signup Failure", t);
+                CharSequence text = "Could not sign up.";
                 Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-
-                username.setText("");
-                password.setText("");
             }
-
             @Override
             public void onSuccess(User u) {
-                Log.i(TAG,"Logged in a user with id: " + u.getId());
-                CharSequence text = "Welcome back, " + u.getUsername() + ".";
+                Log.i(TAG, "Signed up a user with id: " + u.getId());
+                CharSequence text = u.getUsername() + ", your account has been created.";
                 Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+
+                LaserTagApplication.kinveyClient.user().put("email", email.getText().toString());
+                LaserTagApplication.kinveyClient.user().put("first_name", name.getText().toString());
+                LaserTagApplication.kinveyClient.user().update(new KinveyUserCallback() {
+                    @Override
+                    public void onFailure(Throwable e) {Log.e(TAG, "Failed to set up user fields", e);}
+
+                    @Override
+                    public void onSuccess(User u) {Log.i(TAG, "Set up user fields for user with id: " + u.getId());}
+                });
 
                 Intent i = new Intent(getActivity(), MenuActivity.class);
                 getActivity().finish();

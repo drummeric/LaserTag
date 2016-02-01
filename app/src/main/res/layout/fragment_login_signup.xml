@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:hint="Username"></EditText>
+            android:hint="Username" />
 
         <EditText
             android:id="@+id/edit_text_signup_password"
@@ -77,7 +77,8 @@
             android:textSize="18sp"
             android:layout_marginTop="8dp"
             android:textAllCaps="false"
-            android:text="Create Account" />
+            android:text="Create Account"
+            android:onClick="signup" />
 
     </LinearLayout>
 

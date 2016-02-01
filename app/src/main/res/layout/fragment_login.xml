@@ -59,7 +59,8 @@
                     android:textSize="18sp"
                     android:layout_weight="0.5"
                     android:textAllCaps="false"
-                    android:text="Log in" />
+                    android:text="Log in"
+                    android:onClick="login" />
 
                 <Button
                     android:id="@+id/button_sign_up"
@@ -69,7 +70,8 @@
                     android:layout_marginLeft="8dp"
                     android:layout_weight="0.5"
                     android:textAllCaps="false"
-                    android:text="Sign up" />
+                    android:text="Sign up"
+                    android:onClick="showLoginSignup" />
             </LinearLayout>
 
             <Button
@@ -83,7 +85,8 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:textAllCaps="false"
-                android:text="Forgot Password" />
+                android:text="Forgot Password"
+                android:onClick="showLoginPasswordRecover" />
         </LinearLayout>
 
     </LinearLayout>
