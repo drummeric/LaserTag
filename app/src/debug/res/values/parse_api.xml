@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="parse_application_id" templateMergeStrategy="preserve" translatable="false">
-        LEPx5udeSigqPh3fQr7k98595aD8eOP5JnnL2Two
-    </string>
-    <string name="parse_client_key" templateMergeStrategy="preserve" translatable="false">
-        SoE4v3IepJo0EQ9GMk6RIX8oA2UpXbUSHT5cmapM
-    </string>
-</resources>

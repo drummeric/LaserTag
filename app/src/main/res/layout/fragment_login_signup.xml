@@ -1,10 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="@dimen/com_parse_ui_vertical_margin"
-    android:paddingLeft="@dimen/com_parse_ui_horizontal_margin"
-    android:paddingRight="@dimen/com_parse_ui_horizontal_margin"
-    android:paddingBottom="@dimen/com_parse_ui_vertical_margin"
+    android:paddingTop="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
     android:gravity="center"
     android:orientation="vertical">
 
@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/logo"
-        android:contentDescription="@string/com_parse_ui_logo_content_description" />
+        android:contentDescription="Logo" />
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -24,61 +24,60 @@
         android:layout_weight="0.5">
 
         <EditText
-            android:id="@+id/signup_username_input"
+            android:id="@+id/edit_text_signup_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ParseLoginUI.EditText"
-            android:hint="@string/com_parse_ui_username_input_hint"></EditText>
+            android:singleLine="true"
+            android:hint="Username"></EditText>
 
         <EditText
-            android:id="@+id/signup_password_input"
+            android:id="@+id/edit_text_signup_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ParseLoginUI.EditText"
-            android:layout_marginTop="@dimen/com_parse_ui_small_vertical_spacing"
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
             android:fontFamily="sans-serif"
-            android:hint="@string/com_parse_ui_password_input_hint"
+            android:hint="Password"
             android:inputType="textPassword"
             android:selectAllOnFocus="true" />
 
         <EditText
-            android:id="@+id/signup_confirm_password_input"
+            android:id="@+id/edit_text_signup_password_confirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ParseLoginUI.EditText"
-            android:layout_marginTop="@dimen/com_parse_ui_small_vertical_spacing"
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
             android:fontFamily="sans-serif"
-            android:hint="@string/com_parse_ui_confirm_password_input_hint"
+            android:hint="Re-enter Password"
             android:inputType="textPassword"
             android:selectAllOnFocus="true" />
 
         <EditText
-            android:id="@+id/signup_email_input"
+            android:id="@+id/edit_text_signup_email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ParseLoginUI.EditText"
-            android:layout_marginTop="@dimen/com_parse_ui_small_vertical_spacing"
-            android:hint="@string/com_parse_ui_email_input_hint"
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
+            android:hint="Email"
             android:inputType="textEmailAddress" />
 
         <EditText
-            android:id="@+id/signup_name_input"
+            android:id="@+id/edit_text_signup_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ParseLoginUI.EditText"
-            android:layout_marginTop="@dimen/com_parse_ui_small_vertical_spacing"
-            android:hint="@string/com_parse_ui_name_input_hint"
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
+            android:hint="Name"
             android:inputType="textPersonName" />
 
         <Button
-            android:id="@+id/create_account"
+            android:id="@+id/button_signup_create_account"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/com_parse_ui_parse_login_button_background_selector"
             android:textSize="18sp"
-            android:layout_marginTop="@dimen/com_parse_ui_small_vertical_spacing"
+            android:layout_marginTop="8dp"
             android:textAllCaps="false"
-            android:text="@string/com_parse_ui_create_account_button_label" />
+            android:text="Create Account" />
 
     </LinearLayout>
 

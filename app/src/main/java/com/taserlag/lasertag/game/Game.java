@@ -1,21 +1,19 @@
 package com.taserlag.lasertag.game;
 
-import com.parse.ParseClassName;
-import com.parse.ParseObject;
+import com.google.api.client.json.GenericJson;
 import com.taserlag.lasertag.team.Team;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@ParseClassName("Game")
-public class Game extends ParseObject {
+public class Game extends GenericJson {
 
     private Map<String,Team> teams = new LinkedHashMap<>();
 
     public Game() {}
 
     public String getGameType() {
-        return getString("gameType");
+        return (String) get("gameType");
     }
 
     public void setGameType(GameType gameType) {
@@ -23,7 +21,7 @@ public class Game extends ParseObject {
     }
 
     public boolean getScoreEnabled() {
-        return getBoolean("scoreEnabled");
+        return (boolean) get("scoreEnabled");
     }
 
     public void setScoreEnabled(boolean scoreEnabled) {
@@ -31,7 +29,7 @@ public class Game extends ParseObject {
     }
 
     public int getScore() {
-        return getInt("score");
+        return (int) get("score");
     }
 
     public void setScore(int score) {
@@ -39,7 +37,7 @@ public class Game extends ParseObject {
     }
 
     public boolean getTimeEnabled() {
-        return getBoolean("timeEnabled");
+        return (boolean) get("timeEnabled");
     }
 
     public void setTimeEnabled(boolean timeEnabled) {
@@ -47,7 +45,7 @@ public class Game extends ParseObject {
     }
 
     public int getMinutes() {
-        return getInt("minutes");
+        return (int) get("minutes");
     }
 
     public void setMinutes(int minutes) {
@@ -55,7 +53,7 @@ public class Game extends ParseObject {
     }
 
     public int getMaxTeamSize() {
-        return getInt("maxTeamSize");
+        return (int) get("maxTeamSize");
     }
 
     public void setMaxTeamSize(int size) {
@@ -63,7 +61,7 @@ public class Game extends ParseObject {
     }
 
     public boolean getPrivateMatch() {
-        return getBoolean("privateMatch");
+        return (boolean) get("privateMatch");
     }
 
     public void setPrivateMatch(boolean privateMatch) {
@@ -71,7 +69,7 @@ public class Game extends ParseObject {
     }
 
     public boolean getFriendlyFire() {
-        return getBoolean("friendlyFire");
+        return (boolean) get("friendlyFire");
     }
 
     public void setFriendlyFire(boolean friendlyFire) {

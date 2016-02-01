@@ -11,8 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.parse.ParseException;
-import com.parse.ParseQuery;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.Player;
@@ -46,6 +44,7 @@ public class GameLobbyFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
 
         final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
+        /*
         ParseQuery<Game> query = ParseQuery.getQuery(Game.class);
         try {
             game = query.get(gameID);
@@ -53,6 +52,7 @@ public class GameLobbyFragment extends Fragment {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        */
 
         RecyclerView rv = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());

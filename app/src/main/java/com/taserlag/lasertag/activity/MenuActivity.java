@@ -3,16 +3,10 @@ package com.taserlag.lasertag.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 
-import com.google.android.gms.maps.SupportMapFragment;
-import com.parse.ParseUser;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.fragments.CreateGameFragment;
 import com.taserlag.lasertag.fragments.GameLobbyFragment;
@@ -77,7 +71,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void logOut(View view) {
-        ParseUser.logOut();
+        //ParseUser.logOut();
         Intent intent = new Intent(this, LoginActivity.class);
         finish();
         startActivity(intent);

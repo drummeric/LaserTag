@@ -1,7 +1,6 @@
 package com.taserlag.lasertag.fragments;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,7 +13,6 @@ import android.widget.Spinner;
 import android.widget.StickyButton;
 import android.widget.Switch;
 
-import com.parse.ParseException;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
@@ -122,12 +120,14 @@ public class CreateGameFragment extends Fragment {
         game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
+        /*
         try {
             game.save();
             gameID = game.getObjectId();
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        */
     }
 
     public String getGameID(){
