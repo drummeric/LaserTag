@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.StickyButton;
 import android.widget.Switch;
 
 import com.parse.ParseException;
@@ -20,7 +21,7 @@ import com.taserlag.lasertag.game.GameType;
 
 public class CreateGameFragment extends Fragment {
 
-    private Button[] gameTypeButtons = new Button[3];
+    private StickyButton[] gameTypeButtons = new StickyButton[3];
 
     private GameType gameType = GameType.TDM;
 
@@ -35,7 +36,6 @@ public class CreateGameFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -43,24 +43,23 @@ public class CreateGameFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_game, container, false);
 
-        gameTypeButtons[0] = (Button) view.findViewById(R.id.button_tdm);
+        gameTypeButtons[0] = (StickyButton) view.findViewById(R.id.button_tdm);
         gameTypeButtons[0].setText(GameType.TDM.toString());
 
-        gameTypeButtons[1] = (Button) view.findViewById(R.id.button_ffa);
+        gameTypeButtons[1] = (StickyButton) view.findViewById(R.id.button_ffa);
         gameTypeButtons[1].setText(GameType.FFA.toString());
 
-        gameTypeButtons[2] = (Button) view.findViewById(R.id.button_vip);
+        gameTypeButtons[2] = (StickyButton) view.findViewById(R.id.button_vip);
         gameTypeButtons[2].setText(GameType.VIP.toString());
 
         TouchListener tl = new TouchListener();
 
         for(Button b:gameTypeButtons){
-            b.setBackgroundResource(android.R.drawable.btn_default);
             b.setOnTouchListener(tl);
         }
 
-        gameTypeButtons[0].setBackgroundColor(Color.GRAY);
-
+        gameTypeButtons[0].setPressed();
+        gameType = GameType.TDM;
         return view;
     }
 
@@ -91,12 +90,12 @@ public class CreateGameFragment extends Fragment {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
 
-            Button button = (Button) v;
+            StickyButton button = (StickyButton) v;
 
-            for(Button b:gameTypeButtons){
-                b.setBackgroundResource(android.R.drawable.btn_default);
+            for(StickyButton b:gameTypeButtons){
+                b.reset();
             }
-            button.setBackgroundColor(Color.GRAY);
+            button.setPressed();
 
             Spinner spinner = (Spinner) getView().findViewById(R.id.spinner_team_size);
 
