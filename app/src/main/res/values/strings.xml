@@ -3,6 +3,11 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_map">Map</string>
     <string name="score">Score</string>
+    <string name="create_team_dialog_create">Create</string>
+    <string name="create_team_dialog_cancel">Cancel</string>
+    <string name="create_team_dialog_title">Create Team</string>
+    <string name="create_team_dialog_hint">Team Name</string>
+
 
     <string-array name="array_scores">
         <item>5</item>

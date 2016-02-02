@@ -16,6 +16,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="createTeam"
             android:text="Create team"
             android:textSize="15sp"
             android:layout_weight="1"
@@ -54,7 +55,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="(Private) (Game Type) Match to (__Score) ((or)) (__minutes)"
+                android:text="Loading game..."
                 android:id="@+id/text_game_info"
                 android:textSize="20sp"/>
 

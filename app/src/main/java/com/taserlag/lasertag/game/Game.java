@@ -1,16 +1,54 @@
 package com.taserlag.lasertag.game;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Key;
 import com.taserlag.lasertag.team.Team;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Game extends GenericJson {
+    @Key("_id")
+    private String id;
 
-    private Map<String,Team> teams = new LinkedHashMap<>();
+    @Key
+    private String gameType;
+
+    @Key
+    private boolean scoreEnabled;
+
+    @Key
+    private int score;
+
+    @Key
+    private boolean timeEnabled;
+
+    @Key
+    private int minutes;
+
+    @Key
+    private int maxTeamSize;
+
+    @Key
+    private boolean privateMatch;
+
+    @Key
+    private boolean friendlyFire;
+
+    @Key
+    private List<Team> teams = new ArrayList<>();
 
     public Game() {}
+
+    public String getId() {
+        return (String) get("_id");
+    }
+
+    public void setId(String id) {
+        put("_id", id);
+    }
 
     public String getGameType() {
         return (String) get("gameType");
@@ -77,19 +115,19 @@ public class Game extends GenericJson {
     }
 
     public boolean addTeam(Team team){
-        if (teams.containsKey(team.getName())){
+        if (teams.contains(team)){
             return false;
         }
         team.setMaxTeamSize(getMaxTeamSize());
-        teams.put(team.getName(), team);
+        teams.add(team);
         return true;
     }
 
     public boolean removeTeam(Team team){
-        return teams.remove(team.getName()) != null;
+        return teams.remove(team);
     }
 
-    public Map<String, Team> getTeams() {
+    public List<Team> getTeams() {
         return teams;
     }
 

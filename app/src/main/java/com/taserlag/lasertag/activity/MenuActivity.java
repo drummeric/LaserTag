@@ -33,7 +33,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
                 .commit();
     }
 
-    protected void replaceFragment(int containerViewID, Fragment fragment, String tag) {
+    public void replaceFragment(int containerViewID, Fragment fragment, String tag) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(containerViewID, fragment, tag)
@@ -41,6 +41,10 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
                 .commit();
     }
 
+    public Fragment findFragmentByTag(String tag){
+        return getSupportFragmentManager()
+                .findFragmentByTag(tag);
+    }
 
     public void onFragmentInteraction(Uri uri){
         //empty
@@ -54,16 +58,11 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     public void showGameLobby(View view){
         CreateGameFragment cgf = (CreateGameFragment) getSupportFragmentManager().findFragmentByTag("create_game_fragment");
         cgf.saveGame();
-        String gameID = cgf.getGameID();
-
-        GameLobbyFragment fragment = new GameLobbyFragment();
-        fragment.setGameID(gameID);
-        replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
     }
 
-    private Fragment findFragmentByTag(String tag){
-        return getSupportFragmentManager()
-                .findFragmentByTag(tag);
+    public void createTeam(View view){
+        GameLobbyFragment glf = (GameLobbyFragment) getSupportFragmentManager().findFragmentByTag("game_lobby_fragment");
+        glf.doCreateTeam();
     }
 
     public void launchFPS(View view) {

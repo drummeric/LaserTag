@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,17 +14,21 @@ import android.widget.Spinner;
 import android.widget.StickyButton;
 import android.widget.Switch;
 
+import com.kinvey.android.AsyncAppData;
+import com.kinvey.java.core.KinveyClientCallback;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.activity.MenuActivity;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
 
 public class CreateGameFragment extends Fragment {
 
+    private final String TAG = "CreateGameFragment";
+
     private StickyButton[] gameTypeButtons = new StickyButton[3];
 
     private GameType gameType = GameType.TDM;
-
-    private String gameID;
 
     private OnFragmentInteractionListener mListener;
 
@@ -120,17 +125,22 @@ public class CreateGameFragment extends Fragment {
         game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
-        /*
-        try {
-            game.save();
-            gameID = game.getObjectId();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        */
+        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
+        mygame.save(game, new KinveyClientCallback<Game>() {
+            @Override
+            public void onFailure(Throwable e) {
+                Log.e(TAG, "failed to save game data", e);
+            }
+
+            @Override
+            public void onSuccess(Game g) {
+                Log.d(TAG, "saved data for game " + g.getId());
+
+                GameLobbyFragment fragment = new GameLobbyFragment();
+                fragment.setGameID(g.getId());
+                ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
+            }
+        });
     }
 
-    public String getGameID(){
-        return gameID;
-    }
 }
