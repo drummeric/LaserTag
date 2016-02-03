@@ -1,0 +1,186 @@
+package com.taserlag.lasertag.fragments;
+
+import android.content.Context;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.kinvey.android.AsyncAppData;
+import com.kinvey.android.callback.KinveyListCallback;
+import com.kinvey.java.cache.CachePolicy;
+import com.kinvey.java.cache.InMemoryLRUCache;
+import com.kinvey.java.core.KinveyClientCallback;
+import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.activity.MenuActivity;
+import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.Team;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+
+public class JoinGameFragment extends Fragment{
+
+    private final String TAG = "JoinGameFragment";
+
+    private OnFragmentInteractionListener mListener;
+
+    public JoinGameFragment() {
+        // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_join_game, container, false);
+/*
+        AsyncAppData<Game> games = LaserTagApplication.kinveyClient.appData("games", Game.class);
+        games.getEntity("56b25b358fdda5d803003bd6", new KinveyClientCallback< Game >() {
+            @Override
+            public void onSuccess (Game result){
+                //Log.v(TAG, "received " + result.length + " events");
+                Log.v(TAG, "received " + 1 + " events");
+
+                RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_game);
+                LinearLayoutManager llm = new LinearLayoutManager(getContext());
+                rv.setLayoutManager(llm);
+                GameAdapter ta = new GameAdapter(new ArrayList<Game>(Arrays.asList(result)));
+                rv.setAdapter(ta);
+            }
+
+            @Override
+            public void onFailure (Throwable error){
+                Log.e(TAG, "failed to fetch all", error);
+
+                CharSequence text = getString(R.string.join_game_load_failure);
+                Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+
+                MainMenuFragment mmf = (MainMenuFragment) getActivity().getSupportFragmentManager().findFragmentByTag("main_menu_fragment");
+                ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, mmf, "main_menu_fragment");
+            }
+        });
+
+
+*/
+
+        AsyncAppData<Game> myGame = LaserTagApplication.kinveyClient.appData("games2", Game.class);
+        myGame.setCache(new InMemoryLRUCache(), CachePolicy.NOCACHE);
+        myGame.get(new KinveyListCallback<Game>() {
+            @Override
+            public void onSuccess(Game[] result) {
+                Log.v(TAG, "received " + result.length);
+            }
+
+            @Override
+            public void onFailure(Throwable error) {
+                Log.e(TAG, "failed to fetchByFilterCriteria", error);
+            }
+        });
+
+        return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
+    }
+
+    public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder>{
+
+        private List<Game> games;
+
+        public GameAdapter(List<Game> games){
+            this.games = games;
+        }
+
+        @Override
+        public GameViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_team, parent, false);
+            return new GameViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(GameViewHolder holder, int position) {
+            holder.game = games.get(position);
+            //TODO: Do this stuff
+            //holder.gameName.setText(holder.game.getCreatorName() + "'s Game");
+            holder.gameDescription.setText(holder.game.toString());
+        }
+
+        @Override
+        public int getItemCount() {
+            return games.size();
+        }
+
+        public class GameViewHolder extends RecyclerView.ViewHolder {
+            CardView cv;
+            Game game;
+            TextView gameName;
+            TextView gameDescription;
+            Button joinButton;
+
+
+            GameViewHolder(View itemView) {
+                super(itemView);
+                cv = (CardView)itemView.findViewById(R.id.card_view_game);
+                gameName = (TextView)itemView.findViewById(R.id.text_view_game_name);
+                gameDescription = (TextView)itemView.findViewById(R.id.text_view_game_description);
+
+
+                joinButton = (Button)itemView.findViewById(R.id.button_join_game);
+
+                joinButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        GameLobbyFragment fragment = new GameLobbyFragment();
+                        // TODO: join game by ID
+                        //fragment.setGameID(g.getId());
+                        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
+                    }
+                });
+            }
+
+        }//Game View Holder
+
+    }//Game Adapter
+
+}

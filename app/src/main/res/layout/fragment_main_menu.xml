@@ -33,13 +33,14 @@
             android:text="Join Game"
             android:id="@+id/join_game_button"
             android:layout_margin="15dp"
-            android:onClick="launchFPS"/>
+            android:onClick="showJoinGame"/>
 
         <Button
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:text="Stats"
             android:id="@+id/stats_button"
+            android:onClick="launchFPS"
             android:layout_margin="15dp"/>
 
         <Button

@@ -11,9 +11,10 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.fragments.CreateGameFragment;
 import com.taserlag.lasertag.fragments.GameLobbyFragment;
+import com.taserlag.lasertag.fragments.JoinGameFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
 
-public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener{
+public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,17 +51,21 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         //empty
     }
 
+    // main menu to create game fragment
     public void showCreateGame(View view){
         CreateGameFragment fragment = new CreateGameFragment();
         replaceFragment(R.id.menu_frame, fragment, "create_game_fragment");
     }
 
+    // reads input on create game screen and saves game to database
+    // saveGame changes fragment on success
     public void showGameLobby(View view){
         CreateGameFragment cgf = (CreateGameFragment) getSupportFragmentManager().findFragmentByTag("create_game_fragment");
         cgf.saveGame();
     }
 
-    public void createTeam(View view){
+    // shows createTeamDialog in game lobby
+    public void showCreateTeam(View view){
         GameLobbyFragment glf = (GameLobbyFragment) getSupportFragmentManager().findFragmentByTag("game_lobby_fragment");
         glf.doCreateTeam();
     }
@@ -69,6 +74,14 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         Intent intent = new Intent(this, FPSActivity.class);
         startActivity(intent);
     }
+
+    // main menu to join game fragment
+    public void showJoinGame(View view){
+        JoinGameFragment fragment = new JoinGameFragment();
+        replaceFragment(R.id.menu_frame, fragment, "join_game_fragment");
+
+    }
+
 
     public void logOut(View view) {
         LaserTagApplication.kinveyClient.user().logout().execute();
