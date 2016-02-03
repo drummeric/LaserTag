@@ -106,10 +106,12 @@ public class GameLobbyFragment extends Fragment {
         dialog.show(getActivity().getSupportFragmentManager(), "create_team_dialog_fragment");
     }
 
-    public void addTeam(Team team){
-        game.addTeam(team);
-
-        updateRecyler();
+    public boolean addTeam(Team team){
+        boolean teamAdded = game.addTeam(team);
+        if (teamAdded) {
+            updateRecyler();
+        }
+        return teamAdded;
     }
 
     public void updateRecyler(){

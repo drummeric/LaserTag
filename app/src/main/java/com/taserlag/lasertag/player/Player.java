@@ -1,18 +1,33 @@
 package com.taserlag.lasertag.player;
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Key;
 import com.taserlag.lasertag.shield.Shield;
 import com.taserlag.lasertag.weapon.Weapon;
 
-public class Player {
+public class Player extends GenericJson{
 
+    @Key("_id")
+    private String id;
+
+    @Key
     private String name;
+
+    @Key
     private int score = 0;
+
+    @Key
     private int health = 100;
-    private Shield shield;
+
+    @Key
+    private boolean captain = false;
+
+    private boolean primaryWeaponActive = true;
     private Weapon primaryWeapon;
     private Weapon secondaryWeapon;
-    private boolean primaryWeaponActive = true;
-    private boolean captain = false;
+
+    private Shield shield;
+
 
     public Player(String name) {
         this.name = name;

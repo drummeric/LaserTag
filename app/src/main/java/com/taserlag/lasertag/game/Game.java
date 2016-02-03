@@ -43,82 +43,82 @@ public class Game extends GenericJson {
     public Game() {}
 
     public String getId() {
-        return (String) get("_id");
+        return id;
     }
 
     public void setId(String id) {
-        put("_id", id);
+        this.id = id;
     }
 
     public String getGameType() {
-        return (String) get("gameType");
+        return gameType;
     }
 
     public void setGameType(GameType gameType) {
-        put("gameType", gameType.toString());
+        this.gameType = gameType.toString();
     }
 
     public boolean getScoreEnabled() {
-        return (boolean) get("scoreEnabled");
+        return scoreEnabled;
     }
 
     public void setScoreEnabled(boolean scoreEnabled) {
-        put("scoreEnabled", scoreEnabled);
+        this.scoreEnabled = scoreEnabled;
     }
 
     public int getScore() {
-        return (int) get("score");
+        return score;
     }
 
     public void setScore(int score) {
-        put("score", score);
+        this.score = score;
     }
 
     public boolean getTimeEnabled() {
-        return (boolean) get("timeEnabled");
+        return timeEnabled;
     }
 
     public void setTimeEnabled(boolean timeEnabled) {
-        put("timeEnabled", timeEnabled);
+        this.timeEnabled = timeEnabled;
     }
 
     public int getMinutes() {
-        return (int) get("minutes");
+        return minutes;
     }
 
     public void setMinutes(int minutes) {
-        put("minutes", minutes);
+        this.minutes = minutes;
     }
 
     public int getMaxTeamSize() {
-        return (int) get("maxTeamSize");
+        return maxTeamSize;
     }
 
     public void setMaxTeamSize(int size) {
-        put("maxTeamSize", size);
+        this.maxTeamSize = size;
     }
 
     public boolean getPrivateMatch() {
-        return (boolean) get("privateMatch");
+        return privateMatch;
     }
 
     public void setPrivateMatch(boolean privateMatch) {
-        put("privateMatch", privateMatch);
+        this.privateMatch = privateMatch;
     }
 
     public boolean getFriendlyFire() {
-        return (boolean) get("friendlyFire");
+        return friendlyFire;
     }
 
     public void setFriendlyFire(boolean friendlyFire) {
-        put("friendlyFire", friendlyFire);
+        this.friendlyFire = friendlyFire;
     }
 
     public boolean addTeam(Team team){
         if (teams.contains(team)){
             return false;
         }
-        team.setMaxTeamSize(getMaxTeamSize());
+        team.setMaxTeamSize(maxTeamSize);
         teams.add(team);
         return true;
     }

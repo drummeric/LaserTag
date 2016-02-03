@@ -26,27 +26,27 @@ public class Team extends GenericJson{
     }
 
     public String getId() {
-        return (String) get("_id");
+        return id;
     }
 
     public void setId(String id) {
-        put("_id", id);
+        this.id = id;
     }
 
     public int getMaxTeamSize() {
-        return (int) get("maxTeamSize");
+        return maxTeamSize;
     }
 
     public void setMaxTeamSize(int maxTeamSize) {
-        put("maxTeamSize",maxTeamSize);
+        this.maxTeamSize = maxTeamSize;
     }
 
     public String getName() {
-        return (String) get("name");
+        return name;
     }
 
     public void setName(String name) {
-        put("name",name);
+        this.name = name;
     }
 
     public List<Player> getPlayers() {

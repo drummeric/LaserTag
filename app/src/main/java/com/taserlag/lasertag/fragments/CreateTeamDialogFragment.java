@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.taserlag.lasertag.R;
@@ -28,19 +30,52 @@ public class CreateTeamDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.create_team_dialog_title)
                 .setView(teamName, horiz, vert, horiz, vert)
-                        .setPositiveButton(R.string.create_team_dialog_create, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                Team team = new Team (teamName.getText().toString());
-                                team.addPlayer(new Player("Name"));
-                                ((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment")).addTeam(team);
-                            }
-                        })
+                        .setPositiveButton(R.string.create_team_dialog_create, null)
                         .setNegativeButton(R.string.create_team_dialog_cancel, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 dialog.dismiss();
                             }
                         });
         // Create the AlertDialog object and return it
-        return builder.create();
+        final AlertDialog d = builder.create();
+
+        d.setOnShowListener(new DialogInterface.OnShowListener() {
+
+            @Override
+            public void onShow(DialogInterface dialog) {
+
+                Button b = d.getButton(AlertDialog.BUTTON_POSITIVE);
+                b.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        if (teamName.getText().toString().isEmpty()){
+                            teamName.setError(getString(R.string.create_team_dialog_empty_name));
+                        } else {
+
+                            Team team = new Team(teamName.getText().toString());
+                            team.addPlayer(new Player("Name"));
+
+                            if (!((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment")).addTeam(team)){
+                                teamName.setError(getString(R.string.create_team_dialog_team_exists));
+                            } else {
+                                d.dismiss();
+                            }
+                        }
+                    }
+                });
+
+                b = d.getButton(AlertDialog.BUTTON_NEGATIVE);
+                b.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        d.dismiss();
+                    }
+                });
+            }
+        });
+
+        return d;
     }
 }
