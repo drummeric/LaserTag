@@ -8,6 +8,19 @@
     <string name="create_team_dialog_title">Create Team</string>
     <string name="create_team_dialog_hint">Team Name</string>
 
+    <string name="login_error_username_invalid_length">Username must be at least 5 characters long</string>
+    <string name="login_error_password_invalid_length">Password must be at least 5 characters long</string>
+    <string name="login_error_invalid_credentials">Invalid credentials. Please try again.</string>
+    <string name="login_error_wrong_credentials">Incorrect username or password. Please try again. </string>
+
+    <string name="signup_error_mismatch_passwords">Your passwords must match</string>
+    <string name="signup_error_email_invalid">Please enter a valid email</string>
+    <string name="signup_error_name_invalid">Your name must be at least 2 characters long</string>
+    <string name="signup_error_input">Please check your inputs</string>
+    <string name="signup_error_username_conflict">Username already exists</string>
+    <string name="signup_failure">Could not sign up</string>
+
+
 
     <string-array name="array_scores">
         <item>5</item>
