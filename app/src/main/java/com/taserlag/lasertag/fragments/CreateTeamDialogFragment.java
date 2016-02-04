@@ -11,13 +11,13 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.team.Team;
 
 public class CreateTeamDialogFragment extends DialogFragment {
 
     @Override
-    public Dialog onCreateDialog(@NonNull Bundle savedInstanceState) {
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
         final EditText teamName = new EditText(getActivity());
         teamName.setHint(R.string.create_team_dialog_hint);
 
@@ -51,7 +51,7 @@ public class CreateTeamDialogFragment extends DialogFragment {
                         } else {
 
                             Team team = new Team(teamName.getText().toString());
-                            team.addPlayer(new Player("Name"));
+                            team.addPlayer(LaserTagApplication.globalPlayer);
 
                             if (!((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment")).addTeam(team)){
                                 teamName.setError(getString(R.string.create_team_dialog_team_exists));

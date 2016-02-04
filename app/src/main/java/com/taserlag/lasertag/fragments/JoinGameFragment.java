@@ -54,11 +54,15 @@ public class JoinGameFragment extends Fragment{
             public void onSuccess (Game[] result){
                 Log.v(TAG, "received " + result.length + " games");
 
-                RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_game);
-                LinearLayoutManager llm = new LinearLayoutManager(getContext());
-                rv.setLayoutManager(llm);
-                GameAdapter ta = new GameAdapter(new ArrayList<>(Arrays.asList(result)));
-                rv.setAdapter(ta);
+                try {
+                    RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_game);
+                    LinearLayoutManager llm = new LinearLayoutManager(getContext());
+                    rv.setLayoutManager(llm);
+                    GameAdapter ta = new GameAdapter(new ArrayList<>(Arrays.asList(result)));
+                    rv.setAdapter(ta);
+                } catch (Exception e){
+                    Log.i(TAG, "Screen load cancelled",e);
+                }
             }
 
             @Override

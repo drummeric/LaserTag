@@ -53,6 +53,7 @@ public class GameLobbyFragment extends Fragment {
                 Log.v(TAG, "received " + result.getId());
                 game = result;
                 init();
+
             }
 
             @Override
@@ -91,14 +92,18 @@ public class GameLobbyFragment extends Fragment {
     }
 
     private void init(){
-        final TextView gameInfo = (TextView) getView().findViewById(R.id.text_game_info);
-        gameInfo.setText(game.toString());
+        try{
+            final TextView gameInfo = (TextView) getView().findViewById(R.id.text_game_info);
+            gameInfo.setText(game.toString());
 
-        RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
-        rv.setLayoutManager(llm);
-        TeamAdapter ta = new TeamAdapter();
-        rv.setAdapter(ta);
+            RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
+            LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            rv.setLayoutManager(llm);
+            TeamAdapter ta = new TeamAdapter();
+            rv.setAdapter(ta);
+        } catch (Exception e){
+            Log.i(TAG, "Screen load cancelled",e);
+        }
     }
 
     public void doCreateTeam(){
@@ -115,8 +120,12 @@ public class GameLobbyFragment extends Fragment {
     }
 
     public void updateRecyler(){
-        RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
-        rv.getAdapter().notifyDataSetChanged();
+        try {
+            RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
+            rv.getAdapter().notifyDataSetChanged();
+        } catch (Exception e){
+            Log.i(TAG, "Screen load cancelled",e);
+        }
         AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
         mygame.save(game, new KinveyClientCallback<Game>() {
             @Override
@@ -167,11 +176,10 @@ public class GameLobbyFragment extends Fragment {
                 final PlayerAdapter pa = new PlayerAdapter(itemView.getContext(), R.layout.list_item_player);
                 players.setAdapter(pa);
                 joinButton = (Button)itemView.findViewById(R.id.button_join_or_leave_team);
-                // TODO: Add real players based on device/account
                 joinButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        team.addPlayer(new Player("TestName"));
+                        team.addPlayer(LaserTagApplication.globalPlayer);
                         updateRecyler();
                     }
                 });

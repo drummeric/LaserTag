@@ -121,6 +121,7 @@ public class LoginFragment extends Fragment {
 
             @Override
             public void onSuccess(User u) {
+                LaserTagApplication.setGlobalPlayer();
                 PD.dismiss();
                 Log.i(TAG,"Logged in a user with id: " + u.getId());
                 CharSequence text = "Welcome back, " + u.getUsername() + ".";

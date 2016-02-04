@@ -13,11 +13,14 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.kinvey.android.AsyncAppData;
 import com.kinvey.android.callback.KinveyUserCallback;
 import com.kinvey.java.User;
+import com.kinvey.java.core.KinveyClientCallback;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.player.Player;
 
 public class LoginSignupFragment extends Fragment {
 
@@ -152,25 +155,44 @@ public class LoginSignupFragment extends Fragment {
             }
             @Override
             public void onSuccess(User u) {
-                PD.dismiss();
                 Log.i(TAG, "Signed up a user with id: " + u.getId());
                 CharSequence text = u.getUsername() + ", your account has been created.";
                 Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 
-                LaserTagApplication.kinveyClient.user().put("email", email);
-                LaserTagApplication.kinveyClient.user().put("first_name", name);
-                LaserTagApplication.kinveyClient.user().update(new KinveyUserCallback() {
+                final Player player = new Player(u.getUsername());
+                AsyncAppData<Player> myplayer = LaserTagApplication.kinveyClient.appData("players", Player.class);
+                myplayer.save(player, new KinveyClientCallback<Player>() {
                     @Override
-                    public void onFailure(Throwable e) {Log.e(TAG, "Failed to set up user fields", e);}
+                    public void onFailure(Throwable e) {
+                        Log.e(TAG, "failed to save game data", e);
+                    }
 
                     @Override
-                    public void onSuccess(User u) {Log.i(TAG, "Set up user fields for user with id: " + u.getId());}
-                });
+                    public void onSuccess(Player p) {
+                        Log.d(TAG, "saved data for game " + p.getId());
+                        LaserTagApplication.kinveyClient.user().put("playerReference", p.getId());
+                        LaserTagApplication.kinveyClient.user().put("email", email);
+                        LaserTagApplication.kinveyClient.user().put("first_name", name);
+                        LaserTagApplication.kinveyClient.user().update(new KinveyUserCallback() {
+                            @Override
+                            public void onFailure(Throwable e) {
+                                Log.e(TAG, "Failed to set up user fields", e);
+                            }
 
-                Intent i = new Intent(getActivity(), MenuActivity.class);
-                getActivity().finish();
-                startActivity(i);
+                            @Override
+                            public void onSuccess(User u) {
+                                Log.i(TAG, "Set up user fields for user with id: " + u.getId());
+                                LaserTagApplication.setGlobalPlayer();
+                                PD.dismiss();
+
+                                Intent i = new Intent(getActivity(), MenuActivity.class);
+                                getActivity().finish();
+                                startActivity(i);
+                            }
+                        });// saving player, email, and name to user
+                    }
+                });//saving player
             }
-        });
+        });//creating user
     }
 }

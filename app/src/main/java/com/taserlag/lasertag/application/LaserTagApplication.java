@@ -3,16 +3,17 @@ package com.taserlag.lasertag.application;
 import android.app.Application;
 import android.util.Log;
 
+import com.kinvey.android.AsyncAppData;
 import com.kinvey.android.Client;
 import com.kinvey.android.callback.KinveyPingCallback;
-import com.kinvey.android.callback.KinveyUserCallback;
-import com.kinvey.java.User;
-import com.taserlag.lasertag.game.Game;
+import com.kinvey.java.core.KinveyClientCallback;
+import com.taserlag.lasertag.player.Player;
 
 public class LaserTagApplication extends Application {
 
     public static Client kinveyClient;
-    private final String TAG = "LaserTagApplication";
+    private final static String TAG = "LaserTagApplication";
+    public static Player globalPlayer;
 
     @Override
     public void onCreate() {
@@ -29,6 +30,24 @@ public class LaserTagApplication extends Application {
             }
         });
 
+    }
+
+    public static void setGlobalPlayer(){
+        AsyncAppData<Player> myPlayer = LaserTagApplication.kinveyClient.appData("players", Player.class);
+        String str = (String)(kinveyClient.user().get("playerReference"));
+
+        myPlayer.getEntity(str, new KinveyClientCallback<Player>() {
+            @Override
+            public void onSuccess(Player result) {
+                Log.v(TAG, "received " + result.getId());
+                globalPlayer = result;
+            }
+
+            @Override
+            public void onFailure(Throwable error) {
+                Log.e(TAG, "failed to fetchByFilterCriteria", error);
+            }
+        });
     }
 
 }
