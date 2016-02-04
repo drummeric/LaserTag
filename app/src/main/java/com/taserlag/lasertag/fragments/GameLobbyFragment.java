@@ -154,6 +154,12 @@ public class GameLobbyFragment extends Fragment {
             holder.teamName.setText(holder.team.getName());
             ((TeamViewHolder.PlayerAdapter) holder.players.getAdapter()).notifyDataSetChanged();
             setListViewHeightBasedOnItems(holder.players);
+
+            if (!holder.team.getPlayers().contains(LaserTagApplication.globalPlayer)) {
+                holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
+            } else {
+                holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+            }
         }
 
         @Override
@@ -176,11 +182,20 @@ public class GameLobbyFragment extends Fragment {
                 final PlayerAdapter pa = new PlayerAdapter(itemView.getContext(), R.layout.list_item_player);
                 players.setAdapter(pa);
                 joinButton = (Button)itemView.findViewById(R.id.button_join_or_leave_team);
+
                 joinButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        team.addPlayer(LaserTagApplication.globalPlayer);
-                        updateRecyler();
+                        if (joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))){
+                            team.addPlayer(LaserTagApplication.globalPlayer);
+                            updateRecyler();
+                            joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+                        } else {
+                            team.removePlayer(LaserTagApplication.globalPlayer);
+                            updateRecyler();
+                            joinButton.setText(getString(R.string.game_lobby_button_join_team));
+                        }
+
                     }
                 });
             }

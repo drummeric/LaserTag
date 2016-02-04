@@ -54,5 +54,7 @@
     <string name="create_team_dialog_empty_name">Team name must not be empty</string>
     <string name="create_team_dialog_team_exists">Team name already exists</string>
     <string name="join_game_load_failure">Games failed to load. Please try again.</string>
+    <string name="game_lobby_button_join_team">Join Team</string>
+    <string name="game_lobby_button_leave_team">Leave Team</string>
 
 </resources>

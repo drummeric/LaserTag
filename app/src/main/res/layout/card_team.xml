@@ -35,7 +35,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/button_join_or_leave_team"
                     android:layout_alignParentRight="true"
-                    android:text="Join Team"
+                    android:text="@string/game_lobby_button_join_team"
                     android:textSize="15sp"/>
 
             </RelativeLayout>
