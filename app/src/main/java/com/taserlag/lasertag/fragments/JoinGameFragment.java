@@ -115,7 +115,6 @@ public class JoinGameFragment extends Fragment{
         @Override
         public void onBindViewHolder(GameViewHolder holder, int position) {
             holder.game = games.get(position);
-            //TODO: Do this stuff
             holder.gameName.setText(holder.game.getHost() + "'s Game");
             holder.gameDescription.setText(holder.game.toString());
         }
@@ -130,8 +129,6 @@ public class JoinGameFragment extends Fragment{
             Game game;
             TextView gameName;
             TextView gameDescription;
-            Button joinButton;
-
 
             GameViewHolder(View itemView) {
                 super(itemView);
@@ -139,18 +136,15 @@ public class JoinGameFragment extends Fragment{
                 gameName = (TextView)itemView.findViewById(R.id.text_view_game_name);
                 gameDescription = (TextView)itemView.findViewById(R.id.text_view_game_description);
 
-
-                joinButton = (Button)itemView.findViewById(R.id.button_join_game);
-
-                joinButton.setOnClickListener(new View.OnClickListener() {
+                itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         GameLobbyFragment fragment = new GameLobbyFragment();
-                        // TODO: join game by ID
-                        //fragment.setGameID(g.getId());
+                        fragment.setGameID(game.getId());
                         ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
                     }
                 });
+
             }
 
         }//Game View Holder

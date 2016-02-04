@@ -12,44 +12,29 @@
         card_view:cardElevation="4dp"
         android:id="@+id/card_view_game">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:padding="16dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/layout_game">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/text_view_game_name"
-                    android:layout_alignParentLeft="true"
+                    android:layout_marginBottom="4dp"
                     android:text="Game Name"
                     android:textSize="30sp"/>
 
-                <Button
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/button_join_game"
-                    android:layout_alignParentRight="true"
-                    android:text="Join Game"
-                    android:textSize="15sp"/>
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
+                    android:id="@+id/text_view_game_description"
+                    android:text="This is a game"/>
 
-            </RelativeLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:id="@+id/text_view_game_description"
-                android:text="This is a game"
-                android:layout_below="@+id/layout_game"/>
-
-        </RelativeLayout>
+        </LinearLayout>
 
     </android.support.v7.widget.CardView>
 
