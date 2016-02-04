@@ -28,6 +28,7 @@ public class Player extends GenericJson{
 
     private Shield shield;
 
+    public Player() {}
 
     public Player(String name) {
         this.name = name;

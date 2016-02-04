@@ -15,8 +15,6 @@ import android.widget.StickyButton;
 import android.widget.Switch;
 
 import com.kinvey.android.AsyncAppData;
-import com.kinvey.java.cache.CachePolicy;
-import com.kinvey.java.cache.InMemoryLRUCache;
 import com.kinvey.java.core.KinveyClientCallback;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
@@ -119,6 +117,7 @@ public class CreateGameFragment extends Fragment {
 
     public void saveGame() {
         Game game = new Game();
+        game.setHost(LaserTagApplication.kinveyClient.user().getUsername());
         game.setGameType(gameType);
         game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
         game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
@@ -127,8 +126,7 @@ public class CreateGameFragment extends Fragment {
         game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
-        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games2", Game.class);
-        mygame.setCache(new InMemoryLRUCache(), CachePolicy.NOCACHE);
+        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
         mygame.save(game, new KinveyClientCallback<Game>() {
             @Override
             public void onFailure(Throwable e) {

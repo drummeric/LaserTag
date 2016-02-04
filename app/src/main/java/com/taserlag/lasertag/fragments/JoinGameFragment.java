@@ -11,24 +11,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kinvey.android.AsyncAppData;
 import com.kinvey.android.callback.KinveyListCallback;
-import com.kinvey.java.cache.CachePolicy;
-import com.kinvey.java.cache.InMemoryLRUCache;
-import com.kinvey.java.core.KinveyClientCallback;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
-import com.taserlag.lasertag.player.Player;
-import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,18 +47,17 @@ public class JoinGameFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_join_game, container, false);
-/*
+
         AsyncAppData<Game> games = LaserTagApplication.kinveyClient.appData("games", Game.class);
-        games.getEntity("56b25b358fdda5d803003bd6", new KinveyClientCallback< Game >() {
+        games.get(new KinveyListCallback<Game>() {
             @Override
-            public void onSuccess (Game result){
-                //Log.v(TAG, "received " + result.length + " events");
-                Log.v(TAG, "received " + 1 + " events");
+            public void onSuccess (Game[] result){
+                Log.v(TAG, "received " + result.length + " games");
 
                 RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_game);
                 LinearLayoutManager llm = new LinearLayoutManager(getContext());
                 rv.setLayoutManager(llm);
-                GameAdapter ta = new GameAdapter(new ArrayList<Game>(Arrays.asList(result)));
+                GameAdapter ta = new GameAdapter(new ArrayList<>(Arrays.asList(result)));
                 rv.setAdapter(ta);
             }
 
@@ -79,23 +70,6 @@ public class JoinGameFragment extends Fragment{
 
                 MainMenuFragment mmf = (MainMenuFragment) getActivity().getSupportFragmentManager().findFragmentByTag("main_menu_fragment");
                 ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, mmf, "main_menu_fragment");
-            }
-        });
-
-
-*/
-
-        AsyncAppData<Game> myGame = LaserTagApplication.kinveyClient.appData("games2", Game.class);
-        myGame.setCache(new InMemoryLRUCache(), CachePolicy.NOCACHE);
-        myGame.get(new KinveyListCallback<Game>() {
-            @Override
-            public void onSuccess(Game[] result) {
-                Log.v(TAG, "received " + result.length);
-            }
-
-            @Override
-            public void onFailure(Throwable error) {
-                Log.e(TAG, "failed to fetchByFilterCriteria", error);
             }
         });
 
@@ -134,7 +108,7 @@ public class JoinGameFragment extends Fragment{
 
         @Override
         public GameViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_team, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_game, parent, false);
             return new GameViewHolder(v);
         }
 
@@ -142,7 +116,7 @@ public class JoinGameFragment extends Fragment{
         public void onBindViewHolder(GameViewHolder holder, int position) {
             holder.game = games.get(position);
             //TODO: Do this stuff
-            //holder.gameName.setText(holder.game.getCreatorName() + "'s Game");
+            holder.gameName.setText(holder.game.getHost() + "'s Game");
             holder.gameDescription.setText(holder.game.toString());
         }
 

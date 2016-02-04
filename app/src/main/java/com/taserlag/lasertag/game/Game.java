@@ -5,16 +5,17 @@ import com.google.api.client.util.Key;
 import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Game extends GenericJson {
     @Key("_id")
     private String id;
 
     @Key
-    private String gameType;
+    private String host;
+
+    @Key
+    private GameType gameType;
 
     @Key
     private boolean scoreEnabled;
@@ -50,12 +51,20 @@ public class Game extends GenericJson {
         this.id = id;
     }
 
-    public String getGameType() {
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public GameType getGameType() {
         return gameType;
     }
 
     public void setGameType(GameType gameType) {
-        this.gameType = gameType.toString();
+        this.gameType = gameType;
     }
 
     public boolean getScoreEnabled() {
@@ -161,7 +170,7 @@ public class Game extends GenericJson {
             description.append("disabled.");
         }
 
-        if (!GameType.decodeType(getGameType()).equals(GameType.FFA)){
+        if (!getGameType().equals(GameType.FFA)){
             description.append(" The maximum team size is ").append(getMaxTeamSize()).append(".");
         }
 

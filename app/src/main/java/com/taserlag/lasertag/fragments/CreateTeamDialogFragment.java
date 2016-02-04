@@ -11,13 +11,10 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.Team;
 
 public class CreateTeamDialogFragment extends DialogFragment {
-
-    private Game game;
 
     @Override
     public Dialog onCreateDialog(@NonNull Bundle savedInstanceState) {

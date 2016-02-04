@@ -18,8 +18,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.kinvey.android.AsyncAppData;
-import com.kinvey.java.cache.CachePolicy;
-import com.kinvey.java.cache.InMemoryLRUCache;
 import com.kinvey.java.core.KinveyClientCallback;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
@@ -48,8 +46,7 @@ public class GameLobbyFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
-        AsyncAppData<Game> myGame = LaserTagApplication.kinveyClient.appData("games2", Game.class);
-        myGame.setCache(new InMemoryLRUCache(), CachePolicy.NOCACHE);
+        AsyncAppData<Game> myGame = LaserTagApplication.kinveyClient.appData("games", Game.class);
         myGame.getEntity(gameID, new KinveyClientCallback<Game>() {
             @Override
             public void onSuccess(Game result) {
@@ -120,8 +117,7 @@ public class GameLobbyFragment extends Fragment {
     public void updateRecyler(){
         RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
         rv.getAdapter().notifyDataSetChanged();
-        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games2", Game.class);
-        mygame.setCache(new InMemoryLRUCache(), CachePolicy.NOCACHE);
+        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
         mygame.save(game, new KinveyClientCallback<Game>() {
             @Override
             public void onFailure(Throwable e) {

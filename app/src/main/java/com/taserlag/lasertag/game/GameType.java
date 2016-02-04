@@ -1,9 +1,14 @@
 package com.taserlag.lasertag.game;
 
-import com.taserlag.lasertag.team.Team;
+import com.google.api.client.util.Value;
 
 public enum GameType {
-    TDM("Team Deathmatch"),FFA("Free for All"),VIP("VIP");
+    @Value
+    TDM("Team Deathmatch"),
+    @Value
+    FFA("Free for All"),
+    @Value
+    VIP("VIP");
 
     private String gameName;
 

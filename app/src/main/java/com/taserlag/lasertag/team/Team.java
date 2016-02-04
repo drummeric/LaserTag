@@ -21,6 +21,8 @@ public class Team extends GenericJson{
     @Key
     private int maxTeamSize = 1;
 
+    public Team() {}
+
     public Team(String name) {
         this.name = name;
     }
