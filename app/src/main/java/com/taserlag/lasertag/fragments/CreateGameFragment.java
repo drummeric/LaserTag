@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,13 +13,13 @@ import android.widget.Spinner;
 import android.widget.StickyButton;
 import android.widget.Switch;
 
-import com.kinvey.android.AsyncAppData;
-import com.kinvey.java.core.KinveyClientCallback;
+import com.firebase.client.Firebase;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
+import com.taserlag.lasertag.team.Team;
 
 public class CreateGameFragment extends Fragment {
 
@@ -65,7 +64,6 @@ public class CreateGameFragment extends Fragment {
         gameType = GameType.TDM;
         return view;
     }
-
 
     @Override
     public void onAttach(Context context) {
@@ -117,7 +115,7 @@ public class CreateGameFragment extends Fragment {
 
     public void saveGame() {
         Game game = new Game();
-        game.setHost(LaserTagApplication.kinveyClient.user().getUsername());
+        game.setHost(LaserTagApplication.globalPlayer.getName());
         game.setGameType(gameType);
         game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
         game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
@@ -126,22 +124,16 @@ public class CreateGameFragment extends Fragment {
         game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
-        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
-        mygame.save(game, new KinveyClientCallback<Game>() {
-            @Override
-            public void onFailure(Throwable e) {
-                Log.e(TAG, "failed to save game data", e);
-            }
+        Team team = new Team("TESTTTTTTTT");
+        team.addPlayer(LaserTagApplication.globalPlayer);
+        game.addTeam(team);
 
-            @Override
-            public void onSuccess(Game g) {
-                Log.d(TAG, "saved data for game " + g.getId());
+        Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
+        ref.setValue(game);
 
-                GameLobbyFragment fragment = new GameLobbyFragment();
-                fragment.setGameID(g.getId());
-                ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
-            }
-        });
+        GameLobbyFragment fragment = new GameLobbyFragment();
+        fragment.setGame(game, ref);
+        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
     }
 
 }

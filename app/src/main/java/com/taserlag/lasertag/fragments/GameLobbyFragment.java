@@ -7,18 +7,18 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.kinvey.android.AsyncAppData;
-import com.kinvey.java.core.KinveyClientCallback;
+import com.firebase.client.Firebase;
+import com.firebase.ui.FirebaseListAdapter;
+import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
@@ -30,8 +30,8 @@ public class GameLobbyFragment extends Fragment {
     private final String TAG = "GameLobbyFragment";
 
     private OnFragmentInteractionListener mListener;
-    private String gameID;
     private Game game;
+    private Firebase mRef;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -46,22 +46,7 @@ public class GameLobbyFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
-        AsyncAppData<Game> myGame = LaserTagApplication.kinveyClient.appData("games", Game.class);
-        myGame.getEntity(gameID, new KinveyClientCallback<Game>() {
-            @Override
-            public void onSuccess(Game result) {
-                Log.v(TAG, "received " + result.getId());
-                game = result;
-                init();
-
-            }
-
-            @Override
-            public void onFailure(Throwable error) {
-                Log.e(TAG, "failed to fetchByFilterCriteria", error);
-            }
-        });
-
+        init(view);
         return view;
     }
 
@@ -87,22 +72,76 @@ public class GameLobbyFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public void setGameID(String id){
-        gameID = id;
+    public void setGame(Game game, Firebase ref){
+        this.game = game;
+        mRef = ref;
     }
 
-    private void init(){
-        try{
-            final TextView gameInfo = (TextView) getView().findViewById(R.id.text_game_info);
-            gameInfo.setText(game.toString());
+    private void init(final View view){
+        final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
+        gameInfo.setText(game.toString());
 
-            RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
-            LinearLayoutManager llm = new LinearLayoutManager(getContext());
-            rv.setLayoutManager(llm);
-            TeamAdapter ta = new TeamAdapter();
-            rv.setAdapter(ta);
-        } catch (Exception e){
-            Log.i(TAG, "Screen load cancelled",e);
+        RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
+        recycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Team, TeamViewHolder>(Team.class, R.layout.card_team, TeamViewHolder.class, mRef.child("teams")) {
+            @Override
+            public void populateViewHolder(final TeamViewHolder holder, Team team, int position) {
+                holder.teamName.setText(team.getName());
+
+                holder.team = team;
+
+                if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
+                    holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+                } else {
+                    holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
+                }
+
+                holder.joinButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
+                            holder.team.addPlayer(LaserTagApplication.globalPlayer);
+                            holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+                        } else {
+                            holder.team.removePlayer(LaserTagApplication.globalPlayer);
+                            holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
+                        }
+                    }
+                });
+
+                holder.players.setAdapter(new FirebaseListAdapter<Player>(getActivity(), Player.class, R.layout.list_item_player, mRef.child("teams").child(Integer.toString(position)).child("players")) {
+                    @Override
+                    protected void populateView(View view, Player player, int position) {
+                        ((TextView) view.findViewById(R.id.text_player_name)).setText(player.getName());
+                        setListViewHeightBasedOnItems(holder.players);
+                    }
+                });
+
+                ((FirebaseListAdapter) holder.players.getAdapter()).notifyDataSetChanged();
+                setListViewHeightBasedOnItems(holder.players);
+            }
+        };
+        recycler.setAdapter(mAdapter);
+
+    }
+
+    public void setListViewHeightBasedOnItems(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter != null) {
+            int numberOfItems = listAdapter.getCount();
+
+            // Get total height of all items.
+            float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getActivity().getResources().getDisplayMetrics());
+            float totalItemsHeight = size * numberOfItems;
+
+            // Get total height of all item dividers.
+            int totalDividersHeight = listView.getDividerHeight() * (numberOfItems - 1);
+
+            // Set list height.
+            ViewGroup.LayoutParams params = listView.getLayoutParams();
+            params.height = (int) totalItemsHeight + totalDividersHeight;
+            listView.setLayoutParams(params);
+            listView.requestLayout();
         }
     }
 
@@ -112,185 +151,24 @@ public class GameLobbyFragment extends Fragment {
     }
 
     public boolean addTeam(Team team){
-        boolean teamAdded = game.addTeam(team);
-        if (teamAdded) {
-            updateRecyler();
-        }
-        return teamAdded;
+        return game.addTeam(team);
     }
 
-    public void updateRecyler(){
-        try {
-            RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_team);
-            rv.getAdapter().notifyDataSetChanged();
-        } catch (Exception e){
-            Log.i(TAG, "Screen load cancelled",e);
-        }
-        AsyncAppData<Game> mygame = LaserTagApplication.kinveyClient.appData("games", Game.class);
-        mygame.save(game, new KinveyClientCallback<Game>() {
-            @Override
-            public void onFailure(Throwable e) {
-                Log.e(TAG, "failed to save game data", e);
-            }
+    public static class TeamViewHolder extends RecyclerView.ViewHolder {
+        CardView cv;
+        TextView teamName;
+        Button joinButton;
+        ListView players;
+        Team team;
 
-            @Override
-            public void onSuccess(Game g) {
-                Log.d(TAG, "saved data for game " + g.getId());
-            }
-        });
+        public TeamViewHolder(View itemView) {
+            super(itemView);
+            cv = (CardView) itemView.findViewById(R.id.card_view_team);
+            teamName = (TextView) itemView.findViewById(R.id.text_team_name);
+            players = (ListView) itemView.findViewById(R.id.list_view_team);
+
+            joinButton = (Button) itemView.findViewById(R.id.button_join_or_leave_team);
+        }
+
     }
-
-    public class TeamAdapter extends RecyclerView.Adapter<TeamAdapter.TeamViewHolder>{
-
-        @Override
-        public TeamViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_team, parent, false);
-            return new TeamViewHolder(v);
-        }
-
-        @Override
-        public void onBindViewHolder(TeamViewHolder holder, int position) {
-            holder.team = game.getTeams().get(position);
-            holder.teamName.setText(holder.team.getName());
-            ((TeamViewHolder.PlayerAdapter) holder.players.getAdapter()).notifyDataSetChanged();
-            setListViewHeightBasedOnItems(holder.players);
-
-            if (!holder.team.getPlayers().contains(LaserTagApplication.globalPlayer)) {
-                holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
-            } else {
-                holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return game.getTeams().size();
-        }
-
-        public class TeamViewHolder extends RecyclerView.ViewHolder {
-            CardView cv;
-            TextView teamName;
-            Button joinButton;
-            ListView players;
-            Team team;
-
-            TeamViewHolder(View itemView) {
-                super(itemView);
-                cv = (CardView)itemView.findViewById(R.id.card_view_team);
-                teamName = (TextView)itemView.findViewById(R.id.text_team_name);
-                players = (ListView)itemView.findViewById(R.id.list_view_team);
-                final PlayerAdapter pa = new PlayerAdapter(itemView.getContext(), R.layout.list_item_player);
-                players.setAdapter(pa);
-                joinButton = (Button)itemView.findViewById(R.id.button_join_or_leave_team);
-
-                joinButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))){
-                            team.addPlayer(LaserTagApplication.globalPlayer);
-                            updateRecyler();
-                            joinButton.setText(getString(R.string.game_lobby_button_leave_team));
-                        } else {
-                            team.removePlayer(LaserTagApplication.globalPlayer);
-                            updateRecyler();
-                            joinButton.setText(getString(R.string.game_lobby_button_join_team));
-                        }
-
-                    }
-                });
-            }
-
-            public class PlayerAdapter extends ArrayAdapter<Player> {
-
-                public PlayerAdapter(Context context, int resource) {
-                    super(context, resource);
-                }
-
-                @Override
-                public void add(Player player) {
-                   team.getPlayers().add(player);
-                }
-
-                @Override
-                public Player getItem(int position){
-                    return team.getPlayers().get(position);
-                }
-
-                @Override
-                public int getCount(){
-                    if( team != null) {
-                        return team.getPlayers().size();
-                    } else {
-                        return 0;
-                    }
-                }
-
-                @Override
-                public int getPosition(Player p){
-                    return team.getPlayers().indexOf(p);
-                }
-
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-
-                    View v = convertView;
-
-                    if (v == null) {
-                        LayoutInflater vi;
-                        vi = LayoutInflater.from(getContext());
-                        v = vi.inflate(R.layout.list_item_player, null);
-                    }
-
-                    Player p = getItem(position);
-
-                    if (p != null) {
-                        TextView playerName = (TextView) v.findViewById(R.id.text_player_name);
-
-                        if (playerName != null) {
-                            playerName.setText(p.getName());
-                        }
-                    }
-
-                    return v;
-                }
-
-            }//Player Adapter
-
-        }//Team View Holder
-
-        public boolean setListViewHeightBasedOnItems(ListView listView) {
-
-            ListAdapter listAdapter = listView.getAdapter();
-            if (listAdapter != null) {
-
-                int numberOfItems = listAdapter.getCount();
-
-                // Get total height of all items.
-                int totalItemsHeight = 0;
-                for (int itemPos = 0; itemPos < numberOfItems; itemPos++) {
-                    View item = listAdapter.getView(itemPos, null, listView);
-                    item.measure(0, 0);
-                    totalItemsHeight += item.getMeasuredHeight();
-                }
-
-                // Get total height of all item dividers.
-                int totalDividersHeight = listView.getDividerHeight() *
-                        (numberOfItems - 1);
-
-                // Set list height.
-                ViewGroup.LayoutParams params = listView.getLayoutParams();
-                params.height = totalItemsHeight + totalDividersHeight;
-                listView.setLayoutParams(params);
-                listView.requestLayout();
-
-                return true;
-
-            } else {
-                return false;
-            }
-
-        }
-
-    }//Team Adapter
-
 }//Fragment

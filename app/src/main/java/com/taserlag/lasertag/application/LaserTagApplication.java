@@ -2,52 +2,48 @@ package com.taserlag.lasertag.application;
 
 import android.app.Application;
 import android.util.Log;
-
-import com.kinvey.android.AsyncAppData;
-import com.kinvey.android.Client;
-import com.kinvey.android.callback.KinveyPingCallback;
-import com.kinvey.java.core.KinveyClientCallback;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.player.Player;
 
 public class LaserTagApplication extends Application {
-
-    public static Client kinveyClient;
+    public static Firebase firebaseReference;
     private final static String TAG = "LaserTagApplication";
     public static Player globalPlayer;
+    private static ValueEventListener playerListener;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        kinveyClient = new Client.Builder(this.getApplicationContext()).build();
-        kinveyClient.ping(new KinveyPingCallback() {
-            public void onFailure(Throwable t) {
-                Log.e(TAG, "Kinvey Ping Failed", t);
-            }
-
-            public void onSuccess(Boolean b) {
-                Log.d(TAG, "Kinvey Ping Success");
-            }
-        });
-
+        Firebase.setAndroidContext(this);
+        Firebase.getDefaultConfig().setPersistenceEnabled(true);
+        firebaseReference = new Firebase("https://brilliant-inferno-4012.firebaseio.com/");
     }
 
-    public static void setGlobalPlayer(){
-        AsyncAppData<Player> myPlayer = LaserTagApplication.kinveyClient.appData("players", Player.class);
-        String str = (String)(kinveyClient.user().get("playerReference"));
+    public static void initGlobalPlayer() {
 
-        myPlayer.getEntity(str, new KinveyClientCallback<Player>() {
+        playerListener = new ValueEventListener() {
             @Override
-            public void onSuccess(Player result) {
-                Log.v(TAG, "received " + result.getId());
-                globalPlayer = result;
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (firebaseReference.getAuth().getUid() != null) {
+                    Log.i(TAG, "globalPlayer has been successfully updated for user: " + firebaseReference.getAuth().getUid());
+                    globalPlayer = dataSnapshot.getValue(Player.class);
+                }
             }
 
             @Override
-            public void onFailure(Throwable error) {
-                Log.e(TAG, "failed to fetchByFilterCriteria", error);
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.e(TAG, "globalPlayer failed to updated for user: " + firebaseReference.getAuth().getUid(), firebaseError.toException());
             }
-        });
+        };
+
+        firebaseReference.child("users").child(firebaseReference.getAuth().getUid()).child("player").addValueEventListener(playerListener);
+    }
+
+    public static void disconnect(){
+        firebaseReference.child("users").child(firebaseReference.getAuth().getUid()).child("player").removeEventListener(playerListener);
     }
 
 }

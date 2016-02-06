@@ -13,15 +13,17 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.kinvey.android.callback.KinveyUserCallback;
-import com.kinvey.java.User;
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 
 public class LoginFragment extends Fragment {
 
-    private final int MIN_INPUT_LENGTH = 5;
+    private final int MIN_PASSWORD_LENGTH = 5;
+    private final int MIN_EMAIL_LENGTH = 6;
 
     private final String TAG = "LoginFragment";
     private OnFragmentInteractionListener mListener;
@@ -65,31 +67,37 @@ public class LoginFragment extends Fragment {
 
     /*
      * RULES:
-     * Username >= 5 characters long
+     * Email is valid format ( 6 characters and contains @ and .
      * Password >= 5 characters long
      */
     public void performLogin() {
-        final EditText usernameText = ((EditText) getView().findViewById(R.id.edit_text_login_username));
+        final EditText emailText = ((EditText) getView().findViewById(R.id.edit_text_login_email));
         final EditText passwordText = ((EditText) getView().findViewById(R.id.edit_text_login_password));
         boolean validLoginCredentials = true;
-        String username = usernameText.getText().toString();
+        String email = emailText.getText().toString();
         String password = passwordText.getText().toString();
 
-        usernameText.setError(null);
+        emailText.setError(null);
         passwordText.setError(null);
 
-        if (username.length()<MIN_INPUT_LENGTH){
-            usernameText.setError(getString(R.string.login_error_username_invalid_length));
+        if (!email.contains("@") || !(email.contains(".")) || email.length() < MIN_EMAIL_LENGTH){
+            emailText.setError(getString(R.string.signup_error_email_invalid));
+            emailText.setText("");
             validLoginCredentials = false;
         }
 
-        if (password.length()<MIN_INPUT_LENGTH){
+        if (password.length()<MIN_PASSWORD_LENGTH){
             passwordText.setError(getString(R.string.login_error_password_invalid_length));
             validLoginCredentials = false;
         }
 
         if (validLoginCredentials){
-            doLogin(username,password);
+            final ProgressDialog PD = new ProgressDialog(getActivity());
+            PD.setTitle("Please Wait..");
+            PD.setMessage("Loading...");
+            PD.setCancelable(false);
+            PD.show();
+            doLogin(PD,email,password);
         } else {
             clearEntries();
         }
@@ -97,39 +105,45 @@ public class LoginFragment extends Fragment {
     }
 
     private void clearEntries(){
-        ((EditText) getView().findViewById(R.id.edit_text_login_username)).setText("");
+        ((EditText) getView().findViewById(R.id.edit_text_login_email)).setText("");
         ((EditText) getView().findViewById(R.id.edit_text_login_password)).setText("");
     }
 
-    private void doLogin(String username,String password){
-        final ProgressDialog PD = new ProgressDialog(getActivity());
-        PD.setTitle("Please Wait..");
-        PD.setMessage("Loading...");
-        PD.setCancelable(false);
-        PD.show();
-
-        LaserTagApplication.kinveyClient.user().login(username, password, new KinveyUserCallback() {
-
+    public void doLogin(final ProgressDialog PD, String email,String password){
+        LaserTagApplication.firebaseReference.authWithPassword(email, password, new Firebase.AuthResultHandler() {
             @Override
-            public void onFailure(Throwable t) {
+            public void onAuthenticated(AuthData authData) {
                 PD.dismiss();
-                Log.e(TAG, "Login Failure", t);
-                CharSequence text = getString(R.string.login_error_wrong_credentials);
-                Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                clearEntries();
-            }
-
-            @Override
-            public void onSuccess(User u) {
-                LaserTagApplication.setGlobalPlayer();
-                PD.dismiss();
-                Log.i(TAG,"Logged in a user with id: " + u.getId());
-                CharSequence text = "Welcome back, " + u.getUsername() + ".";
-                Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-
+                Log.i(TAG, "Logged in a user with id: " + authData.getUid());
                 Intent i = new Intent(getActivity(), MenuActivity.class);
                 getActivity().finish();
                 startActivity(i);
+            }
+
+            @Override
+            public void onAuthenticationError(FirebaseError firebaseError) {
+                PD.dismiss();
+                CharSequence text;
+                switch (firebaseError.getCode()) {
+                    case FirebaseError.USER_DOES_NOT_EXIST:
+                        Log.e(TAG, "Login Failure: User does not exist", firebaseError.toException());
+                        text = getString(R.string.login_error_user_dne);
+                        break;
+                    case FirebaseError.INVALID_PASSWORD:
+                        Log.e(TAG, "Login Failure: Invalid password", firebaseError.toException());
+                        text = getString(R.string.login_error_wrong_password);
+                        break;
+                    case FirebaseError.NETWORK_ERROR:
+                        Log.e(TAG, "Login Failure: network error", firebaseError.toException());
+                        text = getString(R.string.network_error);
+                        break;
+                    default:
+                        Log.e(TAG, "Login Failure: Unknown error", firebaseError.toException());
+                        text = getString(R.string.login_error_unknown);
+                        break;
+                }
+                Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                clearEntries();
             }
         });
     }

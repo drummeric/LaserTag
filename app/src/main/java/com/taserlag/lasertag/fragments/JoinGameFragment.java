@@ -5,25 +5,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.kinvey.android.AsyncAppData;
-import com.kinvey.android.callback.KinveyListCallback;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -47,7 +38,7 @@ public class JoinGameFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_join_game, container, false);
-
+        /* todo get games
         AsyncAppData<Game> games = LaserTagApplication.kinveyClient.appData("games", Game.class);
         games.get(new KinveyListCallback<Game>() {
             @Override
@@ -76,7 +67,7 @@ public class JoinGameFragment extends Fragment{
                 ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, mmf, "main_menu_fragment");
             }
         });
-
+        */
         return view;
     }
 
@@ -144,13 +135,13 @@ public class JoinGameFragment extends Fragment{
                     @Override
                     public void onClick(View v) {
                         GameLobbyFragment fragment = new GameLobbyFragment();
-                        fragment.setGameID(game.getId());
+                        //todo game id?
+                        //fragment.setGameID(game.getId());
                         ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
                     }
                 });
 
             }
-
         }//Game View Holder
 
     }//Game Adapter

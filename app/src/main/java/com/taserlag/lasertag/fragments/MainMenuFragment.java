@@ -12,6 +12,7 @@ import com.taserlag.lasertag.R;
 
 public class MainMenuFragment extends Fragment {
 
+    private final String TAG = "MainMenuFragment";
     private OnFragmentInteractionListener mListener;
 
     public MainMenuFragment() {

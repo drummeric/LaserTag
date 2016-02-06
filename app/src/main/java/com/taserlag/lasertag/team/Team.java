@@ -1,46 +1,22 @@
 package com.taserlag.lasertag.team;
 
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.util.Key;
 import com.taserlag.lasertag.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Team extends GenericJson{
+public class Team{
 
-    @Key("_id")
-    private String id;
-
-    @Key
-    private List<Player> players = new ArrayList<>();
-
-    @Key
     private String name = "Team Name";
 
-    @Key
+    private List<Player> players = new ArrayList<>();
+
     private int maxTeamSize = 1;
 
     public Team() {}
 
     public Team(String name) {
         this.name = name;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public int getMaxTeamSize() {
-        return maxTeamSize;
-    }
-
-    public void setMaxTeamSize(int maxTeamSize) {
-        this.maxTeamSize = maxTeamSize;
     }
 
     public String getName() {
@@ -51,10 +27,17 @@ public class Team extends GenericJson{
         this.name = name;
     }
 
+    public int getMaxTeamSize() {
+        return maxTeamSize;
+    }
+
+    public void setMaxTeamSize(int maxTeamSize) {
+        this.maxTeamSize = maxTeamSize;
+    }
+
     public List<Player> getPlayers() {
         return players;
     }
-
 
     @Override
     public boolean equals(Object team){

@@ -16,9 +16,14 @@ import com.taserlag.lasertag.fragments.MainMenuFragment;
 
 public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener{
 
+    private final String TAG = "MenuActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        LaserTagApplication.initGlobalPlayer();
+
         setContentView(R.layout.activity_menu);
 
         if (getSupportFragmentManager().findFragmentById(R.id.menu_frame) == null) {
@@ -82,9 +87,9 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
 
     }
 
-
     public void logOut(View view) {
-        LaserTagApplication.kinveyClient.user().logout().execute();
+        LaserTagApplication.disconnect();
+        LaserTagApplication.firebaseReference.unauth();
         Intent intent = new Intent(this, LoginActivity.class);
         finish();
         startActivity(intent);

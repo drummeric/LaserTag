@@ -30,11 +30,12 @@
             android:gravity="center">
 
             <EditText
-                android:id="@+id/edit_text_login_username"
+                android:id="@+id/edit_text_login_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
-                android:hint="Username" />
+                android:inputType="textEmailAddress"
+                android:hint="Email" />
 
             <EditText
                 android:id="@+id/edit_text_login_password"

@@ -2,7 +2,6 @@ package com.taserlag.lasertag.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,20 +12,19 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.kinvey.android.AsyncAppData;
-import com.kinvey.android.callback.KinveyUserCallback;
-import com.kinvey.java.User;
-import com.kinvey.java.core.KinveyClientCallback;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.player.Player;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginSignupFragment extends Fragment {
 
     private final int MIN_INPUT_LENGTH = 5;
     private final int MIN_EMAIL_LENGTH = 6;
-    private final int MIN_NAME_LENGTH = 2;
 
     private final String TAG = "LoginSignupFragment";
     private OnFragmentInteractionListener mListener;
@@ -74,27 +72,23 @@ public class LoginSignupFragment extends Fragment {
      * password >= 5
      * passwordConfirm = password
      * email contains @ and >= 6
-     * name >= 2
      */
     public void performSignup() {
         final EditText usernameText = ((EditText) getView().findViewById(R.id.edit_text_signup_username));
         final EditText passwordText = ((EditText) getView().findViewById(R.id.edit_text_signup_password));
         final EditText passwordConfirmText = ((EditText) getView().findViewById(R.id.edit_text_signup_password_confirm));
         final EditText emailText = ((EditText) getView().findViewById(R.id.edit_text_signup_email));
-        final EditText nameText = ((EditText) getView().findViewById(R.id.edit_text_signup_name));
         boolean validSignupCredentials = true;
 
         usernameText.setError(null);
         passwordText.setError(null);
         passwordConfirmText.setError(null);
         emailText.setError(null);
-        nameText.setError(null);
 
         String username = usernameText.getText().toString();
         String password = passwordText.getText().toString();
         String passwordConfirm = passwordConfirmText.getText().toString();
         String email = emailText.getText().toString();
-        String name = nameText.getText().toString();
 
         if (username.length()<MIN_INPUT_LENGTH){
             usernameText.setError(getString(R.string.login_error_username_invalid_length));
@@ -119,80 +113,63 @@ public class LoginSignupFragment extends Fragment {
             validSignupCredentials = false;
         }
 
-        if (name.length() < MIN_NAME_LENGTH){
-            nameText.setError(getString(R.string.signup_error_name_invalid));
-            emailText.setText("");
-            validSignupCredentials = false;
-        }
-
         if (validSignupCredentials){
-            doSignup(username,password,email,name);
+            doSignup(username,password,email);
         }
     }
 
-    private void doSignup(String username, String password, final String email, final String name){
-
+    private void doSignup(final String username, final String password, final String email){
         final ProgressDialog PD = new ProgressDialog(getActivity());
         PD.setTitle("Please Wait..");
         PD.setMessage("Loading...");
         PD.setCancelable(false);
         PD.show();
 
-        LaserTagApplication.kinveyClient.user().create(username, password, new KinveyUserCallback() {
+        LaserTagApplication.firebaseReference.createUser(email, password, new Firebase.ValueResultHandler<Map<String, Object>>() {
             @Override
-            public void onFailure(Throwable t) {
-                PD.dismiss();
-                Log.e(TAG, "Signup Failure", t);
-                Log.e(TAG, t.getMessage());
+            public void onSuccess(Map<String, Object> stringObjectMap) {
+                Log.i(TAG, "Signed up a user with id: " + stringObjectMap.get("uid"));
 
-                if (t.getMessage().startsWith("UserAlreadyExists")){
-                    CharSequence text = getString(R.string.signup_error_username_conflict);
-                    Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                } else {
-                    CharSequence text = getString(R.string.signup_failure);
-                    Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onSuccess(User u) {
-                Log.i(TAG, "Signed up a user with id: " + u.getId());
-                CharSequence text = u.getUsername() + ", your account has been created.";
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("username",username);
+                LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(map);
+
+                Player newPlayer = new Player(username);
+                LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).child("player").setValue(newPlayer);
+
+
+                CharSequence text = username + ", your account has been created.";
                 Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 
-                final Player player = new Player(u.getUsername());
-                AsyncAppData<Player> myplayer = LaserTagApplication.kinveyClient.appData("players", Player.class);
-                myplayer.save(player, new KinveyClientCallback<Player>() {
-                    @Override
-                    public void onFailure(Throwable e) {
-                        Log.e(TAG, "failed to save game data", e);
-                    }
-
-                    @Override
-                    public void onSuccess(Player p) {
-                        Log.d(TAG, "saved data for game " + p.getId());
-                        LaserTagApplication.kinveyClient.user().put("playerReference", p.getId());
-                        LaserTagApplication.kinveyClient.user().put("email", email);
-                        LaserTagApplication.kinveyClient.user().put("first_name", name);
-                        LaserTagApplication.kinveyClient.user().update(new KinveyUserCallback() {
-                            @Override
-                            public void onFailure(Throwable e) {
-                                Log.e(TAG, "Failed to set up user fields", e);
-                            }
-
-                            @Override
-                            public void onSuccess(User u) {
-                                Log.i(TAG, "Set up user fields for user with id: " + u.getId());
-                                LaserTagApplication.setGlobalPlayer();
-                                PD.dismiss();
-
-                                Intent i = new Intent(getActivity(), MenuActivity.class);
-                                getActivity().finish();
-                                startActivity(i);
-                            }
-                        });// saving player, email, and name to user
-                    }
-                });//saving player
+                // Creating account does not log the user in
+                LoginFragment lf = (LoginFragment) getActivity().getSupportFragmentManager().findFragmentByTag("login_fragment");
+                lf.doLogin(PD,email,password);
             }
-        });//creating user
+
+            @Override
+            public void onError(FirebaseError firebaseError) {
+                PD.dismiss();
+                CharSequence text;
+                switch (firebaseError.getCode()) {
+                    case FirebaseError.EMAIL_TAKEN:
+                        Log.e(TAG, "Signup Failure: email taken", firebaseError.toException());
+                        text = getString(R.string.signup_error_email_taken);
+                        break;
+                    case FirebaseError.INVALID_EMAIL:
+                        Log.e(TAG, "Signup Failure: invalid email", firebaseError.toException());
+                        text = getString(R.string.signup_error_email_invalid);
+                        break;
+                    case FirebaseError.NETWORK_ERROR:
+                        Log.e(TAG, "Signup Failure: network error", firebaseError.toException());
+                        text = getString(R.string.network_error);
+                        break;
+                    default:
+                        Log.e(TAG, "Signup Failure: Unknown error", firebaseError.toException());
+                        text = getString(R.string.login_error_unknown);
+                        break;
+                }
+                Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

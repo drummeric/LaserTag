@@ -1,55 +1,32 @@
 package com.taserlag.lasertag.game;
 
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.util.Key;
 import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Game extends GenericJson {
-    @Key("_id")
-    private String id;
-
-    @Key
+public class Game{
     private String host;
 
-    @Key
     private GameType gameType;
 
-    @Key
     private boolean scoreEnabled;
 
-    @Key
     private int score;
 
-    @Key
     private boolean timeEnabled;
 
-    @Key
     private int minutes;
 
-    @Key
     private int maxTeamSize;
 
-    @Key
     private boolean privateMatch;
 
-    @Key
     private boolean friendlyFire;
 
-    @Key
     private List<Team> teams = new ArrayList<>();
 
     public Game() {}
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getHost() {
         return host;
