@@ -61,5 +61,6 @@
     <string name="login_error_user_dne">The specified user account does not exist.</string>
     <string name="signup_error_email_taken">The specified email is in use</string>
     <string name="network_error">A connection could not be established. Please check your internet settings and try again.</string>
+    <string name="create_team_dialog_team_warning">*Note: You will be automatically placed on this team and removed from any others you are on.*</string>
 
 </resources>

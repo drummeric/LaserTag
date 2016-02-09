@@ -19,7 +19,6 @@ import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
-import com.taserlag.lasertag.team.Team;
 
 public class CreateGameFragment extends Fragment {
 
@@ -124,9 +123,6 @@ public class CreateGameFragment extends Fragment {
         game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
-        Team team = new Team("TESTTTTTTTT");
-        team.addPlayer(LaserTagApplication.globalPlayer);
-        game.addTeam(team);
 
         Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
         ref.setValue(game);

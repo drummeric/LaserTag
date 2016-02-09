@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,23 +16,25 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.firebase.ui.FirebaseListAdapter;
 import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
-import com.taserlag.lasertag.player.Player;
-import com.taserlag.lasertag.team.Team;
 
 public class GameLobbyFragment extends Fragment {
 
     private final String TAG = "GameLobbyFragment";
 
     private OnFragmentInteractionListener mListener;
-    private Game game;
-    private Firebase mRef;
+    private Game mGame;
+    private Firebase mGameReference;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -72,25 +75,58 @@ public class GameLobbyFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public void setGame(Game game, Firebase ref){
-        this.game = game;
-        mRef = ref;
+    public void setGame(Game game, final Firebase reference){
+        this.mGame = game;
+        this.mGameReference = reference;
+        game.enableListeners(mGameReference);
+
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mGame = dataSnapshot.getValue(Game.class);
+                Log.i(TAG, "Game with the following key updated: " + reference.getKey());
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.e(TAG, "Game with the following key failed to update: " + reference.getKey(), firebaseError.toException());
+            }
+        });
+    }
+
+    public Game getGame(){
+        return mGame;
+    }
+
+    public Firebase getGameReference(){
+        return mGameReference;
     }
 
     private void init(final View view){
         final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
-        gameInfo.setText(game.toString());
+        gameInfo.setText(mGame.toString());
+
+        Button createTeamButton = (Button) view.findViewById(R.id.button_create_team);
+        createTeamButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CreateTeamDialogFragment dialog = new CreateTeamDialogFragment();
+                dialog.show(getActivity().getSupportFragmentManager(), "create_team_dialog_fragment");
+            }
+        });
 
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Team, TeamViewHolder>(Team.class, R.layout.card_team, TeamViewHolder.class, mRef.child("teams")) {
+        //todo use Map.Entry<K,V> instead of Object
+        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Object, TeamViewHolder>(Object.class, R.layout.card_team, TeamViewHolder.class, mGameReference.child("fullKeys")) {
+
             @Override
-            public void populateViewHolder(final TeamViewHolder holder, Team team, int position) {
-                holder.teamName.setText(team.getName());
+            public void populateViewHolder(final TeamViewHolder holder, Object team, int position) {
+                final String teamReference = getRef(position).getKey();
 
-                holder.team = team;
+                holder.teamName.setText(teamReference.split(":~")[0]);
 
-                if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
+                if (mGame.findPlayer(LaserTagApplication.globalPlayer).equals(teamReference)){
                     holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
                 } else {
                     holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
@@ -100,29 +136,31 @@ public class GameLobbyFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
-                            holder.team.addPlayer(LaserTagApplication.globalPlayer);
-                            holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+                            if (mGame.addGlobalPlayer(teamReference, mGameReference)){
+                                holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
+                            } else {
+                                Toast.makeText(getActivity().getApplicationContext(), "This team is full", Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            holder.team.removePlayer(LaserTagApplication.globalPlayer);
+                            mGame.removeGlobalPlayer(teamReference, mGameReference);
                             holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
                         }
                     }
                 });
 
-                holder.players.setAdapter(new FirebaseListAdapter<Player>(getActivity(), Player.class, R.layout.list_item_player, mRef.child("teams").child(Integer.toString(position)).child("players")) {
+                holder.playersListView.setAdapter(new FirebaseListAdapter<String>(getActivity(), String.class, R.layout.list_item_player, mGameReference.child("fullKeys").child(teamReference)) {
                     @Override
-                    protected void populateView(View view, Player player, int position) {
-                        ((TextView) view.findViewById(R.id.text_player_name)).setText(player.getName());
-                        setListViewHeightBasedOnItems(holder.players);
+                    protected void populateView(View view, String player, int position) {
+                        ((TextView) view.findViewById(R.id.text_player_name)).setText(player.split(":~")[0]);
+                        setListViewHeightBasedOnItems(holder.playersListView);
                     }
                 });
 
-                ((FirebaseListAdapter) holder.players.getAdapter()).notifyDataSetChanged();
-                setListViewHeightBasedOnItems(holder.players);
+                ((FirebaseListAdapter) holder.playersListView.getAdapter()).notifyDataSetChanged();
+                setListViewHeightBasedOnItems(holder.playersListView);
             }
         };
         recycler.setAdapter(mAdapter);
-
     }
 
     public void setListViewHeightBasedOnItems(ListView listView) {
@@ -145,30 +183,18 @@ public class GameLobbyFragment extends Fragment {
         }
     }
 
-    public void doCreateTeam(){
-        CreateTeamDialogFragment dialog = new CreateTeamDialogFragment();
-        dialog.show(getActivity().getSupportFragmentManager(), "create_team_dialog_fragment");
-    }
-
-    public boolean addTeam(Team team){
-        return game.addTeam(team);
-    }
-
     public static class TeamViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
         TextView teamName;
         Button joinButton;
-        ListView players;
-        Team team;
+        ListView playersListView;
 
         public TeamViewHolder(View itemView) {
             super(itemView);
             cv = (CardView) itemView.findViewById(R.id.card_view_team);
             teamName = (TextView) itemView.findViewById(R.id.text_team_name);
-            players = (ListView) itemView.findViewById(R.id.list_view_team);
-
+            playersListView = (ListView) itemView.findViewById(R.id.list_view_team);
             joinButton = (Button) itemView.findViewById(R.id.button_join_or_leave_team);
         }
-
     }
-}//Fragment
+}

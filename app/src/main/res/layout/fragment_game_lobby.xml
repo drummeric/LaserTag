@@ -16,7 +16,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="showCreateTeam"
+            android:id="@+id/button_create_team"
             android:text="Create team"
             android:textSize="15sp"
             android:layout_weight="1"

@@ -6,27 +6,28 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.team.Team;
 
 public class CreateTeamDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        final EditText teamName = new EditText(getActivity());
-        teamName.setHint(R.string.create_team_dialog_hint);
 
-        int horiz = (int) getResources().getDimension(R.dimen.create_game_dialog_horizontal_margin);
-        int vert = (int) getResources().getDimension(R.dimen.create_game_dialog_vertical_margin);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_create_team, null);
+
+        final EditText teamName = (EditText) dialogView.findViewById(R.id.edit_text_create_team_dialog_team_name);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.create_team_dialog_title)
-                .setView(teamName, horiz, vert, horiz, vert)
+                .setView(dialogView)
                         .setPositiveButton(R.string.create_team_dialog_create, null)
                         .setNegativeButton(R.string.create_team_dialog_cancel, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
@@ -49,11 +50,11 @@ public class CreateTeamDialogFragment extends DialogFragment {
                         if (teamName.getText().toString().isEmpty()){
                             teamName.setError(getString(R.string.create_team_dialog_empty_name));
                         } else {
-
+                            GameLobbyFragment glf = ((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"));
                             Team team = new Team(teamName.getText().toString());
-                            team.addPlayer(LaserTagApplication.globalPlayer);
+                            Game game = glf.getGame();
 
-                            if (!((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment")).addTeam(team)){
+                            if (!game.createTeamWithGlobalPlayer(team, glf.getGameReference())){
                                 teamName.setError(getString(R.string.create_team_dialog_team_exists));
                             } else {
                                 d.dismiss();

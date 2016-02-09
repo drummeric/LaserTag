@@ -69,12 +69,6 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         cgf.saveGame();
     }
 
-    // shows createTeamDialog in game lobby
-    public void showCreateTeam(View view){
-        GameLobbyFragment glf = (GameLobbyFragment) getSupportFragmentManager().findFragmentByTag("game_lobby_fragment");
-        glf.doCreateTeam();
-    }
-
     public void launchFPS(View view) {
         Intent intent = new Intent(this, FPSActivity.class);
         startActivity(intent);
