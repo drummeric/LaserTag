@@ -15,9 +15,11 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VerticalSeekBar;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
@@ -29,6 +31,7 @@ import com.taserlag.lasertag.weapon.StrongWeapon;
 
 public class FPSActivity extends AppCompatActivity implements MapHandler {
 
+    private final String TAG = "FPSActivity";
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
@@ -170,6 +173,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     private void releaseCamera() {
         if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.setPreviewCallback(null);
             mCamera.release();
             mCamera = null;
         }
@@ -219,9 +224,27 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private void shoot() {
         if (player.getActiveWeapon().fire()) {
             updateGUI();
+
+            int[] hitColor = mPreview.getTargetColor();
+            Log.i(TAG, "Shot argb: "+ hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
+
+            int[] playerColor = LaserTagApplication.globalPlayer.getColor();
+
+            if (checkColors(hitColor, playerColor, 40)){
+                Toast.makeText(this, "Stop hitting yourself...", Toast.LENGTH_SHORT).show();
+            }
+
             MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
             mp.start();
         }
+    }
+
+    public boolean checkColors(int[] hitColor, int[] playerColor, int tolerance){
+        boolean colorMatch = true;
+        for (int i = 0; i<hitColor.length; i++){
+            colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= tolerance;
+        }
+        return colorMatch;
     }
 
     public void reloadWeapon(View view) {

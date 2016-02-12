@@ -13,8 +13,9 @@ import com.taserlag.lasertag.fragments.CreateGameFragment;
 import com.taserlag.lasertag.fragments.GameLobbyFragment;
 import com.taserlag.lasertag.fragments.JoinGameFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
+import com.taserlag.lasertag.fragments.SetPlayerColorFragment;
 
-public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener{
+public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener, SetPlayerColorFragment.OnFragmentInteractionListener{
 
     private final String TAG = "MenuActivity";
 

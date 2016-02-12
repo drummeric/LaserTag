@@ -1,6 +1,7 @@
 package com.taserlag.lasertag.fragments;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -25,6 +26,7 @@ import com.firebase.client.ValueEventListener;
 import com.firebase.ui.FirebaseListAdapter;
 import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 
@@ -115,6 +117,14 @@ public class GameLobbyFragment extends Fragment {
             }
         });
 
+        final Button readyButton = (Button) view.findViewById(R.id.button_ready_up);
+        readyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MenuActivity) getActivity()).launchFPS(readyButton);
+            }
+        });
+
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
         //todo use Map.Entry<K,V> instead of Object
@@ -150,8 +160,37 @@ public class GameLobbyFragment extends Fragment {
 
                 holder.playersListView.setAdapter(new FirebaseListAdapter<String>(getActivity(), String.class, R.layout.list_item_player, mGameReference.child("fullKeys").child(teamReference)) {
                     @Override
-                    protected void populateView(View view, String player, int position) {
+                    protected void populateView(View view, String player, final int position) {
                         ((TextView) view.findViewById(R.id.text_player_name)).setText(player.split(":~")[0]);
+                        final Button colorButton = (Button) view.findViewById(R.id.button_game_lobby_set_player_color);
+
+                        LaserTagApplication.firebaseReference.child("users").child(player.split(":~")[1]).child("player").child("color").addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.child("0").getValue(Integer.class) != null) {
+                                    colorButton.setBackgroundColor(Color.argb(
+                                        dataSnapshot.child("0").getValue(Integer.class),
+                                        dataSnapshot.child("1").getValue(Integer.class),
+                                        dataSnapshot.child("2").getValue(Integer.class),
+                                        dataSnapshot.child("3").getValue(Integer.class)
+                                    ));
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+
+                        colorButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(mGame.getFullKeys().get(teamReference).get(position));
+                                ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "set_player_color_fragment");
+                            }
+                        });
+
                         setListViewHeightBasedOnItems(holder.playersListView);
                     }
                 });
@@ -169,7 +208,7 @@ public class GameLobbyFragment extends Fragment {
             int numberOfItems = listAdapter.getCount();
 
             // Get total height of all items.
-            float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getActivity().getResources().getDisplayMetrics());
+            float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 31, getActivity().getResources().getDisplayMetrics());
             float totalItemsHeight = size * numberOfItems;
 
             // Get total height of all item dividers.

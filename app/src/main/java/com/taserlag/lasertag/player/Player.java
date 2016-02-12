@@ -15,6 +15,8 @@ public class Player{
 
     private boolean primaryWeaponActive = true;
 
+    private int[] color;
+
     private Weapon primaryWeapon;
     private Weapon secondaryWeapon;
     private Shield shield;
@@ -50,6 +52,10 @@ public class Player{
 
     public int getHealth() {
         return health;
+    }
+
+    public int[] getColor() {
+        return color;
     }
 
     public Weapon getActiveWeapon() {
