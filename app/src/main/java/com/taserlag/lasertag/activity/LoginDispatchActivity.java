@@ -13,7 +13,7 @@ public class LoginDispatchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        if(LaserTagApplication.firebaseReference.getAuth()!=null){
+        if(LaserTagApplication.firebaseReference.getAuth().getUid()!=null){
             // Starts MenuActivity and updates globalPlayer if logged in
             Intent i = new Intent(LoginDispatchActivity.this, MenuActivity.class);
             finish();

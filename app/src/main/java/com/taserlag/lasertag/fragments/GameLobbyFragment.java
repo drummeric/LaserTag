@@ -136,7 +136,7 @@ public class GameLobbyFragment extends Fragment {
 
                 holder.teamName.setText(teamReference.split(":~")[0]);
 
-                if (mGame.findPlayer(LaserTagApplication.globalPlayer).equals(teamReference)){
+                if (mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals(teamReference)){
                     holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
                 } else {
                     holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
@@ -160,19 +160,33 @@ public class GameLobbyFragment extends Fragment {
 
                 holder.playersListView.setAdapter(new FirebaseListAdapter<String>(getActivity(), String.class, R.layout.list_item_player, mGameReference.child("fullKeys").child(teamReference)) {
                     @Override
-                    protected void populateView(View view, String player, final int position) {
-                        ((TextView) view.findViewById(R.id.text_player_name)).setText(player.split(":~")[0]);
+                    protected void populateView(View view, String playerUID, final int position) {
+                        final TextView playerName = ((TextView) view.findViewById(R.id.text_player_name));
                         final Button colorButton = (Button) view.findViewById(R.id.button_game_lobby_set_player_color);
 
-                        LaserTagApplication.firebaseReference.child("users").child(player.split(":~")[1]).child("player").child("color").addValueEventListener(new ValueEventListener() {
+                        LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").child("name").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot != null) {
+                                    playerName.setText(dataSnapshot.getValue(String.class));
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+
+                        LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").child("color").addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.child("0").getValue(Integer.class) != null) {
                                     colorButton.setBackgroundColor(Color.argb(
-                                        dataSnapshot.child("0").getValue(Integer.class),
-                                        dataSnapshot.child("1").getValue(Integer.class),
-                                        dataSnapshot.child("2").getValue(Integer.class),
-                                        dataSnapshot.child("3").getValue(Integer.class)
+                                            dataSnapshot.child("0").getValue(Integer.class),
+                                            dataSnapshot.child("1").getValue(Integer.class),
+                                            dataSnapshot.child("2").getValue(Integer.class),
+                                            dataSnapshot.child("3").getValue(Integer.class)
                                     ));
                                 }
                             }

@@ -154,7 +154,7 @@ public class Game{
 
     //teamFullKey ends in ":~" for new team
     public boolean addGlobalPlayer(final String teamFullKey, Firebase gameReference){
-        String currentTeamFullKey = findPlayer(LaserTagApplication.globalPlayer);
+        String currentTeamFullKey = findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid());
 
         if (!currentTeamFullKey.equals("")){
             // player is on a team
@@ -186,7 +186,7 @@ public class Game{
 
                         // add global player to new team
                         List<String> playerKey = new ArrayList<String>();
-                        playerKey.add(LaserTagApplication.globalPlayer.getName() + ":~" + LaserTagApplication.firebaseReference.getAuth().getUid());
+                        playerKey.add(LaserTagApplication.firebaseReference.getAuth().getUid());
 
                         // if this is a new team
                         if (teamFullKey.endsWith(":~")) {
@@ -200,7 +200,7 @@ public class Game{
                         }
 
                     } else {
-                        game.getFullKeys().get(teamFullKey).add(LaserTagApplication.globalPlayer.getName() + ":~" + LaserTagApplication.firebaseReference.getAuth().getUid());
+                        game.getFullKeys().get(teamFullKey).add(LaserTagApplication.firebaseReference.getAuth().getUid());
                     }
                     currentData.setValue(game);
                 }
@@ -230,7 +230,7 @@ public class Game{
                     currentData.setValue(thisGame);
                 } else {
                     Game game = currentData.getValue(Game.class);
-                    game.getFullKeys().get(teamFullKey).remove(LaserTagApplication.globalPlayer.getName() + ":~" + LaserTagApplication.firebaseReference.getAuth().getUid());
+                    game.getFullKeys().get(teamFullKey).remove(LaserTagApplication.firebaseReference.getAuth().getUid());
 
                     //empty team -> remove team from database
                     if (game.getFullKeys().get(teamFullKey).isEmpty()) {
@@ -277,11 +277,11 @@ public class Game{
 
     //Returns teamfullkey of team to which player belongs
     // else null
-    public String findPlayer(Player player){
+    public String findPlayer(String playerUID){
 
         for (Map.Entry<String, List<String>> entry: fullKeys.entrySet()){
-            for (String playerFullKey:entry.getValue()){
-                if (player.getName().equals(playerFullKey.split(":~")[0])){
+            for (String playerFoundUID:entry.getValue()){
+                if (playerUID.equals(playerFoundUID)){
                     return entry.getKey();
                 }
             }
