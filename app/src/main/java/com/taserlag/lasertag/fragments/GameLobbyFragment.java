@@ -10,6 +10,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -105,6 +106,19 @@ public class GameLobbyFragment extends Fragment {
     }
 
     private void init(final View view){
+        view.setFocusableInTouchMode(true);
+        view.requestFocus();
+        view.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK){
+                    mGame.removeGlobalPlayer(mGameReference);
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
+                return true;
+            }
+        });
+
         final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
         gameInfo.setText(mGame.toString());
 
@@ -121,7 +135,9 @@ public class GameLobbyFragment extends Fragment {
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MenuActivity) getActivity()).launchFPS(readyButton);
+                if (!mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals("")) {
+                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
+                }
             }
         });
 

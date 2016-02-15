@@ -17,6 +17,9 @@ public class Player{
 
     private int[] color;
 
+    private String activeGameKey = "";
+    private boolean ready = false;
+
     private Weapon primaryWeapon;
     private Weapon secondaryWeapon;
     private Shield shield;
@@ -58,6 +61,14 @@ public class Player{
         return color;
     }
 
+    public String getActiveGameKey() {
+        return activeGameKey;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
     public Weapon getActiveWeapon() {
         if (primaryWeaponActive) {
             return primaryWeapon;
@@ -81,6 +92,5 @@ public class Player{
     public void resetCaptain() {
         captain = false;
     }
-
 
 }

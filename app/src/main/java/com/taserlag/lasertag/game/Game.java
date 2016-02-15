@@ -7,7 +7,6 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.taserlag.lasertag.application.LaserTagApplication;
-import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
@@ -153,7 +152,7 @@ public class Game{
     }
 
     //teamFullKey ends in ":~" for new team
-    public boolean addGlobalPlayer(final String teamFullKey, Firebase gameReference){
+    public boolean addGlobalPlayer(final String teamFullKey, final Firebase gameReference){
         String currentTeamFullKey = findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid());
 
         if (!currentTeamFullKey.equals("")){
@@ -211,6 +210,12 @@ public class Game{
             @Override
             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
                 if (committed) {
+                    LaserTagApplication.firebaseReference
+                            .child("users")
+                            .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                            .child("player")
+                            .child("activeGameKey")
+                            .setValue(gameReference.getKey());
                     restoreGameMap(currentData.getValue(Game.class));
                 }
             }
@@ -246,11 +251,27 @@ public class Game{
             @Override
             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
                 if (committed) {
+                    LaserTagApplication.firebaseReference
+                            .child("users")
+                            .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                            .child("player")
+                            .child("activeGameKey")
+                            .setValue("");
+                    LaserTagApplication.firebaseReference
+                            .child("users")
+                            .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                            .child("player")
+                            .child("ready")
+                            .setValue(false);
                     restoreGameMap(currentData.getValue(Game.class));
                 }
             }
         });
         return true;
+    }
+
+    public boolean removeGlobalPlayer(Firebase gameReference){
+        return removeGlobalPlayer(findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()),gameReference);
     }
 
     public void restoreGameMap(Game game){
