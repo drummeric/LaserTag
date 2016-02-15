@@ -25,6 +25,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
+    public byte[] getCameraData() {
+        return mCameraData;
+    }
+
     //averages middle 100 pixels
     public int[] getTargetColor(){
         Camera.Parameters parameters = mCamera.getParameters();
