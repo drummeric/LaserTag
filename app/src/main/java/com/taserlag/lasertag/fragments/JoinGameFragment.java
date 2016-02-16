@@ -79,8 +79,7 @@ public class JoinGameFragment extends Fragment{
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        GameLobbyFragment fragment = new GameLobbyFragment();
-                        fragment.setGame(game, getRef(position));
+                        GameLobbyFragment fragment = GameLobbyFragment.newInstance(getRef(position).getKey());
                         ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
                     }
                 });

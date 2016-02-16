@@ -127,8 +127,7 @@ public class CreateGameFragment extends Fragment {
         Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
         ref.setValue(game);
 
-        GameLobbyFragment fragment = new GameLobbyFragment();
-        fragment.setGame(game, ref);
+        GameLobbyFragment fragment = GameLobbyFragment.newInstance(ref.getKey());
         ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
     }
 

@@ -35,6 +35,8 @@ public class GameLobbyFragment extends Fragment {
 
     private final String TAG = "GameLobbyFragment";
 
+    private static final String GAME_KEY_PARAM = "gameKey";
+
     private OnFragmentInteractionListener mListener;
     private Game mGame;
     private Firebase mGameReference;
@@ -43,6 +45,13 @@ public class GameLobbyFragment extends Fragment {
         // Required empty public constructor
     }
 
+    public static GameLobbyFragment newInstance(String gameKey) {
+        GameLobbyFragment fragment = new GameLobbyFragment();
+        Bundle args = new Bundle();
+        args.putString(GAME_KEY_PARAM, gameKey);
+        fragment.setArguments(args);
+        return fragment;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,8 +60,27 @@ public class GameLobbyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
-        init(view);
+        final View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
+        if (getArguments() != null) {
+            mGameReference = LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM));
+
+            mGameReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue(Game.class) != null) {
+                        mGame = dataSnapshot.getValue(Game.class);
+                        mGame.enableListeners(mGameReference);
+                        init(view);
+                        Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Log.e(TAG, "Game with the following key failed to update: " + mGameReference.getKey(), firebaseError.toException());
+                }
+            });
+        }
         return view;
     }
 
@@ -76,25 +104,6 @@ public class GameLobbyFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
-    }
-
-    public void setGame(Game game, final Firebase reference){
-        this.mGame = game;
-        this.mGameReference = reference;
-        game.enableListeners(mGameReference);
-
-        reference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                mGame = dataSnapshot.getValue(Game.class);
-                Log.i(TAG, "Game with the following key updated: " + reference.getKey());
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.e(TAG, "Game with the following key failed to update: " + reference.getKey(), firebaseError.toException());
-            }
-        });
     }
 
     public Game getGame(){
