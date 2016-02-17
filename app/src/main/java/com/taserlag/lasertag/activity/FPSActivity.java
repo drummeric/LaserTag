@@ -38,6 +38,9 @@ import com.taserlag.lasertag.shield.FastShield;
 import com.taserlag.lasertag.weapon.FastWeapon;
 import com.taserlag.lasertag.weapon.StrongWeapon;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     private final String TAG = "FPSActivity";
@@ -52,6 +55,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Player player;
     private Firebase mGameReference;
+
+    private Map<String, int[]> colorMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -198,6 +203,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
                     //timer has started, player ready flag clear
                     LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                     queryRef.removeEventListener(this);
+
+                    //init colorMap now that the query is finalized
+                    for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
+                        Player player = userSnaphot.child("player").getValue(Player.class);
+                        colorMap.put(player.getName(), player.getColor());
+                    }
                 }
             }
 
@@ -311,10 +322,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
 
                 Log.i(TAG, "Shot argb: " + hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
 
-                int[] playerColor = LaserTagApplication.globalPlayer.getColor();
+                String hitPlayer = checkColors(hitColor, 40);
 
-                if (checkColors(hitColor, playerColor, 40)) {
-                    Toast.makeText(this, "Stop hitting yourself...", Toast.LENGTH_SHORT).show();
+                if (!hitPlayer.equals("")) {
+                    Toast.makeText(this, "You hit " + hitPlayer, Toast.LENGTH_SHORT).show();
                 }
 
                 MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
@@ -323,7 +334,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
         }
     }
 
-    public boolean checkColors(int[] hitColor, int[] playerColor, int tolerance){
+    public String checkColors(int[] hitColor, int tolerance){
+        for (Map.Entry<String, int[]> player: colorMap.entrySet()){
+            if (checkPlayerColors(hitColor, player.getValue(),tolerance)){
+                return player.getKey();
+            }
+        }
+        return "";
+    }
+
+    public boolean checkPlayerColors(int[] hitColor, int[] playerColor, int tolerance){
         boolean colorMatch = true;
         for (int i = 0; i<hitColor.length; i++){
             colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= tolerance;

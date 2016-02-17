@@ -49,6 +49,7 @@ public class GameLobbyFragment extends Fragment {
     private boolean FPSStarted = false;
 
     private boolean gameInitialized = false;
+    private boolean firstTime = true;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -69,7 +70,17 @@ public class GameLobbyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
+        //todo investigate this firstTime hack
+        //racing the init called from Attach with this init call
+        // we want to call from Attach the first time b/c getActivity sometimes
+        // returns null from here
+        View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
+        if (!gameInitialized && !firstTime) {
+            gameInitialized = true;
+            init(view);
+        }
+
+        return view;
     }
 
     @Override
@@ -98,6 +109,7 @@ public class GameLobbyFragment extends Fragment {
                         mGame.enableListeners(mGameReference);
                         if (!gameInitialized) {
                             gameInitialized = true;
+                            firstTime = false;
                             init(getView());
                         }
                         Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
@@ -136,7 +148,6 @@ public class GameLobbyFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mGameReference.removeEventListener(mGameReferenceListener);
         mListener = null;
     }
 
@@ -161,6 +172,7 @@ public class GameLobbyFragment extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK){
                     mGame.removeGlobalPlayer(mGameReference);
+                    mGameReference.removeEventListener(mGameReferenceListener);
                     getActivity().getSupportFragmentManager()
                             .beginTransaction()
                             .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
@@ -290,6 +302,7 @@ public class GameLobbyFragment extends Fragment {
                         colorButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                gameInitialized = false;
                                 SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(mGame.getFullKeys().get(teamReference).get(position));
                                 ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "set_player_color_fragment");
                             }
