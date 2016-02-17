@@ -34,6 +34,8 @@ public class Game{
 
     private boolean friendlyFire;
 
+    private boolean gameReady = false;
+
     private Map<String, List<String>> fullKeys = new HashMap<>();
 
     public Game() {}
@@ -108,6 +110,10 @@ public class Game{
 
     public void setFriendlyFire(boolean friendlyFire) {
         this.friendlyFire = friendlyFire;
+    }
+
+    public boolean isGameReady() {
+        return gameReady;
     }
 
     public Map<String, List<String>> getFullKeys() {

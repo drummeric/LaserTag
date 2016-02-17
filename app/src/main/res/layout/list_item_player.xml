@@ -22,4 +22,15 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentRight="true"
+        android:text="READY"
+        android:visibility="invisible"
+        android:textSize="14sp"
+        android:id="@+id/text_player_ready"/>
+
 </RelativeLayout>

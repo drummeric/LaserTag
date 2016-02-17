@@ -225,17 +225,20 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
         if (player.getActiveWeapon().fire()) {
             updateGUI();
 
-            int[] hitColor = mPreview.getTargetColor();
-            Log.i(TAG, "Shot argb: "+ hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
+            if (mPreview.getCameraData()!=null) {
+                int[] hitColor = mPreview.getTargetColor();
 
-            int[] playerColor = LaserTagApplication.globalPlayer.getColor();
+                Log.i(TAG, "Shot argb: " + hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
 
-            if (checkColors(hitColor, playerColor, 40)){
-                Toast.makeText(this, "Stop hitting yourself...", Toast.LENGTH_SHORT).show();
+                int[] playerColor = LaserTagApplication.globalPlayer.getColor();
+
+                if (checkColors(hitColor, playerColor, 40)) {
+                    Toast.makeText(this, "Stop hitting yourself...", Toast.LENGTH_SHORT).show();
+                }
+
+                MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
+                mp.start();
             }
-
-            MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
-            mp.start();
         }
     }
 

@@ -70,7 +70,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         cgf.saveGame();
     }
 
-    public void launchFPS(View view) {
+    public void launchFPS() {
         Intent intent = new Intent(this, FPSActivity.class);
         startActivity(intent);
     }

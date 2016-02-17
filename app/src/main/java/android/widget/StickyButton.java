@@ -8,6 +8,8 @@ import android.util.AttributeSet;
 public class StickyButton extends Button {
 
     private Drawable defaultBackground;
+    private int stickyColor = Color.GRAY;
+    private boolean stuck = false;
 
     public StickyButton(Context context) {
         super(context);
@@ -29,13 +31,22 @@ public class StickyButton extends Button {
         defaultBackground = this.getBackground();
     }
 
+    public void setStickyColor(int color) {
+        this.stickyColor = color;
+    }
+
+    public boolean isStuck() {
+        return stuck;
+    }
+
     public void setPressed(){
-        this.setBackgroundColor(Color.GRAY);
+        stuck = true;
+        this.setBackgroundColor(stickyColor);
     }
 
     public void reset(){
+        stuck = false;
         this.setBackground(defaultBackground);
     }
-
 
 }

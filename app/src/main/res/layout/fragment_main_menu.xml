@@ -44,7 +44,6 @@
             android:layout_height="wrap_content"
             android:text="Stats"
             android:id="@+id/stats_button"
-            android:onClick="launchFPS"
             android:layout_margin="15dp"/>
 
         <Button

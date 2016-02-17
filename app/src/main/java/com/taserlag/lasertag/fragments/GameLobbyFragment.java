@@ -1,5 +1,7 @@
 package com.taserlag.lasertag.fragments;
 
+import android.widget.StickyButton;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.firebase.ui.FirebaseListAdapter;
 import com.firebase.ui.FirebaseRecyclerAdapter;
@@ -30,6 +33,7 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.Player;
 
 public class GameLobbyFragment extends Fragment {
 
@@ -40,6 +44,8 @@ public class GameLobbyFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private Game mGame;
     private Firebase mGameReference;
+
+    private boolean gameInitialized = false;
 
     public GameLobbyFragment() {
         // Required empty public constructor
@@ -60,28 +66,7 @@ public class GameLobbyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
-        if (getArguments() != null) {
-            mGameReference = LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM));
-
-            mGameReference.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue(Game.class) != null) {
-                        mGame = dataSnapshot.getValue(Game.class);
-                        mGame.enableListeners(mGameReference);
-                        init(view);
-                        Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
-                    }
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(TAG, "Game with the following key failed to update: " + mGameReference.getKey(), firebaseError.toException());
-                }
-            });
-        }
-        return view;
+        return inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
     }
 
     @Override
@@ -92,6 +77,40 @@ public class GameLobbyFragment extends Fragment {
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
+        }
+
+    }
+
+    @Override
+    public void onAttach(final Activity activity){
+        super.onAttach(activity);
+        if (getArguments() != null) {
+            mGameReference = LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM));
+
+            mGameReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue(Game.class) != null) {
+                        mGame = dataSnapshot.getValue(Game.class);
+                        mGame.enableListeners(mGameReference);
+                        if (!gameInitialized) {
+                            gameInitialized = true;
+                            init(getView());
+                        }
+                        Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
+
+                        if (mGame.isGameReady()){
+                            mGameReference.child("gameReady").setValue(false);
+                            ((MenuActivity) activity).launchFPS();
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Log.e(TAG, "Game with the following key failed to update: " + mGameReference.getKey(), firebaseError.toException());
+                }
+            });
         }
     }
 
@@ -140,12 +159,42 @@ public class GameLobbyFragment extends Fragment {
             }
         });
 
-        final Button readyButton = (Button) view.findViewById(R.id.button_ready_up);
+        final StickyButton readyButton = (StickyButton) view.findViewById(R.id.button_ready_up);
+        readyButton.setStickyColor(Color.GREEN);
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals("")) {
-                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
+                    if (readyButton.isStuck()){
+                        readyButton.reset();
+                        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
+                    } else {
+                        readyButton.setPressed();
+                        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
+
+                        Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
+                        queryRef.keepSynced(true);
+                        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                boolean gameReady = true;
+
+                                for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
+                                    Player player = userSnaphot.child("player").getValue(Player.class);
+                                    gameReady &= player.isReady();
+                                }
+
+                                if (gameReady) {
+                                    mGameReference.child("gameReady").setValue(true);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -188,31 +237,23 @@ public class GameLobbyFragment extends Fragment {
                     protected void populateView(View view, String playerUID, final int position) {
                         final TextView playerName = ((TextView) view.findViewById(R.id.text_player_name));
                         final Button colorButton = (Button) view.findViewById(R.id.button_game_lobby_set_player_color);
+                        final TextView playerReady = ((TextView) view.findViewById(R.id.text_player_ready));
 
-                        LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").child("name").addListenerForSingleValueEvent(new ValueEventListener() {
+                        LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot != null) {
-                                    playerName.setText(dataSnapshot.getValue(String.class));
-                                }
-                            }
+                                if (dataSnapshot.getValue(Player.class) != null) {
+                                    Player player = dataSnapshot.getValue(Player.class);
+                                    playerName.setText(player.getName());
 
-                            @Override
-                            public void onCancelled(FirebaseError firebaseError) {
+                                    int[] color = player.getColor();
+                                    colorButton.setBackgroundColor(Color.argb(color[0], color[1], color[2], color[3]));
 
-                            }
-                        });
-
-                        LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").child("color").addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.child("0").getValue(Integer.class) != null) {
-                                    colorButton.setBackgroundColor(Color.argb(
-                                            dataSnapshot.child("0").getValue(Integer.class),
-                                            dataSnapshot.child("1").getValue(Integer.class),
-                                            dataSnapshot.child("2").getValue(Integer.class),
-                                            dataSnapshot.child("3").getValue(Integer.class)
-                                    ));
+                                    if (player.isReady()) {
+                                        playerReady.setVisibility(View.VISIBLE);
+                                    } else {
+                                        playerReady.setVisibility(View.INVISIBLE);
+                                    }
                                 }
                             }
 
