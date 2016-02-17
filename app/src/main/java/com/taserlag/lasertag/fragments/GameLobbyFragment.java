@@ -44,6 +44,9 @@ public class GameLobbyFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private Game mGame;
     private Firebase mGameReference;
+    //stored to be cleared when we leave on back press
+    private ValueEventListener mGameReferenceListener;
+    private boolean FPSStarted = false;
 
     private boolean gameInitialized = false;
 
@@ -87,7 +90,7 @@ public class GameLobbyFragment extends Fragment {
         if (getArguments() != null) {
             mGameReference = LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM));
 
-            mGameReference.addValueEventListener(new ValueEventListener() {
+            mGameReferenceListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.getValue(Game.class) != null) {
@@ -99,9 +102,23 @@ public class GameLobbyFragment extends Fragment {
                         }
                         Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
 
-                        if (mGame.isGameReady()){
+                        //only start one instance of FPSActivity
+                        if (mGame.isGameReady()&&!FPSStarted){
+                            //if you're on a team when the game starts, go to FPSActivity
+                            FPSStarted = true;
                             mGameReference.child("gameReady").setValue(false);
-                            ((MenuActivity) activity).launchFPS();
+                            if (LaserTagApplication.globalPlayer.isReady()) {
+                                LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
+                                ((MenuActivity) activity).launchFPS(mGameReference.getKey());
+                            } else {
+                                //kicks you out of the lobby if the game starts and you arent on a team
+                                Toast.makeText(getContext(), "The game has started and you were not on a team", Toast.LENGTH_SHORT).show();
+                                getActivity().getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                                        .commit();
+                                getActivity().getSupportFragmentManager().popBackStack();
+                            }
                         }
                     }
                 }
@@ -110,13 +127,16 @@ public class GameLobbyFragment extends Fragment {
                 public void onCancelled(FirebaseError firebaseError) {
                     Log.e(TAG, "Game with the following key failed to update: " + mGameReference.getKey(), firebaseError.toException());
                 }
-            });
+            };
+
+            mGameReference.addValueEventListener(mGameReferenceListener);
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        mGameReference.removeEventListener(mGameReferenceListener);
         mListener = null;
     }
 
@@ -141,6 +161,10 @@ public class GameLobbyFragment extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK){
                     mGame.removeGlobalPlayer(mGameReference);
+                    getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                            .commit();
                     getActivity().getSupportFragmentManager().popBackStack();
                 }
                 return true;

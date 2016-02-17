@@ -18,6 +18,7 @@ import com.taserlag.lasertag.fragments.SetPlayerColorFragment;
 public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener, SetPlayerColorFragment.OnFragmentInteractionListener{
 
     private final String TAG = "MenuActivity";
+    private static final String GAME_REF_PARAM = "gameRef";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +71,12 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         cgf.saveGame();
     }
 
-    public void launchFPS() {
+    //Passes game reference to FPSActivity
+    public void launchFPS(String gameReference) {
         Intent intent = new Intent(this, FPSActivity.class);
+        intent.putExtra(GAME_REF_PARAM,gameReference);
         startActivity(intent);
+        finish();
     }
 
     // main menu to join game fragment

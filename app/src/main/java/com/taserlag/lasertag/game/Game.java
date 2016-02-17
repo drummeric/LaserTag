@@ -172,15 +172,12 @@ public class Game{
             return false;
         }
 
-        //lol
-        final Game thisGame = this;
-
         gameReference.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData currentData) {
                 if (currentData.getValue() == null) {
                     //should never happen
-                    currentData.setValue(thisGame);
+                    currentData.setValue(Game.this);
                 } else {
                     Game game = currentData.getValue(Game.class);
 
@@ -231,14 +228,12 @@ public class Game{
     }
 
     public boolean removeGlobalPlayer(final String teamFullKey, Firebase gameReference) {
-        //lol
-        final Game thisGame = this;
 
         gameReference.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData currentData) {
                 if (currentData.getValue() == null) {
-                    currentData.setValue(thisGame);
+                    currentData.setValue(Game.this);
                 } else {
                     Game game = currentData.getValue(Game.class);
                     game.getFullKeys().get(teamFullKey).remove(LaserTagApplication.firebaseReference.getAuth().getUid());

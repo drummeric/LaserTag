@@ -1,12 +1,16 @@
 package com.taserlag.lasertag.activity;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +22,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VerticalSeekBar;
 
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
+import com.firebase.client.ValueEventListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
@@ -32,6 +41,8 @@ import com.taserlag.lasertag.weapon.StrongWeapon;
 public class FPSActivity extends AppCompatActivity implements MapHandler {
 
     private final String TAG = "FPSActivity";
+    private static final String GAME_REF_PARAM = "gameRef";
+
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
@@ -40,11 +51,20 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private TextView mAmmo;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Player player;
+    private Firebase mGameReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fps);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null){
+            mGameReference = LaserTagApplication.firebaseReference.child("games/"+extras.getString(GAME_REF_PARAM));
+        }
+
+        doStartCountdown();
+
         player = new Player("Player", new FastWeapon(), new StrongWeapon(), new FastShield());
         mAmmo = (TextView) findViewById(R.id.ammo_text_view);
         updateGUI();
@@ -78,6 +98,15 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     protected void onPause() {
         super.onPause();
         releaseCamera();
+    }
+
+    //Clears back stack and finishes activity. Returns to new MenuActivity
+    @Override
+    public void onBackPressed(){
+        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        Intent intent = new Intent(this, MenuActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -125,6 +154,58 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
         mapAss.addMarker(location);
         if (!mapAss.getMapExpanded())
             mapAss.animateCamera(location);
+    }
+
+    //Shows countdown dialog once everyone in game has loaded FPSActivity
+    private void doStartCountdown(){
+        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Game Starting in:");
+        alertDialog.setMessage("Waiting on players...");
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+
+        final CountDownTimer timer = new CountDownTimer(10000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                alertDialog.setMessage((millisUntilFinished/1000)+" seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                alertDialog.dismiss();
+            }
+        };
+
+        //Player has loaded FPSActivity, player ready flag set
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
+
+        //Get players in game
+        //Check to see if everyone has successfully started FPSActivity -> start timer
+        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
+        queryRef.keepSynced(true);
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean gameReady = true;
+
+                for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
+                    Player player = userSnaphot.child("player").getValue(Player.class);
+                    gameReady &= player.isReady();
+                }
+
+                if (gameReady) {
+                    timer.start();
+                    //timer has started, player ready flag clear
+                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
+                    queryRef.removeEventListener(this);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     private void initializeCameraAndSeekbar() {
