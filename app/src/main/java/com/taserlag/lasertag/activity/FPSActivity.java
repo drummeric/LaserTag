@@ -34,14 +34,13 @@ import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.player.Player;
-import com.taserlag.lasertag.shield.FastShield;
-import com.taserlag.lasertag.weapon.FastWeapon;
-import com.taserlag.lasertag.weapon.StrongWeapon;
+import com.taserlag.lasertag.shooter.ColorShooterTask;
+import com.taserlag.lasertag.shooter.ShooterCallback;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class FPSActivity extends AppCompatActivity implements MapHandler {
+public class FPSActivity extends AppCompatActivity implements MapHandler{
 
     private final String TAG = "FPSActivity";
     private static final String GAME_REF_PARAM = "gameRef";
@@ -53,10 +52,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
     private CameraPreview mPreview;
     private TextView mAmmo;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
-    private Player player;
     private Firebase mGameReference;
 
-    private Map<String, int[]> colorMap = new HashMap<>();
+    public static Map<String, int[]> colorMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +68,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
 
         doStartCountdown();
 
-        player = new Player("Player", new FastWeapon(), new StrongWeapon(), new FastShield());
         mAmmo = (TextView) findViewById(R.id.ammo_text_view);
         updateGUI();
     }
@@ -287,8 +284,40 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
         }
     }
 
-    private void updateGUI() {
-        mAmmo.setText(player.getActiveWeapon().getCurrentClipAmmo() + "|" + player.getActiveWeapon().getExcessAmmo());
+    public void updateGUI() {
+        mAmmo.setText(LaserTagApplication.globalPlayer.getActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.getActiveWeapon().getExcessAmmo());
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
+
+                @Override
+                public void onFinishShoot(String playerHit) {
+                    if (!playerHit.equals("")) {
+                        Toast.makeText(FPSActivity.this, "You hit " + playerHit, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void updateGUI(){
+                    FPSActivity.this.updateGUI();
+                }
+            });
+            asyncTask.execute(mPreview.getCameraData());
+        }
+        return true;
+    }
+
+    public void reloadWeapon(View view) {
+        LaserTagApplication.globalPlayer.getActiveWeapon().reload();
+        updateGUI();
+    }
+
+    public void swapWeapon(View view) {
+        LaserTagApplication.globalPlayer.swapWeapon();
+        updateGUI();
     }
 
     // This snippet hides the system bars.
@@ -303,62 +332,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            shoot();
-        }
-        return true;
-    }
-
-    private void shoot() {
-        if (player.getActiveWeapon().fire()) {
-            updateGUI();
-
-            if (mPreview.getCameraData()!=null) {
-                int[] hitColor = mPreview.getTargetColor();
-
-                Log.i(TAG, "Shot argb: " + hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
-
-                String hitPlayer = checkColors(hitColor, 40);
-
-                if (!hitPlayer.equals("")) {
-                    Toast.makeText(this, "You hit " + hitPlayer, Toast.LENGTH_SHORT).show();
-                }
-
-                MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
-                mp.start();
-            }
-        }
-    }
-
-    public String checkColors(int[] hitColor, int tolerance){
-        for (Map.Entry<String, int[]> player: colorMap.entrySet()){
-            if (checkPlayerColors(hitColor, player.getValue(),tolerance)){
-                return player.getKey();
-            }
-        }
-        return "";
-    }
-
-    public boolean checkPlayerColors(int[] hitColor, int[] playerColor, int tolerance){
-        boolean colorMatch = true;
-        for (int i = 0; i<hitColor.length; i++){
-            colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= tolerance;
-        }
-        return colorMatch;
-    }
-
-    public void reloadWeapon(View view) {
-        player.getActiveWeapon().reload();
-        updateGUI();
-    }
-
-    public void swapWeapon(View view) {
-        player.swapWeapon();
-        updateGUI();
     }
 
 } // FPSActivity

@@ -12,6 +12,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private byte[] mCameraData;
+    public static int mWidth;
+    public static int mHeight;
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
@@ -23,6 +25,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+        Camera.Parameters parameters = mCamera.getParameters();
+        Camera.Size size = parameters.getPreviewSize();
+        mWidth = size.width;
+        mHeight = size.height;
     }
 
     public byte[] getCameraData() {
@@ -31,16 +38,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     //averages middle 100 pixels
     public int[] getTargetColor(){
-        Camera.Parameters parameters = mCamera.getParameters();
-        Camera.Size size = parameters.getPreviewSize();
-        final int width = size.width;
-        final int height = size.height;
         int pixel;
         int[] argb = new int[4];
         for (int i = 0; i<10 ; i++){
             for (int j = 0; j<10; j++){
                 // gets pixel at x,y
-                pixel = getYUVvalue(mCameraData, width, height, (width-5+i)/2, (height-5+j)/2);
+                pixel = getYUVvalue(mCameraData, mWidth, mHeight, (mWidth-5+i)/2, (mHeight-5+j)/2);
 
                 // separates int color to rbg color
                 argb[0] = (argb[0]*(i+j) + Color.alpha(pixel))/(i+j+1);

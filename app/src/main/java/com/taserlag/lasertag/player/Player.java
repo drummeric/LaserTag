@@ -1,6 +1,8 @@
 package com.taserlag.lasertag.player;
 
 import com.taserlag.lasertag.shield.Shield;
+import com.taserlag.lasertag.weapon.FastWeapon;
+import com.taserlag.lasertag.weapon.StrongWeapon;
 import com.taserlag.lasertag.weapon.Weapon;
 
 public class Player{
@@ -20,8 +22,8 @@ public class Player{
     private String activeGameKey = "";
     private boolean ready = false;
 
-    private Weapon primaryWeapon;
-    private Weapon secondaryWeapon;
+    private Weapon primaryWeapon = new FastWeapon();
+    private Weapon secondaryWeapon = new StrongWeapon();
     private Shield shield;
 
     public Player() {}

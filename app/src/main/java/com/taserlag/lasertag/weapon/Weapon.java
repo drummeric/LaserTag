@@ -16,12 +16,14 @@ public abstract class Weapon {
         return excessAmmo;
     }
 
-    public boolean fire() {
+    public boolean canShoot() {
+        return currentClipAmmo != 0;
+    }
+
+    public void fire(){
         if (currentClipAmmo != 0) {
             currentClipAmmo--;
-            return true;
         }
-        return false;
     }
 
     public void reload() {
