@@ -19,6 +19,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.camera.CameraHelper;
 import com.taserlag.lasertag.camera.CameraPreview;
 
 public class SetPlayerColorFragment extends Fragment {
@@ -97,7 +98,7 @@ public class SetPlayerColorFragment extends Fragment {
                             playerColorPrompt.setText("Shoot " + mPlayerName + " " + (5 - mShots) + " times.");
                         }
 
-                        int[] argb = mPreview.getTargetColor();
+                        int[] argb = CameraHelper.getInstance().getTargetColor(mPreview.getCameraData());
 
                         //running average of colors detected
                         mARGB[0] = (mARGB[0]*(mShots-1) + argb[0])/(mShots);
