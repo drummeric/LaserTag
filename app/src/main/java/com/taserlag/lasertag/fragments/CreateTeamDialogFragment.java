@@ -11,11 +11,23 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.firebase.client.Firebase;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.team.Team;
 
 public class CreateTeamDialogFragment extends DialogFragment {
+
+    private Game mGame;
+    private Firebase mGameReference;
+
+    public void setGame(Game mGame) {
+        this.mGame = mGame;
+    }
+
+    public void setGameReference(Firebase mGameReference) {
+        this.mGameReference = mGameReference;
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -50,11 +62,9 @@ public class CreateTeamDialogFragment extends DialogFragment {
                         if (teamName.getText().toString().isEmpty()){
                             teamName.setError(getString(R.string.create_team_dialog_empty_name));
                         } else {
-                            GameLobbyFragment glf = ((GameLobbyFragment) getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"));
                             Team team = new Team(teamName.getText().toString());
-                            Game game = glf.getGame();
 
-                            if (!game.createTeamWithGlobalPlayer(team, glf.getGameReference())){
+                            if (mGame != null && mGameReference != null && !mGame.createTeamWithGlobalPlayer(team, mGameReference)) {
                                 teamName.setError(getString(R.string.create_team_dialog_team_exists));
                             } else {
                                 d.dismiss();

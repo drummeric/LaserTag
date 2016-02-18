@@ -156,21 +156,27 @@ public class GameLobbyFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public Game getGame(){
-        return mGame;
-    }
-
-    public Firebase getGameReference(){
-        return mGameReference;
-    }
-
     private void init(final View view){
+        initBackButton(view);
+
+        //set game description at top of screen
+        final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
+        gameInfo.setText(mGame.toString());
+
+        initCreateTeamButton(view);
+
+        initReadyButton(view);
+
+        initRecyclerView(view);
+    }
+
+    private void initBackButton(View view){
         view.setFocusableInTouchMode(true);
         view.requestFocus();
         view.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_BACK){
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
                     mGame.removeGlobalPlayer(mGameReference);
                     mGameReference.removeEventListener(mGameReferenceListener);
                     getActivity().getSupportFragmentManager()
@@ -182,19 +188,22 @@ public class GameLobbyFragment extends Fragment {
                 return true;
             }
         });
+    }
 
-        final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
-        gameInfo.setText(mGame.toString());
-
+    private void initCreateTeamButton(View view){
         Button createTeamButton = (Button) view.findViewById(R.id.button_create_team);
         createTeamButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 CreateTeamDialogFragment dialog = new CreateTeamDialogFragment();
+                dialog.setGame(mGame);
+                dialog.setGameReference(mGameReference);
                 dialog.show(getActivity().getSupportFragmentManager(), "create_team_dialog_fragment");
             }
         });
+    }
 
+    private void initReadyButton(View view){
         final StickyButton readyButton = (StickyButton) view.findViewById(R.id.button_ready_up);
         readyButton.setStickyColor(Color.GREEN);
         readyButton.setOnClickListener(new View.OnClickListener() {
@@ -235,6 +244,9 @@ public class GameLobbyFragment extends Fragment {
             }
         });
 
+    }
+
+    private void initRecyclerView(View view){
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
         //todo use Map.Entry<K,V> instead of Object
@@ -319,7 +331,7 @@ public class GameLobbyFragment extends Fragment {
         recycler.setAdapter(mAdapter);
     }
 
-    public void setListViewHeightBasedOnItems(ListView listView) {
+    private void setListViewHeightBasedOnItems(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
         if (listAdapter != null) {
             int numberOfItems = listAdapter.getCount();
