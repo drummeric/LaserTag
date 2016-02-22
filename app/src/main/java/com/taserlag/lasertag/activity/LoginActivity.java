@@ -68,4 +68,8 @@ public class LoginActivity extends AppCompatActivity implements LoginFragment.On
     public void signup(View view) {
         ((LoginSignupFragment) findFragmentByTag("login_signup_fragment")).performSignup();
     }
+
+    public void passwordRecover(View view) {
+        ((LoginPasswordRecoverFragment) findFragmentByTag("login_password_recover_fragment")).performPasswordRecover();
+    }
 }

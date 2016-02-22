@@ -20,6 +20,9 @@
     <string name="signup_error_username_conflict">Username already exists</string>
     <string name="signup_failure">Could not sign up</string>
 
+    <string name="password_recover_email_sent">Please check your email to recover your password.</string>
+    <string name="password_recover_error_user_dne">The specified email does not exist.</string>
+    <string name="password_recover_failure">The password recovery email failed to send. Please try again.</string>
 
     <string-array name="array_scores">
         <item>5</item>
