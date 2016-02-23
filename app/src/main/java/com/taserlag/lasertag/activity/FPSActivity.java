@@ -285,7 +285,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     }
 
     public void updateGUI() {
-        mAmmo.setText(LaserTagApplication.globalPlayer.getActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.getActiveWeapon().getExcessAmmo());
+        mAmmo.setText(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo());
     }
 
     @Override
@@ -311,7 +311,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     }
 
     public void reloadWeapon(View view) {
-        LaserTagApplication.globalPlayer.getActiveWeapon().reload();
+        LaserTagApplication.globalPlayer.retrieveActiveWeapon().reload();
         updateGUI();
     }
 

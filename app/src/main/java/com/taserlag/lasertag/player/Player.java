@@ -71,7 +71,7 @@ public class Player{
         return ready;
     }
 
-    public Weapon getActiveWeapon() {
+    public Weapon retrieveActiveWeapon() {
         if (primaryWeaponActive) {
             return primaryWeapon;
         } else {

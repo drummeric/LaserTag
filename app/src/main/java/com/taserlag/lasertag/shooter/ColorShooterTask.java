@@ -25,10 +25,10 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
     @Override
     protected void onPreExecute() {
-        if (!LaserTagApplication.globalPlayer.getActiveWeapon().canShoot()){
+        if (!LaserTagApplication.globalPlayer.retrieveActiveWeapon().canShoot()){
             cancel(true);
         } else {
-            LaserTagApplication.globalPlayer.getActiveWeapon().fire();
+            LaserTagApplication.globalPlayer.retrieveActiveWeapon().fire();
             fpsCallback.updateGUI();
 
         }
