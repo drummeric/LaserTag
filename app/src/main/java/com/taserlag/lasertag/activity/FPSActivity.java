@@ -5,7 +5,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.location.Location;
-import android.media.MediaPlayer;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
@@ -54,6 +55,13 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
 
+    private SoundPool mSoundPool;
+    private static final int MAX_STEAMS = 1;
+    private static final int SOURCE_QUALITY = 0;
+
+    private int mShootSound;
+
+
     public static Map<String, int[]> colorMap = new HashMap<>();
 
     @Override
@@ -67,6 +75,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         }
 
         doStartCountdown();
+
+        mSoundPool = new SoundPool(MAX_STEAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
+
+        mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+            }
+        });
+
+        mShootSound = mSoundPool.load(this, R.raw.m4a1single, 1);
 
         mAmmo = (TextView) findViewById(R.id.ammo_text_view);
         updateGUI();
@@ -302,6 +320,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
                 @Override
                 public void updateGUI(){
+                    mSoundPool.play(mShootSound,1,1,1,0,1);
                     FPSActivity.this.updateGUI();
                 }
             });

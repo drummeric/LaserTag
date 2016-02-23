@@ -47,9 +47,6 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
         String hitPlayer = checkColors(hitColor, 40);
 
-        //MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.m4a1single);
-        //mp.start();
-
         return hitPlayer;
     }
 
