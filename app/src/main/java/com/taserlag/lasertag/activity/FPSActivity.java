@@ -49,20 +49,21 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
+    private final int TIMER_LENGTH_MS = 10000;
+
     private Camera mCamera;
     private CameraPreview mPreview;
     private TextView mAmmo;
+    private TextView mHealth;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
 
     private SoundPool mSoundPool;
-    private static final int MAX_STEAMS = 1;
+    private static final int MAX_STREAMS = 1;
     private static final int SOURCE_QUALITY = 0;
-
     private int mShootSound;
 
-
-    public static Map<String, int[]> colorMap = new HashMap<>();
+    public static Map<String, Player> playerMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,18 +77,32 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
         doStartCountdown();
 
-        mSoundPool = new SoundPool(MAX_STEAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
+        mHealth = (TextView) findViewById(R.id.health_text_view);
+        mAmmo = (TextView) findViewById(R.id.ammo_text_view);
+        updateAmmoText();
+        updateHealthText(LaserTagApplication.globalPlayer.getHealth());
 
+        mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
             }
         });
-
         mShootSound = mSoundPool.load(this, R.raw.m4a1single, 1);
 
-        mAmmo = (TextView) findViewById(R.id.ammo_text_view);
-        updateGUI();
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue(Integer.class) < 100) {
+                    Toast.makeText(FPSActivity.this, "You've been shot!", Toast.LENGTH_SHORT).show();
+                    updateHealthText(dataSnapshot.getValue(Integer.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
     }
 
     @Override
@@ -127,6 +142,154 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         Intent intent = new Intent(this, MenuActivity.class);
         startActivity(intent);
         finish();
+    }
+
+
+    //Shows countdown dialog once everyone in game has loaded FPSActivity
+    private void doStartCountdown(){
+        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Game Starting in:");
+        alertDialog.setMessage("Waiting on players...");
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+
+        final CountDownTimer timer = new CountDownTimer(TIMER_LENGTH_MS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                alertDialog.setMessage((millisUntilFinished/1000)+" seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                alertDialog.dismiss();
+            }
+        };
+
+        //Player has loaded FPSActivity, player ready flag set
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
+
+        //Get players in game
+        //Check to see if everyone has successfully started FPSActivity -> start timer
+        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
+        queryRef.keepSynced(true);
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean gameReady = true;
+
+                for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
+                    Player player = userSnaphot.child("player").getValue(Player.class);
+                    gameReady &= player.isReady();
+                }
+
+                if (gameReady) {
+                    timer.start();
+                    //timer has started, player ready flag clear
+                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
+                    queryRef.removeEventListener(this);
+
+                    //init playerMap now that the query is finalized
+                    for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
+                        Player player = userSnaphot.child("player").getValue(Player.class);
+                        playerMap.put(userSnaphot.getKey(), player);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    // parameter passed is updated value from database, which is guaranteed to be the most up to date at this time
+    private void updateHealthText(int health){
+        mHealth.setText("Health: " + health);
+    }
+
+    // no param since ammo not stored in database
+    private void updateAmmoText() {
+        mAmmo.setText(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo());
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
+
+                @Override
+                public void onFinishShoot(String playerHit) {
+                    if (!playerHit.equals("")) {
+                        if (playerMap.get(playerHit).decrementHealth(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getStrength(), playerHit)){
+                            Toast.makeText(FPSActivity.this, "You hit " + playerMap.get(playerHit).getName(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void updateGUI(){
+                    mSoundPool.play(mShootSound,1,1,1,0,1);
+                    FPSActivity.this.updateAmmoText();
+                }
+            });
+            asyncTask.execute(mPreview.getCameraData());
+        }
+        return true;
+    }
+
+    public void reloadWeapon(View view) {
+        LaserTagApplication.globalPlayer.retrieveActiveWeapon().reload();
+        updateAmmoText();
+    }
+
+    public void swapWeapon(View view) {
+        LaserTagApplication.globalPlayer.swapWeapon();
+        updateAmmoText();
+    }
+
+    private void initializeCameraAndSeekbar() {
+        // Create an instance of camera
+        mCamera = getCameraInstance();
+
+        // Create preview of camera
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
+
+        // Initialize seekbar
+        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
+        mSeekBar.setProgress(0);
+
+        Camera.Parameters params = mCamera.getParameters();
+        if (params.isZoomSupported()) {
+            mSeekBar.setMax(params.getMaxZoom());
+        }
+
+        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                setZoom(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+    }
+
+    private Camera getCameraInstance() {
+        Camera c = null;
+        try {
+            c = Camera.open(); // Attempt to get a Camera instance
+        } catch (Exception e) {
+            Log.e("LaserTag", "Camera is not available", e); // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
     }
 
     @Override
@@ -176,108 +339,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             mapAss.animateCamera(location);
     }
 
-    //Shows countdown dialog once everyone in game has loaded FPSActivity
-    private void doStartCountdown(){
-        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle("Game Starting in:");
-        alertDialog.setMessage("Waiting on players...");
-        alertDialog.setCancelable(false);
-        alertDialog.show();
-
-        final CountDownTimer timer = new CountDownTimer(10000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                alertDialog.setMessage((millisUntilFinished/1000)+" seconds");
-            }
-
-            @Override
-            public void onFinish() {
-                alertDialog.dismiss();
-            }
-        };
-
-        //Player has loaded FPSActivity, player ready flag set
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
-
-        //Get players in game
-        //Check to see if everyone has successfully started FPSActivity -> start timer
-        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
-        queryRef.keepSynced(true);
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean gameReady = true;
-
-                for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                    Player player = userSnaphot.child("player").getValue(Player.class);
-                    gameReady &= player.isReady();
-                }
-
-                if (gameReady) {
-                    timer.start();
-                    //timer has started, player ready flag clear
-                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
-                    queryRef.removeEventListener(this);
-
-                    //init colorMap now that the query is finalized
-                    for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                        Player player = userSnaphot.child("player").getValue(Player.class);
-                        colorMap.put(player.getName(), player.getColor());
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
-
-    private void initializeCameraAndSeekbar() {
-        // Create an instance of camera
-        mCamera = getCameraInstance();
-
-        // Create preview of camera
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
-
-        // Initialize seekbar
-        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
-        mSeekBar.setProgress(0);
-
-        Camera.Parameters params = mCamera.getParameters();
-        if (params.isZoomSupported()) {
-            mSeekBar.setMax(params.getMaxZoom());
-        }
-
-        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                setZoom(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-    }
-
-    private Camera getCameraInstance() {
-        Camera c = null;
-        try {
-            c = Camera.open(); // Attempt to get a Camera instance
-        } catch (Exception e) {
-            Log.e("LaserTag", "Camera is not available", e); // Camera is not available (in use or does not exist)
-        }
-        return c; // returns null if camera is unavailable
-    }
-
     private void releaseCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
@@ -300,43 +361,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             // set Camera parameters
             mCamera.setParameters(params);
         }
-    }
-
-    public void updateGUI() {
-        mAmmo.setText(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo());
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
-
-                @Override
-                public void onFinishShoot(String playerHit) {
-                    if (!playerHit.equals("")) {
-                        Toast.makeText(FPSActivity.this, "You hit " + playerHit, Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void updateGUI(){
-                    mSoundPool.play(mShootSound,1,1,1,0,1);
-                    FPSActivity.this.updateGUI();
-                }
-            });
-            asyncTask.execute(mPreview.getCameraData());
-        }
-        return true;
-    }
-
-    public void reloadWeapon(View view) {
-        LaserTagApplication.globalPlayer.retrieveActiveWeapon().reload();
-        updateGUI();
-    }
-
-    public void swapWeapon(View view) {
-        LaserTagApplication.globalPlayer.swapWeapon();
-        updateGUI();
     }
 
     // This snippet hides the system bars.

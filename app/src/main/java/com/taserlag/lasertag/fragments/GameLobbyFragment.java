@@ -116,10 +116,11 @@ public class GameLobbyFragment extends Fragment {
 
                         //only start one instance of FPSActivity
                         if (mGame.isGameReady()&&!FPSStarted){
-                            //if you're on a team when the game starts, go to FPSActivity
+                            //if you're on a team when the game starts, reset your health and go to FPSActivity
                             FPSStarted = true;
                             mGameReference.child("gameReady").setValue(false);
                             if (LaserTagApplication.globalPlayer.isReady()) {
+                                LaserTagApplication.globalPlayer.resetHealth();
                                 LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                                 ((MenuActivity) activity).launchFPS(mGameReference.getKey());
                             } else {

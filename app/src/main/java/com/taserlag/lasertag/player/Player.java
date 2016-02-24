@@ -1,11 +1,20 @@
 package com.taserlag.lasertag.player;
 
+import android.util.Log;
+
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.MutableData;
+import com.firebase.client.Transaction;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.shield.Shield;
 import com.taserlag.lasertag.weapon.FastWeapon;
 import com.taserlag.lasertag.weapon.StrongWeapon;
 import com.taserlag.lasertag.weapon.Weapon;
 
 public class Player{
+
+    private static final String TAG = "player";
 
     private String name;
 
@@ -93,6 +102,83 @@ public class Player{
 
     public void resetCaptain() {
         captain = false;
+    }
+
+    //can only increment my score, does not take in playerUID
+    public void incrementScore(final int value){
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                if (mutableData.getValue(Integer.class) == null) {
+                    mutableData.setValue(100);
+                } else {
+                    int health = mutableData.getValue(Integer.class);
+                    health -= value;
+                    if (health > 0) {
+                        mutableData.setValue(mutableData.getValue(Integer.class) - value);
+                    } else {
+                        mutableData.setValue(0);
+                    }
+                }
+
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.i(TAG, "Successfully decremented health for player " + name);
+            }
+        });
+    }
+
+    // can only reset my health, does not take playerUID
+    public void resetHealth(){
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                mutableData.setValue(100);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.i(TAG, "Successfully reset health for player " + name);
+            }
+        });
+    }
+
+    // decrement other people's health, cannot hurt yourself
+    // returns false if you try to decrement your own health
+    public boolean decrementHealth(final int value, String playerUID){
+        boolean hitYourself = LaserTagApplication.firebaseReference.getAuth().getUid().equals(playerUID);
+
+        if (!hitYourself) {
+            LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player/health").runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData mutableData) {
+                    if (mutableData.getValue(Integer.class) == null) {
+                        mutableData.setValue(100);
+                    } else {
+                        int health = mutableData.getValue(Integer.class);
+                        health -= value;
+                        if (health > 0) {
+                            mutableData.setValue(mutableData.getValue(Integer.class) - value);
+                        } else {
+                            mutableData.setValue(0);
+                        }
+                    }
+
+                    return Transaction.success(mutableData);
+                }
+
+                @Override
+                public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+                    Log.i(TAG, "Successfully decremented health for player " + name);
+                }
+            });
+        }
+
+        return !hitYourself;
     }
 
 }

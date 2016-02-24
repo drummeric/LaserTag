@@ -21,7 +21,6 @@ public class CameraHelper {
         mWidth = width;
     }
 
-
     public void setHeight(int height) {
         mHeight = height;
     }

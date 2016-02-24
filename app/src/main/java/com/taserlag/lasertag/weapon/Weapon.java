@@ -7,6 +7,7 @@ public abstract class Weapon {
     protected int excessAmmo;
     protected int clipSize;
     protected int currentClipAmmo;
+    private long lastShotTime = 0;
 
     public int getCurrentClipAmmo() {
         return currentClipAmmo;
@@ -16,14 +17,25 @@ public abstract class Weapon {
         return excessAmmo;
     }
 
-    public boolean canShoot() {
-        return currentClipAmmo != 0;
+    public int getStrength(){
+        return strength;
     }
 
-    public void fire(){
-        if (currentClipAmmo != 0) {
+    // if you have ammo and the time elapsed since the last shot is
+    // greater than the fireRate of the weapon, canShoot
+    private boolean canShoot() {
+        return (currentClipAmmo != 0) && (System.currentTimeMillis() - lastShotTime >= fireRate);
+    }
+
+    // only fires if it can, returns success/failure
+    // save shot time and dec ammo
+    public boolean fire(){
+        boolean canShoot = canShoot();
+        if (canShoot) {
+            lastShotTime = System.currentTimeMillis();
             currentClipAmmo--;
         }
+        return canShoot;
     }
 
     public void reload() {

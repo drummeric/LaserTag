@@ -7,6 +7,7 @@ public class StrongWeapon extends Weapon {
         excessAmmo = 40;
         clipSize = 10;
         currentClipAmmo = 10;
+        fireRate = 1000;
     }
 
 }

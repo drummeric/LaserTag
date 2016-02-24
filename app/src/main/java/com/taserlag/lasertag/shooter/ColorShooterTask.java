@@ -6,6 +6,7 @@ import android.util.Log;
 import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraHelper;
+import com.taserlag.lasertag.player.Player;
 
 import java.util.Map;
 
@@ -25,12 +26,10 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
     @Override
     protected void onPreExecute() {
-        if (!LaserTagApplication.globalPlayer.retrieveActiveWeapon().canShoot()){
+        if (!LaserTagApplication.globalPlayer.retrieveActiveWeapon().fire()){
             cancel(true);
         } else {
-            LaserTagApplication.globalPlayer.retrieveActiveWeapon().fire();
             fpsCallback.updateGUI();
-
         }
     }
 
@@ -50,13 +49,13 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
         return hitPlayer;
     }
 
-    // returns player with the closest color within tolerance or ""
+    // returns playerUID with the closest color within tolerance or ""
     private String checkColors(int[] hitColor, int tolerance){
         String smallestPlayer = "";
         int distance = tolerance *3;
         int totalDiff;
-        for (Map.Entry<String, int[]> player: FPSActivity.colorMap.entrySet()){
-            totalDiff = checkPlayerColors(hitColor, player.getValue(),tolerance);
+        for (Map.Entry<String, Player> player: FPSActivity.playerMap.entrySet()){
+            totalDiff = checkPlayerColors(hitColor, player.getValue().getColor(),tolerance);
             if (totalDiff <= distance){
                 smallestPlayer = player.getKey();
                 distance = totalDiff;
