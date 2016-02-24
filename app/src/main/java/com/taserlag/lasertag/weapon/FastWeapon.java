@@ -10,4 +10,9 @@ public class FastWeapon extends Weapon {
         fireRate = 200;
     }
 
+    @Override
+    public String toString(){
+        return "Fast";
+    }
+
 }

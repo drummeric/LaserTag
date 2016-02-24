@@ -18,10 +18,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VerticalSeekBar;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -31,6 +29,7 @@ import com.firebase.client.ValueEventListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
+import com.taserlag.lasertag.camera.Zoom;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
@@ -49,12 +48,15 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
-    private final int TIMER_LENGTH_MS = 10000;
+    private final int TIMER_LENGTH_MS = 1000;
 
     private Camera mCamera;
     private CameraPreview mPreview;
-    private TextView mAmmo;
-    private TextView mHealth;
+    private Zoom mCameraZoom = Zoom.NONE;
+    private TextView mClipAmmoText;
+    private TextView mTotalAmmoText;
+    private TextView mWeaponText;
+    private TextView mHealthText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
 
@@ -77,9 +79,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
         doStartCountdown();
 
-        mHealth = (TextView) findViewById(R.id.health_text_view);
-        mAmmo = (TextView) findViewById(R.id.ammo_text_view);
+        mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
+        mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
+        mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
+        mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         updateAmmoText();
+        updateWeaponText();
         updateHealthText(LaserTagApplication.globalPlayer.getHealth());
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
@@ -115,8 +120,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             // If permission not granted, request permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
         } else {
-            // Else initialize camera and seekbar
-            initializeCameraAndSeekbar();
+            // Else initialize camera
+            initializeCamera();
         }
 
         // Check location permission
@@ -205,12 +210,22 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
     // parameter passed is updated value from database, which is guaranteed to be the most up to date at this time
     private void updateHealthText(int health){
-        mHealth.setText("Health: " + health);
+        mHealthText.setText(String.valueOf(health));
     }
 
     // no param since ammo not stored in database
     private void updateAmmoText() {
-        mAmmo.setText(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo() + "|" + LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo());
+        int clip = LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo();
+        if (clip < 10){
+            mClipAmmoText.setText("0"+String.valueOf(clip));
+        } else {
+            mClipAmmoText.setText(String.valueOf(clip));
+        }
+        mTotalAmmoText.setText("/"+String.valueOf(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo())+" ");
+    }
+
+    private void updateWeaponText(){
+        mWeaponText.setText("[ "+LaserTagApplication.globalPlayer.retrieveActiveWeapon().toString()+" ]");
     }
 
     @Override
@@ -246,9 +261,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     public void swapWeapon(View view) {
         LaserTagApplication.globalPlayer.swapWeapon();
         updateAmmoText();
+        updateWeaponText();
     }
 
-    private void initializeCameraAndSeekbar() {
+    private void initializeCamera() {
         // Create an instance of camera
         mCamera = getCameraInstance();
 
@@ -256,30 +272,28 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
+    }
 
-        // Initialize seekbar
-        VerticalSeekBar mSeekBar = (VerticalSeekBar) findViewById(R.id.zoom_seek_bar);
-        mSeekBar.setProgress(0);
-
+    public void scopeClick(View view){
         Camera.Parameters params = mCamera.getParameters();
         if (params.isZoomSupported()) {
-            mSeekBar.setMax(params.getMaxZoom());
+            switch (mCameraZoom) {
+                case NONE:
+                    setZoom(params.getMaxZoom()/2);
+                    mCameraZoom = Zoom.HALF;
+                    break;
+
+                case HALF:
+                    setZoom(params.getMaxZoom());
+                    mCameraZoom = Zoom.FULL;
+                    break;
+
+                case FULL:
+                    setZoom(0);
+                    mCameraZoom = Zoom.NONE;
+                    break;
+            }
         }
-
-        mSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                setZoom(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
     }
 
     private Camera getCameraInstance() {
@@ -299,7 +313,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // Camera permission was granted
-                    initializeCameraAndSeekbar();
+                    initializeCamera();
                 } else {
                     // Camera permission was denied
                     // Exit the application

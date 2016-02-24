@@ -10,4 +10,9 @@ public class StrongWeapon extends Weapon {
         fireRate = 1000;
     }
 
+    @Override
+    public String toString(){
+        return "Strong";
+    }
+
 }
