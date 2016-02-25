@@ -298,7 +298,7 @@ public class Game{
     }
 
     //Returns teamfullkey of team to which player belongs
-    // else null
+    // else ""
     public String findPlayer(String playerUID){
 
         for (Map.Entry<String, List<String>> entry: fullKeys.entrySet()){
@@ -316,8 +316,10 @@ public class Game{
     public String toString(){
         StringBuilder description = new StringBuilder();
 
+        description.append(getHost()).append("'s ");
+
         if (getPrivateMatch()) {
-            description.append("Private ");
+            description.append("private ");
         }
 
         description.append(getGameType()).append(" game ");

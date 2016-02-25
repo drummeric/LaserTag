@@ -26,7 +26,7 @@ public class Player{
 
     private boolean primaryWeaponActive = true;
 
-    private int[] color;
+    private int[] color = new int[4];
 
     private String activeGameKey = "";
     private boolean ready = false;
@@ -104,52 +104,75 @@ public class Player{
         captain = false;
     }
 
+    private void resetScore(){
+        score = 0;
+    }
+
+    private void resetHealth(){
+        health = 100;
+    }
+
     //can only increment my score, does not take in playerUID
-    public void incrementScore(final int value){
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+    private static void incrementScore(final int value, final String teamUID){
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
                 if (mutableData.getValue(Integer.class) == null) {
-                    mutableData.setValue(100);
+                    mutableData.setValue(0);
                 } else {
-                    int health = mutableData.getValue(Integer.class);
-                    health -= value;
-                    if (health > 0) {
-                        mutableData.setValue(mutableData.getValue(Integer.class) - value);
-                    } else {
-                        mutableData.setValue(0);
-                    }
+                    mutableData.setValue(mutableData.getValue(Integer.class) + value);
                 }
-
                 return Transaction.success(mutableData);
             }
 
             @Override
             public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Successfully decremented health for player " + name);
+                Log.i(TAG, "Successfully incremented score for player " + LaserTagApplication.firebaseReference.getAuth().getUid());
+            }
+        });
+
+        LaserTagApplication.firebaseReference.child("teams").child(teamUID).child("score").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                if (mutableData.getValue(Integer.class) == null) {
+                    mutableData.setValue(0);
+                } else {
+                    mutableData.setValue(mutableData.getValue(Integer.class) + value);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.i(TAG, "Successfully incremented score for team " + teamUID);
             }
         });
     }
 
     // can only reset my health, does not take playerUID
-    public void resetHealth(){
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+    public static void resetHealthAndScore(){
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
-                mutableData.setValue(100);
+                if (mutableData.getValue(Player.class)!=null){
+                    Player player = mutableData.getValue(Player.class);
+                    player.resetScore();
+                    player.resetHealth();
+                    mutableData.setValue(player);
+                }
                 return Transaction.success(mutableData);
             }
 
             @Override
             public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Successfully reset health for player " + name);
+                Log.i(TAG, "Successfully reset health for player " + LaserTagApplication.firebaseReference.getAuth().getUid());
             }
         });
     }
 
     // decrement other people's health, cannot hurt yourself
     // returns false if you try to decrement your own health
-    public boolean decrementHealth(final int value, String playerUID){
+    public static boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){
         boolean hitYourself = LaserTagApplication.firebaseReference.getAuth().getUid().equals(playerUID);
 
         if (!hitYourself) {
@@ -162,8 +185,10 @@ public class Player{
                         int health = mutableData.getValue(Integer.class);
                         health -= value;
                         if (health > 0) {
-                            mutableData.setValue(mutableData.getValue(Integer.class) - value);
+                            mutableData.setValue(health);
                         } else {
+                            //they're dead, inc my score by 1
+                            incrementScore(1, teamUID);
                             mutableData.setValue(0);
                         }
                     }
@@ -173,7 +198,7 @@ public class Player{
 
                 @Override
                 public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                    Log.i(TAG, "Successfully decremented health for player " + name);
+                    Log.i(TAG, "Successfully decremented health for player " + playerUID);
                 }
             });
         }

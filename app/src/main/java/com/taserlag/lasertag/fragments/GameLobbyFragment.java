@@ -120,7 +120,7 @@ public class GameLobbyFragment extends Fragment {
                             FPSStarted = true;
                             mGameReference.child("gameReady").setValue(false);
                             if (LaserTagApplication.globalPlayer.isReady()) {
-                                LaserTagApplication.globalPlayer.resetHealth();
+                                Player.resetHealthAndScore();
                                 LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                                 ((MenuActivity) activity).launchFPS(mGameReference.getKey());
                             } else {

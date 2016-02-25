@@ -6,6 +6,8 @@ public class Team{
 
     private int maxTeamSize = 1;
 
+    private int score = 0;
+
     public Team() {}
 
     public Team(String name) {
@@ -26,6 +28,10 @@ public class Team{
 
     public void setMaxTeamSize(int maxTeamSize) {
         this.maxTeamSize = maxTeamSize;
+    }
+
+    public int getScore(){
+        return score;
     }
 
     @Override

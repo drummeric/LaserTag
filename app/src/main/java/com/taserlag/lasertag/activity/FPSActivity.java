@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
+import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
@@ -57,8 +58,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private TextView mTotalAmmoText;
     private TextView mWeaponText;
     private TextView mHealthText;
+    private TextView mScoreText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
+    private Game mGame;
 
     private SoundPool mSoundPool;
     private static final int MAX_STREAMS = 1;
@@ -79,12 +82,27 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
         doStartCountdown();
 
+        mGameReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue(Game.class) != null) {
+                    mGame = dataSnapshot.getValue(Game.class);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
+
+        mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         updateAmmoText();
         updateWeaponText();
+        updateScoreText(LaserTagApplication.globalPlayer.getScore());
         updateHealthText(LaserTagApplication.globalPlayer.getHealth());
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
@@ -101,6 +119,19 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 if (dataSnapshot.getValue(Integer.class) < 100) {
                     Toast.makeText(FPSActivity.this, "You've been shot!", Toast.LENGTH_SHORT).show();
                     updateHealthText(dataSnapshot.getValue(Integer.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
+
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue(Integer.class) < 100) {
+                    updateScoreText(dataSnapshot.getValue(Integer.class));
                 }
             }
 
@@ -208,6 +239,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         });
     }
 
+    private void updateScoreText(int score){
+        mScoreText.setText(String.valueOf(score));
+    }
+
     // parameter passed is updated value from database, which is guaranteed to be the most up to date at this time
     private void updateHealthText(int health){
         mHealthText.setText(String.valueOf(health));
@@ -234,10 +269,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
 
                 @Override
-                public void onFinishShoot(String playerHit) {
-                    if (!playerHit.equals("")) {
-                        if (playerMap.get(playerHit).decrementHealth(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getStrength(), playerHit)){
-                            Toast.makeText(FPSActivity.this, "You hit " + playerMap.get(playerHit).getName(), Toast.LENGTH_SHORT).show();
+                public void onFinishShoot(String playerHitUID) {
+                    if (!playerHitUID.equals("")) {
+                        if (Player.decrementHealthAndIncMyScore(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
+                            Toast.makeText(FPSActivity.this, "You hit " + playerMap.get(playerHitUID).getName(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
