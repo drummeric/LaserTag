@@ -16,7 +16,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
-import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.player.DBPlayer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -134,7 +134,7 @@ public class LoginSignupFragment extends Fragment {
                 map.put("username",username);
                 LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(map);
 
-                Player newPlayer = new Player(username);
+                DBPlayer newPlayer = new DBPlayer(username);
                 LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).child("player").setValue(newPlayer);
 
 

@@ -6,12 +6,12 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.player.DBPlayer;
 
 public class LaserTagApplication extends Application {
     public static Firebase firebaseReference;
     private final static String TAG = "LaserTagApplication";
-    public static Player globalPlayer;
+    public static DBPlayer globalPlayer;
     private static ValueEventListener playerListener;
 
     @Override
@@ -29,7 +29,7 @@ public class LaserTagApplication extends Application {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (firebaseReference.getAuth().getUid() != null) {
                     Log.i(TAG, "globalPlayer has been successfully updated for user: " + firebaseReference.getAuth().getUid());
-                    globalPlayer = dataSnapshot.getValue(Player.class);
+                    globalPlayer = dataSnapshot.getValue(DBPlayer.class);
                 }
             }
 

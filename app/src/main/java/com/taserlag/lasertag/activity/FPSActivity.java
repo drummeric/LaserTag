@@ -34,6 +34,7 @@ import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.shooter.ColorShooterTask;
 import com.taserlag.lasertag.shooter.ShooterCallback;
@@ -68,7 +69,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private static final int SOURCE_QUALITY = 0;
     private int mShootSound;
 
-    public static Map<String, Player> playerMap = new HashMap<>();
+    public static Map<String, DBPlayer> dbPlayerMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -214,8 +215,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 boolean gameReady = true;
 
                 for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                    Player player = userSnaphot.child("player").getValue(Player.class);
-                    gameReady &= player.isReady();
+                    DBPlayer dbPlayer = userSnaphot.child("player").getValue(DBPlayer.class);
+                    gameReady &= dbPlayer.isReady();
                 }
 
                 if (gameReady) {
@@ -224,10 +225,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                     LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                     queryRef.removeEventListener(this);
 
-                    //init playerMap now that the query is finalized
+                    //init dbPlayerMap now that the query is finalized
                     for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                        Player player = userSnaphot.child("player").getValue(Player.class);
-                        playerMap.put(userSnaphot.getKey(), player);
+                        DBPlayer dbPlayer = userSnaphot.child("player").getValue(DBPlayer.class);
+                        dbPlayerMap.put(userSnaphot.getKey(), dbPlayer);
                     }
                 }
             }
@@ -250,17 +251,17 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
     // no param since ammo not stored in database
     private void updateAmmoText() {
-        int clip = LaserTagApplication.globalPlayer.retrieveActiveWeapon().getCurrentClipAmmo();
+        int clip = Player.getInstance().retrieveActiveWeapon().getCurrentClipAmmo();
         if (clip < 10){
             mClipAmmoText.setText("0"+String.valueOf(clip));
         } else {
             mClipAmmoText.setText(String.valueOf(clip));
         }
-        mTotalAmmoText.setText("/"+String.valueOf(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getExcessAmmo())+" ");
+        mTotalAmmoText.setText("/"+String.valueOf(Player.getInstance().retrieveActiveWeapon().getExcessAmmo())+" ");
     }
 
     private void updateWeaponText(){
-        mWeaponText.setText("[ "+LaserTagApplication.globalPlayer.retrieveActiveWeapon().toString()+" ]");
+        mWeaponText.setText("[ "+Player.getInstance().retrieveActiveWeapon().toString()+" ]");
     }
 
     @Override
@@ -271,8 +272,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 @Override
                 public void onFinishShoot(String playerHitUID) {
                     if (!playerHitUID.equals("")) {
-                        if (Player.decrementHealthAndIncMyScore(LaserTagApplication.globalPlayer.retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
-                            Toast.makeText(FPSActivity.this, "You hit " + playerMap.get(playerHitUID).getName(), Toast.LENGTH_SHORT).show();
+                        if (DBPlayer.decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
+                            Toast.makeText(FPSActivity.this, "You hit " + dbPlayerMap.get(playerHitUID).getName(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -289,12 +290,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     }
 
     public void reloadWeapon(View view) {
-        LaserTagApplication.globalPlayer.retrieveActiveWeapon().reload();
+        Player.getInstance().retrieveActiveWeapon().reload();
         updateAmmoText();
     }
 
     public void swapWeapon(View view) {
-        LaserTagApplication.globalPlayer.swapWeapon();
+        Player.getInstance().swapWeapon();
         updateAmmoText();
         updateWeaponText();
     }

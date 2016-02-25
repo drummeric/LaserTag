@@ -33,6 +33,7 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 
 public class GameLobbyFragment extends Fragment {
@@ -120,7 +121,8 @@ public class GameLobbyFragment extends Fragment {
                             FPSStarted = true;
                             mGameReference.child("gameReady").setValue(false);
                             if (LaserTagApplication.globalPlayer.isReady()) {
-                                Player.resetHealthAndScore();
+                                DBPlayer.resetHealthAndScore();
+                                Player.reset();
                                 LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                                 ((MenuActivity) activity).launchFPS(mGameReference.getKey());
                             } else {
@@ -226,8 +228,8 @@ public class GameLobbyFragment extends Fragment {
                                 boolean gameReady = true;
 
                                 for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                                    Player player = userSnaphot.child("player").getValue(Player.class);
-                                    gameReady &= player.isReady();
+                                    DBPlayer dbPlayer = userSnaphot.child("player").getValue(DBPlayer.class);
+                                    gameReady &= dbPlayer.isReady();
                                 }
 
                                 if (gameReady) {
@@ -291,14 +293,14 @@ public class GameLobbyFragment extends Fragment {
                         LaserTagApplication.firebaseReference.child("users").child(playerUID).child("player").addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.getValue(Player.class) != null) {
-                                    Player player = dataSnapshot.getValue(Player.class);
-                                    playerName.setText(player.getName());
+                                if (dataSnapshot.getValue(DBPlayer.class) != null) {
+                                    DBPlayer dbPlayer = dataSnapshot.getValue(DBPlayer.class);
+                                    playerName.setText(dbPlayer.getName());
 
-                                    int[] color = player.getColor();
+                                    int[] color = dbPlayer.getColor();
                                     colorButton.setBackgroundColor(Color.argb(color[0], color[1], color[2], color[3]));
 
-                                    if (player.isReady()) {
+                                    if (dbPlayer.isReady()) {
                                         playerReady.setVisibility(View.VISIBLE);
                                     } else {
                                         playerReady.setVisibility(View.INVISIBLE);
