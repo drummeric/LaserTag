@@ -19,6 +19,7 @@ import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
+import com.taserlag.lasertag.player.Player;
 
 public class CreateGameFragment extends Fragment {
 
@@ -114,7 +115,7 @@ public class CreateGameFragment extends Fragment {
 
     public void saveGame() {
         Game game = new Game();
-        game.setHost(LaserTagApplication.globalPlayer.getName());
+        game.setHost(Player.getInstance().getName());
         game.setGameType(gameType);
         game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
         game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));

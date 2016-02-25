@@ -16,7 +16,7 @@ public class LoginDispatchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         if (LaserTagApplication.firebaseReference.getAuth()!=null && LaserTagApplication.firebaseReference.getAuth().getUid()!=null){
-            // Starts MenuActivity and updates globalPlayer if logged in
+            // Starts MenuActivity if logged in
             Intent i = new Intent(LoginDispatchActivity.this, MenuActivity.class);
             finish();
             startActivity(i);

@@ -14,6 +14,7 @@ import com.taserlag.lasertag.fragments.GameLobbyFragment;
 import com.taserlag.lasertag.fragments.JoinGameFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
 import com.taserlag.lasertag.fragments.SetPlayerColorFragment;
+import com.taserlag.lasertag.player.Player;
 
 public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener, SetPlayerColorFragment.OnFragmentInteractionListener{
 
@@ -24,7 +25,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LaserTagApplication.initGlobalPlayer();
+        Player.getInstance();
 
         setContentView(R.layout.activity_menu);
 
@@ -87,7 +88,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void logOut(View view) {
-        LaserTagApplication.disconnect();
+        Player.getInstance().disconnect();
         LaserTagApplication.firebaseReference.unauth();
         Intent intent = new Intent(this, LoginActivity.class);
         finish();

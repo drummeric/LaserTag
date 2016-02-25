@@ -103,8 +103,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         updateAmmoText();
         updateWeaponText();
-        updateScoreText(LaserTagApplication.globalPlayer.getScore());
-        updateHealthText(LaserTagApplication.globalPlayer.getHealth());
+        updateScoreText(Player.getInstance().getScore());
+        updateHealthText(Player.getInstance().getHealth());
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -272,7 +272,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 @Override
                 public void onFinishShoot(String playerHitUID) {
                     if (!playerHitUID.equals("")) {
-                        if (DBPlayer.decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
+                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
                             Toast.makeText(FPSActivity.this, "You hit " + dbPlayerMap.get(playerHitUID).getName(), Toast.LENGTH_SHORT).show();
                         }
                     }
