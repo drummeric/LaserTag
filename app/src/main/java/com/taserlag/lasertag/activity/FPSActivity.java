@@ -3,11 +3,13 @@ package com.taserlag.lasertag.activity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.AnimationDrawable;
 import android.hardware.Camera;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -18,6 +20,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,7 +61,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private TextView mClipAmmoText;
     private TextView mTotalAmmoText;
     private TextView mWeaponText;
-    private TextView mHealthText;
+    private static TextView mHealthText;
+    private static TextView mShieldText;
+    private static ImageView mShieldImage;
     private TextView mScoreText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
@@ -99,12 +104,20 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
+        mShieldText = (TextView) findViewById(R.id.text_view_fps_shield);
+        mShieldImage = (ImageView) findViewById(R.id.image_view_fps_shield);
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
+
+        //init textviews
         updateAmmoText();
         updateWeaponText();
         updateScoreText(Player.getInstance().getScore());
-        updateHealthText(Player.getInstance().getHealth());
+        updateHealthText();
+
+        // Set shield text and immediately override image with shield ready
+        updateShieldUI();
+        readyShieldImage();
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -117,9 +130,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Integer.class) < 100) {
+                if (dataSnapshot.getValue(Integer.class) < Player.getInstance().getTotalHealth()) {
                     Toast.makeText(FPSActivity.this, "You've been shot!", Toast.LENGTH_SHORT).show();
-                    updateHealthText(dataSnapshot.getValue(Integer.class));
+                    // Player and shield in charge of updating health and shield UI
+                    // since we don't know if its health or shield strength being decremented
+                    Player.getInstance().decrementHealth(dataSnapshot.getValue(Integer.class));
                 }
             }
 
@@ -239,15 +254,83 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             }
         });
     }
+// todo replace with path calculation through string concatenation
+    private static void updateShieldImage(){
+        switch(Player.getInstance().getShield().getStrength()/10){
+            case 10:
+                mShieldImage.setImageResource(R.drawable.shield10);
+                break;
+            case 9:
+                mShieldImage.setImageResource(R.drawable.shield9);
+                break;
+            case 8:
+                mShieldImage.setImageResource(R.drawable.shield8);
+                break;
+            case 7:
+                mShieldImage.setImageResource(R.drawable.shield7);
+                break;
+            case 6:
+                mShieldImage.setImageResource(R.drawable.shield6);
+                break;
+            case 5:
+                mShieldImage.setImageResource(R.drawable.shield5);
+                break;
+            case 4:
+                mShieldImage.setImageResource(R.drawable.shield4);
+                break;
+            case 3:
+                mShieldImage.setImageResource(R.drawable.shield3);
+                break;
+            case 2:
+                mShieldImage.setImageResource(R.drawable.shield2);
+                break;
+            case 1:
+                mShieldImage.setImageResource(R.drawable.shield1);
+                break;
+            default:
+                mShieldImage.setImageResource(R.drawable.shield0);
+                break;
+        }
+    }
+
+    //10 seconds after charging starts, transition to ready animation
+    public static void rechargeShieldImage(){
+        mShieldImage.setImageResource(R.drawable.shield_fill_animation);
+        AnimationDrawable rechargeAnimation = (AnimationDrawable) mShieldImage.getDrawable();
+        rechargeAnimation.start();
+
+        Handler animationHandler = new Handler();
+        animationHandler.postDelayed(new Runnable() {
+
+            public void run() {
+                readyShieldImage();
+            }
+        }, 10000);
+    }
+
+    // shield ready (used on init)
+    private static void readyShieldImage(){
+        mShieldImage.setImageResource(R.drawable.shield_ready_animation);
+        AnimationDrawable rechargeAnimation = (AnimationDrawable) mShieldImage.getDrawable();
+        rechargeAnimation.start();
+    }
 
     private void updateScoreText(int score){
         mScoreText.setText(String.valueOf(score));
     }
 
-    // parameter passed is updated value from database, which is guaranteed to be the most up to date at this time
-    private void updateHealthText(int health){
-        mHealthText.setText(String.valueOf(health));
+    // health values read from singleton Player
+    public static  void updateHealthText(){
+        mHealthText.setText(String.valueOf(Player.getInstance().getRealHealth()));
     }
+
+    // shield values read from singleton Player
+    // updates image based on current shield health
+    public static void updateShieldUI(){
+        mShieldText.setText(String.valueOf(Player.getInstance().getShield().getStrength()));
+        updateShieldImage();
+    }
+
 
     // no param since ammo not stored in database
     private void updateAmmoText() {
@@ -287,6 +370,13 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             asyncTask.execute(mPreview.getCameraData());
         }
         return true;
+    }
+
+    //onClick listener
+    public void deployShield(View view){
+        if (Player.getInstance().deployShield()) {
+            updateShieldUI();
+        }
     }
 
     public void reloadWeapon(View view) {

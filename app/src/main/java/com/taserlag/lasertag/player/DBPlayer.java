@@ -150,6 +150,24 @@ public class DBPlayer{
         });
     }
 
+    public void incrementHealth(final int value){
+        // adds maxShieldStrength to health in DB
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData healthData) {
+                if (healthData.getValue(Integer.class) != null) {
+                    healthData.setValue(healthData.getValue(Integer.class) + value);
+                }
+                return Transaction.success(healthData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+
+            }
+        });
+    }
+
     // decrement other people's health, cannot hurt yourself
     // returns false if you try to decrement your own health
     public static boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){

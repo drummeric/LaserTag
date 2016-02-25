@@ -4,7 +4,10 @@ import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.MutableData;
+import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
+import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.shield.Shield;
 import com.taserlag.lasertag.weapon.FastWeapon;
@@ -15,11 +18,14 @@ public class Player{
 
     private static final String TAG = "player";
 
+    //health in DB is actually realHealth + shieldStrength
+    private int realHealth = 100;
+
     private boolean mPrimaryWeaponActive = true;
 
     private Weapon mPrimaryWeapon = new FastWeapon();
     private Weapon mSecondaryWeapon = new StrongWeapon();
-    private Shield mShield;
+    private Shield mShield = new Shield();
     public static DBPlayer dbPlayer;
     private static ValueEventListener playerListener;
 
@@ -49,9 +55,9 @@ public class Player{
     }
 
     public static void reset(){
+        //reinits shields and weapons to new objects
         instance = new Player();
     }
-
 
     public boolean isPrimaryWeaponActive() {
         return mPrimaryWeaponActive;
@@ -65,6 +71,14 @@ public class Player{
         }
     }
 
+    public boolean deployShield(){
+        boolean deployable = mShield.deploy();
+        if (deployable) {
+            dbPlayer.incrementHealth(mShield.getStrength());
+        }
+        return deployable;
+    }
+
     public Shield getShield() {
         return mShield;
     }
@@ -72,6 +86,24 @@ public class Player{
     public void swapWeapon() {
         mPrimaryWeaponActive = !mPrimaryWeaponActive;
     }
+
+    // decrement realHealth by the damage not absorbed by the shield
+    public void decrementHealth(int value){
+        int realHealthDamage = mShield.decStrength(realHealth+mShield.getStrength()-value);
+        if (realHealthDamage!=0){
+            realHealth -= realHealthDamage;
+            FPSActivity.updateHealthText();
+        }
+    }
+
+    public int getRealHealth(){
+        return realHealth;
+    }
+
+    public int getTotalHealth(){
+        return realHealth + mShield.getStrength();
+    }
+
 
     public static void disconnect(){
         instance = null;
