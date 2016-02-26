@@ -19,6 +19,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -64,6 +66,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private static TextView mHealthText;
     private static TextView mShieldText;
     private static ImageView mShieldImage;
+    private ImageView mGunImage;
     private TextView mScoreText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
@@ -106,6 +109,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
         mShieldText = (TextView) findViewById(R.id.text_view_fps_shield);
         mShieldImage = (ImageView) findViewById(R.id.image_view_fps_shield);
+        mGunImage = (ImageView) findViewById(R.id.image_view_fps_gun);
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
 
@@ -331,6 +335,17 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         updateShieldImage();
     }
 
+    //rotates gun image over 75 ms, plays sound and updates ammo text view
+    private void updateGunUI(){
+        Animation rotateAnimation = new RotateAnimation(0, -20, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        rotateAnimation.setDuration(75);
+        rotateAnimation.setRepeatCount(0);
+        rotateAnimation.setFillAfter(false);
+
+        mGunImage.startAnimation(rotateAnimation);
+        mSoundPool.play(mShootSound,1,1,1,0,1);
+        updateAmmoText();
+    }
 
     // no param since ammo not stored in database
     private void updateAmmoText() {
@@ -363,8 +378,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
                 @Override
                 public void updateGUI(){
-                    mSoundPool.play(mShootSound,1,1,1,0,1);
-                    FPSActivity.this.updateAmmoText();
+                    updateGunUI();
                 }
             });
             asyncTask.execute(mPreview.getCameraData());
