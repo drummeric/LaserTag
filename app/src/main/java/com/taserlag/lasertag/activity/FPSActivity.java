@@ -68,6 +68,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private static ImageView mShieldImage;
     private ImageView mGunImage;
     private TextView mScoreText;
+    private TextView mZoomText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
     private Firebase mGameReference;
     private Game mGame;
@@ -112,6 +113,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mGunImage = (ImageView) findViewById(R.id.image_view_fps_gun);
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
+        mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
 
         //init textviews
         updateAmmoText();
@@ -420,16 +422,19 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             switch (mCameraZoom) {
                 case NONE:
                     setZoom(params.getMaxZoom()/2);
+                    mZoomText.setText("2x");
                     mCameraZoom = Zoom.HALF;
                     break;
 
                 case HALF:
                     setZoom(params.getMaxZoom());
+                    mZoomText.setText("4x");
                     mCameraZoom = Zoom.FULL;
                     break;
 
                 case FULL:
                     setZoom(0);
+                    mZoomText.setText("");
                     mCameraZoom = Zoom.NONE;
                     break;
             }
