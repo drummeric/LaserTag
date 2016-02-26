@@ -15,7 +15,6 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="swapWeapon"
         android:id="@+id/text_view_fps_score"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
