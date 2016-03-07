@@ -4,8 +4,6 @@ import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.MutableData;
-import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
@@ -45,7 +43,7 @@ public class Player{
 
                 @Override
                 public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(TAG, "Player failed to updated for user: " + LaserTagApplication.firebaseReference.getAuth().getUid(), firebaseError.toException());
+                    Log.e(TAG, "Player failed to update for user: " + LaserTagApplication.firebaseReference.getAuth().getUid(), firebaseError.toException());
                 }
             };
 

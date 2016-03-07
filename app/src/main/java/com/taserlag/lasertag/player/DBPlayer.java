@@ -7,10 +7,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.taserlag.lasertag.application.LaserTagApplication;
-import com.taserlag.lasertag.shield.Shield;
-import com.taserlag.lasertag.weapon.FastWeapon;
-import com.taserlag.lasertag.weapon.StrongWeapon;
-import com.taserlag.lasertag.weapon.Weapon;
+import com.taserlag.lasertag.team.Team;
 // Only class that should be accessing/storing player data to the database
 // Static methods for incrementing score/health
 public class DBPlayer{
@@ -120,22 +117,7 @@ public class DBPlayer{
             }
         });
 
-        LaserTagApplication.firebaseReference.child("teams").child(teamUID).child("score").runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                if (mutableData.getValue(Integer.class) == null) {
-                    mutableData.setValue(0);
-                } else {
-                    mutableData.setValue(mutableData.getValue(Integer.class) + value);
-                }
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Successfully incremented score for team " + teamUID);
-            }
-        });
+        Team.incScore(value, teamUID);
     }
 
     // can only reset my health, does not take playerUID

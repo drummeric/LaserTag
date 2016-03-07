@@ -136,13 +136,15 @@ public class GameLobbyFragment extends Fragment {
                             }
                         }
                     } else { //Game has been deleted because the host left the lobby
-                        Toast.makeText(getContext(), "The game host, "+mGame.getHost()+", has left the lobby!", Toast.LENGTH_SHORT).show();
-                        Player.getInstance().resetActiveGameKey();
-                        getActivity().getSupportFragmentManager()
-                                .beginTransaction()
-                                .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
-                                .commit();
-                        getActivity().getSupportFragmentManager().popBackStack();
+                        if (!Player.getInstance().getName().equals(mGame.getHost())) {
+                            Toast.makeText(getContext(), "The game host, " + mGame.getHost() + ", has left the lobby!", Toast.LENGTH_SHORT).show();
+                            Player.getInstance().resetActiveGameKey();
+                            getActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                                    .commit();
+                            getActivity().getSupportFragmentManager().popBackStack();
+                        }
                     }
                 }
 

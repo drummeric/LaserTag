@@ -152,7 +152,6 @@ public class Game{
         if (teamNameExists(team)){
             return false;
         }
-        team.setMaxTeamSize(maxTeamSize);
         addGlobalPlayer(team.getName() + ":~", gameReference);
 
         return true;
@@ -185,7 +184,6 @@ public class Game{
                     //if the team isn't in the game's map
                     if (game.getFullKeys().get(teamFullKey) == null) {
                         Team team = new Team(teamFullKey.split(":~")[0]);
-                        team.setMaxTeamSize(maxTeamSize);
 
                         // add global player to new team
                         List<String> playerKey = new ArrayList<String>();
