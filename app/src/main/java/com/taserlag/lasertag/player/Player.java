@@ -166,6 +166,10 @@ public class Player{
         dbPlayer.setReady(ready);
     }
 
+    public void resetActiveGameKey(){
+        dbPlayer.resetActiveGameKey();
+    }
+
     // can only reset my health, does not take playerUID
     public void resetHealthAndScore(){
         dbPlayer.resetHealthAndScore();

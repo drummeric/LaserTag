@@ -92,8 +92,17 @@ public class DBPlayer{
         this.ready = ready;
     }
 
+    public void resetActiveGameKey(){
+        LaserTagApplication.firebaseReference
+                .child("users")
+                .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                .child("player")
+                .child("activeGameKey")
+                .setValue("");
+    }
+
     //can only increment my score, does not take in playerUID
-    private static void incrementScore(final int value, final String teamUID){
+    private void incrementScore(final int value, final String teamUID){
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
@@ -130,7 +139,7 @@ public class DBPlayer{
     }
 
     // can only reset my health, does not take playerUID
-    public static void resetHealthAndScore(){
+    public void resetHealthAndScore(){
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
@@ -170,7 +179,7 @@ public class DBPlayer{
 
     // decrement other people's health, cannot hurt yourself
     // returns false if you try to decrement your own health
-    public static boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){
+    public boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){
         boolean hitYourself = LaserTagApplication.firebaseReference.getAuth().getUid().equals(playerUID);
 
         if (!hitYourself) {

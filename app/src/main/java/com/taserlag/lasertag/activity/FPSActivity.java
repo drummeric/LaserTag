@@ -152,7 +152,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Integer.class) < 100) {
+                if (dataSnapshot.getValue(Integer.class)!=null) {
                     updateScoreText(dataSnapshot.getValue(Integer.class));
                 }
             }

@@ -7,6 +7,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
@@ -252,12 +253,7 @@ public class Game{
             @Override
             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
                 if (committed) {
-                    LaserTagApplication.firebaseReference
-                            .child("users")
-                            .child(LaserTagApplication.firebaseReference.getAuth().getUid())
-                            .child("player")
-                            .child("activeGameKey")
-                            .setValue("");
+                    Player.getInstance().resetActiveGameKey();
                     LaserTagApplication.firebaseReference
                             .child("users")
                             .child(LaserTagApplication.firebaseReference.getAuth().getUid())

@@ -135,6 +135,14 @@ public class GameLobbyFragment extends Fragment {
                                 getActivity().getSupportFragmentManager().popBackStack();
                             }
                         }
+                    } else { //Game has been deleted because the host left the lobby
+                        Toast.makeText(getContext(), "The game host, "+mGame.getHost()+", has left the lobby!", Toast.LENGTH_SHORT).show();
+                        Player.getInstance().resetActiveGameKey();
+                        getActivity().getSupportFragmentManager()
+                                .beginTransaction()
+                                .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                                .commit();
+                        getActivity().getSupportFragmentManager().popBackStack();
                     }
                 }
 
@@ -180,7 +188,13 @@ public class GameLobbyFragment extends Fragment {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    mGame.removeGlobalPlayer(mGameReference);
+                    if (mGame.getHost().equals(Player.getInstance().getName())){
+                        mGameReference.setValue(null);
+                        Player.getInstance().resetActiveGameKey();
+                    } else {
+                        mGame.removeGlobalPlayer(mGameReference);
+                    }
+
                     mGameReference.removeEventListener(mGameReferenceListener);
                     getActivity().getSupportFragmentManager()
                             .beginTransaction()
