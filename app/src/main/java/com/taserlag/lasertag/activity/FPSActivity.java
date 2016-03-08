@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -406,7 +407,20 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 public void onFinishShoot(String playerHitUID) {
                     if (!playerHitUID.equals("")) {
                         if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
-                            Toast.makeText(FPSActivity.this, "You hit " + dbPlayerMap.get(playerHitUID).getName(), Toast.LENGTH_SHORT).show();
+                            final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
+                            reticle.setImageResource(R.drawable.redreticle);
+
+                            //animation lasts 500 ms total
+                            Animation animationGrowShrink = AnimationUtils.loadAnimation(FPSActivity.this, R.anim.growshrink);
+                            reticle.startAnimation(animationGrowShrink);
+
+                            Handler flashHandler = new Handler();
+                            flashHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    reticle.setImageResource(R.drawable.reticle1);
+                                }
+                            }, 500);
                         }
                     }
                 }
