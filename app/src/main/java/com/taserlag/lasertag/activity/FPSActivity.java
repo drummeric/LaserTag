@@ -137,10 +137,19 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Integer.class) < Player.getInstance().getTotalHealth()) {
-                    Toast.makeText(FPSActivity.this, "You've been shot!", Toast.LENGTH_SHORT).show();
                     // Player and shield in charge of updating health and shield UI
                     // since we don't know if its health or shield strength being decremented
                     Player.getInstance().decrementHealth(dataSnapshot.getValue(Integer.class));
+
+                    //flash the screen red
+                    FPSActivity.this.findViewById(R.id.image_view_fps_screen_flash).setVisibility(View.VISIBLE);
+                    Handler flashHandler = new Handler();
+                    flashHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            FPSActivity.this.findViewById(R.id.image_view_fps_screen_flash).setVisibility(View.INVISIBLE);
+                        }
+                    },500);
                 }
             }
 
