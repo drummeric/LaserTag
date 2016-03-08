@@ -57,6 +57,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
     private final int TIMER_LENGTH_MS = 1000;
+    private final int RESPAWN_TIMER_LENGTH_MS = 5000;
 
     private Camera mCamera;
     private CameraPreview mPreview;
@@ -68,6 +69,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private static TextView mShieldText;
     private static ImageView mShieldImage;
     private ImageView mGunImage;
+    private static ImageView mScreenFlash;
     private TextView mScoreText;
     private TextView mZoomText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
@@ -112,19 +114,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         mShieldText = (TextView) findViewById(R.id.text_view_fps_shield);
         mShieldImage = (ImageView) findViewById(R.id.image_view_fps_shield);
         mGunImage = (ImageView) findViewById(R.id.image_view_fps_gun);
+        mScreenFlash = (ImageView) findViewById(R.id.image_view_fps_screen_flash);
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
 
-        //init textviews
-        updateAmmoText();
-        updateWeaponText();
-        updateScoreText(Player.getInstance().getScore());
-        updateHealthText();
+        //init UI (health, weapons, ammo, shield)
+        resetUIOnRespawn();
 
-        // Set shield text and immediately override image with shield ready
-        updateShieldUI();
-        readyShieldImage();
+        //init score text
+        updateScoreText(Player.getInstance().getScore());
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -140,17 +139,28 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 if (dataSnapshot.getValue(Integer.class) < Player.getInstance().getTotalHealth()) {
                     // Player and shield in charge of updating health and shield UI
                     // since we don't know if its health or shield strength being decremented
-                    Player.getInstance().decrementHealth(dataSnapshot.getValue(Integer.class));
+                    if (Player.getInstance().decrementHealth(dataSnapshot.getValue(Integer.class))){
+                        //I just died
+                        final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
+                        alertDialog.setTitle("You Died!");
+                        alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS/1000) + " seconds");
+                        alertDialog.setCancelable(false);
+                        alertDialog.show();
 
-                    //flash the screen red
-                    FPSActivity.this.findViewById(R.id.image_view_fps_screen_flash).setVisibility(View.VISIBLE);
-                    Handler flashHandler = new Handler();
-                    flashHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            FPSActivity.this.findViewById(R.id.image_view_fps_screen_flash).setVisibility(View.INVISIBLE);
-                        }
-                    },500);
+                        new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                alertDialog.setMessage("Respawning in "+(millisUntilFinished/1000)+" seconds");
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                alertDialog.dismiss();
+                                //reset health, weapons and shields
+                                resetUIOnRespawn();
+                            }
+                        }.start();
+                    }
                 }
             }
 
@@ -294,6 +304,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         return mGameReference;
     }
 
+    private void resetUIOnRespawn(){
+        //reset health, weapons and shield
+        Player.reset();
+        updateHealthText();
+        updateShieldUI();
+        readyShieldImage();
+        updateAmmoText();
+        updateWeaponText();
+    }
+
 // todo replace with path calculation through string concatenation
     private static void updateShieldImage(){
         switch(Player.getInstance().getShield().getStrength()/10){
@@ -362,6 +382,17 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     // health values read from singleton Player
     public static  void updateHealthText(){
         mHealthText.setText(String.valueOf(Player.getInstance().getRealHealth()));
+
+        //flash the screen red
+        mScreenFlash.setVisibility(View.VISIBLE);
+        Handler flashHandler = new Handler();
+        flashHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mScreenFlash.setVisibility(View.INVISIBLE);
+            }
+        },500);
+
     }
 
     // shield values read from singleton Player

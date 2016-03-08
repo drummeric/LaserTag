@@ -120,6 +120,23 @@ public class DBPlayer{
         Team.incScore(value, teamUID);
     }
 
+    public void resetHealth(){
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                if (mutableData.getValue(Integer.class)!=null){
+                    mutableData.setValue(100);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+                Log.i(TAG, "Successfully reset health for player " + LaserTagApplication.firebaseReference.getAuth().getUid());
+            }
+        });
+    }
+
     // can only reset my health, does not take playerUID
     public void resetHealthScoreAndReady(){
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").runTransaction(new Transaction.Handler() {
@@ -137,7 +154,7 @@ public class DBPlayer{
 
             @Override
             public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Successfully reset health for player " + LaserTagApplication.firebaseReference.getAuth().getUid());
+                Log.i(TAG, "Successfully reset health, score and ready for player " + LaserTagApplication.firebaseReference.getAuth().getUid());
             }
         });
     }
@@ -171,7 +188,7 @@ public class DBPlayer{
                 public Transaction.Result doTransaction(MutableData mutableData) {
                     if (mutableData.getValue(Integer.class) == null) {
                         mutableData.setValue(100);
-                    } else {
+                    } else if (mutableData.getValue(Integer.class)!=0){
                         int health = mutableData.getValue(Integer.class);
                         health -= value;
                         if (health > 0) {

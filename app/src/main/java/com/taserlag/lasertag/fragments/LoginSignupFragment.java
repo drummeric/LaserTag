@@ -135,6 +135,7 @@ public class LoginSignupFragment extends Fragment {
                 LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(map);
 
                 DBPlayer newPlayer = new DBPlayer(username);
+                newPlayer.setColor(new int[]{255,0,0,0});
                 LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).child("player").setValue(newPlayer);
 
 

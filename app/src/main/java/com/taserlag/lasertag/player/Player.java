@@ -55,6 +55,11 @@ public class Player{
     public static void reset(){
         //reinits shields and weapons to new objects
         instance = new Player();
+        resetHealth();
+    }
+
+    private static void resetHealth(){
+        dbPlayer.resetHealth();
     }
 
     public boolean isPrimaryWeaponActive() {
@@ -86,12 +91,13 @@ public class Player{
     }
 
     // decrement realHealth by the damage not absorbed by the shield
-    public void decrementHealth(int value){
+    public boolean decrementHealth(int value){
         int realHealthDamage = mShield.decStrength(realHealth+mShield.getStrength()-value);
         if (realHealthDamage!=0){
             realHealth -= realHealthDamage;
             FPSActivity.updateHealthText();
         }
+        return realHealth == 0;
     }
 
     public int getRealHealth(){
