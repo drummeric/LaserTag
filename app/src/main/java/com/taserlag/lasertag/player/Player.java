@@ -169,8 +169,8 @@ public class Player{
     }
 
     // can only reset my health, does not take playerUID
-    public void resetHealthAndScore(){
-        dbPlayer.resetHealthAndScore();
+    public void resetHealthScoreAndReady(){
+        dbPlayer.resetHealthScoreAndReady();
     }
 
     // decrement other people's health, cannot hurt yourself

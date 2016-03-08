@@ -121,7 +121,7 @@ public class DBPlayer{
     }
 
     // can only reset my health, does not take playerUID
-    public void resetHealthAndScore(){
+    public void resetHealthScoreAndReady(){
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
@@ -129,6 +129,7 @@ public class DBPlayer{
                     DBPlayer DBplayer = mutableData.getValue(DBPlayer.class);
                     DBplayer.setScore(0);     //reset score and health
                     DBplayer.setHealth(100);
+                    DBplayer.setReady(false);
                     mutableData.setValue(DBplayer);
                 }
                 return Transaction.success(mutableData);

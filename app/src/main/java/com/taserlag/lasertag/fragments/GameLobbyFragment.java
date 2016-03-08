@@ -81,6 +81,10 @@ public class GameLobbyFragment extends Fragment {
             init(view);
         }
 
+        //reset Player
+        Player.getInstance().resetHealthScoreAndReady();
+        Player.reset();
+
         return view;
     }
 
@@ -121,8 +125,6 @@ public class GameLobbyFragment extends Fragment {
                             FPSStarted = true;
                             mGameReference.child("gameReady").setValue(false);
                             if (Player.getInstance().isReady()) {
-                                Player.getInstance().resetHealthAndScore();
-                                Player.reset();
                                 LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                                 ((MenuActivity) activity).launchFPS(mGameReference.getKey());
                             } else {
