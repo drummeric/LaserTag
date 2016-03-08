@@ -6,6 +6,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
+import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 
 public class Team{
@@ -42,6 +43,9 @@ public class Team{
                     mutableData.setValue(0);
                 } else {
                     mutableData.setValue(mutableData.getValue(Integer.class) + value);
+                }
+                if (FPSActivity.getGame().getScoreEnabled()&&FPSActivity.getGame().getScore()<=mutableData.getValue(Integer.class)){
+                    FPSActivity.getGame().endGame(FPSActivity.getGameReference());
                 }
                 return Transaction.success(mutableData);
             }

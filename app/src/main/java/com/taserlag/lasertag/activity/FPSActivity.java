@@ -70,8 +70,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private TextView mScoreText;
     private TextView mZoomText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
-    private Firebase mGameReference;
-    private Game mGame;
+    private static Firebase mGameReference;
+    private static Game mGame;
 
     private SoundPool mSoundPool;
     private static final int MAX_STREAMS = 1;
@@ -161,6 +161,21 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             public void onCancelled(FirebaseError firebaseError) {
             }
         });
+
+        mGameReference.child("gameOver").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot gameOverSnapshot) {
+                Boolean gameOver = gameOverSnapshot.getValue(Boolean.class);
+                if (gameOver!=null && gameOver){
+                    Toast.makeText(FPSActivity.this,"Game over!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -201,7 +216,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         startActivity(intent);
         finish();
     }
-
 
     //Shows countdown dialog once everyone in game has loaded FPSActivity
     private void doStartCountdown(){
@@ -260,6 +274,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             }
         });
     }
+
+    //todo Game and DBGame
+    public static Game getGame(){
+        return mGame;
+    }
+
+    public static Firebase getGameReference(){
+        return mGameReference;
+    }
+
 // todo replace with path calculation through string concatenation
     private static void updateShieldImage(){
         switch(Player.getInstance().getShield().getStrength()/10){
@@ -345,7 +369,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         rotateAnimation.setFillAfter(false);
 
         mGunImage.startAnimation(rotateAnimation);
-        mSoundPool.play(mShootSound,1,1,1,0,1);
+        mSoundPool.play(mShootSound, 1, 1, 1, 0, 1);
         updateAmmoText();
     }
 
@@ -357,7 +381,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         } else {
             mClipAmmoText.setText(String.valueOf(clip));
         }
-        mTotalAmmoText.setText("/"+String.valueOf(Player.getInstance().retrieveActiveWeapon().getExcessAmmo())+" ");
+        mTotalAmmoText.setText("/" + String.valueOf(Player.getInstance().retrieveActiveWeapon().getExcessAmmo()) + " ");
     }
 
     private void updateWeaponText(){
@@ -406,16 +430,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         updateWeaponText();
     }
 
-    private void initializeCamera() {
-        // Create an instance of camera
-        mCamera = getCameraInstance();
-
-        // Create preview of camera
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
-    }
-
     public void scopeClick(View view){
         Camera.Parameters params = mCamera.getParameters();
         if (params.isZoomSupported()) {
@@ -439,6 +453,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                     break;
             }
         }
+    }
+
+    private void initializeCamera() {
+        // Create an instance of camera
+        mCamera = getCameraInstance();
+
+        // Create preview of camera
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
     }
 
     private Camera getCameraInstance() {

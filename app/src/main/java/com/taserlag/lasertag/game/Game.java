@@ -37,6 +37,8 @@ public class Game{
 
     private boolean gameReady = false;
 
+    private boolean gameOver = false;
+
     private Map<String, List<String>> fullKeys = new HashMap<>();
 
     public Game() {}
@@ -117,8 +119,16 @@ public class Game{
         return gameReady;
     }
 
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
     public Map<String, List<String>> getFullKeys() {
         return fullKeys;
+    }
+
+    public void endGame(Firebase game){
+        game.child("gameOver").setValue(true);
     }
 
     public void enableListeners(Firebase reference){
