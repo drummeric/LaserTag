@@ -73,8 +73,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private TextView mScoreText;
     private TextView mZoomText;
     private MapAssistant mapAss = MapAssistant.getInstance(this);
-    private static Firebase mGameReference;
-    private static Game mGame;
 
     private SoundPool mSoundPool;
     private static final int MAX_STREAMS = 1;
@@ -88,25 +86,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fps);
 
-        Bundle extras = getIntent().getExtras();
-        if (extras != null){
-            mGameReference = LaserTagApplication.firebaseReference.child("games/"+extras.getString(GAME_REF_PARAM));
-        }
-
         doStartCountdown();
-
-        mGameReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Game.class) != null) {
-                    mGame = dataSnapshot.getValue(Game.class);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-            }
-        });
 
         mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
@@ -182,20 +162,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             }
         });
 
-        mGameReference.child("gameOver").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot gameOverSnapshot) {
-                Boolean gameOver = gameOverSnapshot.getValue(Boolean.class);
-                if (gameOver!=null && gameOver){
-                    Toast.makeText(FPSActivity.this,"Game over!", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        Game.getInstance().startGameListeners();
     }
 
     @Override
@@ -262,7 +229,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
         //Get players in game
         //Check to see if everyone has successfully started FPSActivity -> start timer
-        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
+        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(Game.getInstance().getKey());
         queryRef.keepSynced(true);
         queryRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -293,15 +260,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
 
             }
         });
-    }
-
-    //todo Game and DBGame
-    public static Game getGame(){
-        return mGame;
-    }
-
-    public static Firebase getGameReference(){
-        return mGameReference;
     }
 
     private void resetUIOnRespawn(){
@@ -437,7 +395,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                 @Override
                 public void onFinishShoot(String playerHitUID) {
                     if (!playerHitUID.equals("")) {
-                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
+                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, Game.getInstance().findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
                             final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
                             reticle.setImageResource(R.drawable.redreticle);
 
@@ -614,4 +572,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
+    public static void gameOver() {
+        Toast.makeText(LaserTagApplication.getAppContext(),"Game over!", Toast.LENGTH_SHORT).show();
+    }
 } // FPSActivity

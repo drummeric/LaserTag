@@ -16,6 +16,7 @@ import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.game.Game;
 
 
@@ -39,6 +40,7 @@ public class JoinGameFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_join_game, container, false);
+        Game.getInstance().resetDBGame();
         init(view);
         return view;
     }
@@ -69,12 +71,12 @@ public class JoinGameFragment extends Fragment{
 
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_game);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Game, GameViewHolder>(Game.class, R.layout.card_game, GameViewHolder.class, LaserTagApplication.firebaseReference.child("games")) {
+        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<DBGame, GameViewHolder>(DBGame.class, R.layout.card_game, GameViewHolder.class, LaserTagApplication.firebaseReference.child("games")) {
 
             @Override
-            public void populateViewHolder(final GameViewHolder holder, final Game game, final int position) {
-                holder.gameName.setText(game.getHost()+"'s Game");
-                holder.gameDescription.setText(game.toString());
+            public void populateViewHolder(final GameViewHolder holder, final DBGame dbGame, final int position) {
+                holder.gameName.setText(dbGame.getHost()+"'s Game");
+                holder.gameDescription.setText(dbGame.toString());
 
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override

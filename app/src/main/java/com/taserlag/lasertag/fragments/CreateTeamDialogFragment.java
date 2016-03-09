@@ -18,17 +18,6 @@ import com.taserlag.lasertag.team.Team;
 
 public class CreateTeamDialogFragment extends DialogFragment {
 
-    private Game mGame;
-    private Firebase mGameReference;
-
-    public void setGame(Game mGame) {
-        this.mGame = mGame;
-    }
-
-    public void setGameReference(Firebase mGameReference) {
-        this.mGameReference = mGameReference;
-    }
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
@@ -64,7 +53,7 @@ public class CreateTeamDialogFragment extends DialogFragment {
                         } else {
                             Team team = new Team(teamName.getText().toString());
 
-                            if (mGame != null && mGameReference != null && !mGame.createTeamWithGlobalPlayer(team, mGameReference)) {
+                            if (Game.getInstance() != null && !Game.getInstance().createTeamWithGlobalPlayer(team)) {
                                 teamName.setError(getString(R.string.create_team_dialog_team_exists));
                             } else {
                                 d.dismiss();

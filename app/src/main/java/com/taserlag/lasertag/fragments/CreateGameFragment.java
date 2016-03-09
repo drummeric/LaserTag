@@ -17,6 +17,7 @@ import com.firebase.client.Firebase;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
 import com.taserlag.lasertag.player.Player;
@@ -44,6 +45,7 @@ public class CreateGameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_game, container, false);
+        Game.getInstance().resetDBGame();
 
         gameTypeButtons[0] = (StickyButton) view.findViewById(R.id.button_tdm);
         gameTypeButtons[0].setText(GameType.TDM.toString());
@@ -114,19 +116,19 @@ public class CreateGameFragment extends Fragment {
     }
 
     public void saveGame() {
-        Game game = new Game();
-        game.setHost(Player.getInstance().getName());
-        game.setGameType(gameType);
-        game.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
-        game.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
-        game.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
-        game.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
-        game.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
-        game.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
-        game.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
+        DBGame dbGame = new DBGame();
+        dbGame.setHost(Player.getInstance().getName());
+        dbGame.setGameType(gameType);
+        dbGame.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
+        dbGame.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
+        dbGame.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
+        dbGame.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
+        dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
+        dbGame.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
+        dbGame.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
 
         Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
-        ref.setValue(game);
+        ref.setValue(dbGame);
 
         GameLobbyFragment fragment = GameLobbyFragment.newInstance(ref.getKey());
         ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");

@@ -14,7 +14,7 @@ import com.taserlag.lasertag.weapon.Weapon;
 
 public class Player{
 
-    private static final String TAG = "player";
+    private static final String TAG = "Player";
 
     //health in DB is actually realHealth + shieldStrength
     private int realHealth = 100;
@@ -24,7 +24,7 @@ public class Player{
     private Weapon mPrimaryWeapon = new FastWeapon();
     private Weapon mSecondaryWeapon = new StrongWeapon();
     private Shield mShield = new Shield();
-    public static DBPlayer dbPlayer;
+    private static DBPlayer dbPlayer;
     private static ValueEventListener playerListener;
 
     private static Player instance = null;

@@ -1,19 +1,12 @@
 package com.taserlag.lasertag.game;
 
-import android.support.v4.app.Fragment;
-import android.util.Log;
-import android.widget.Toast;
-
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
-import com.firebase.client.ValueEventListener;
-import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
-import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.Team;
 
@@ -22,152 +15,127 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Game {
+public class DBGame{
 
-    private static final String TAG = "Game";
+    private String host;
 
-    private static Game instance = null;
-    private static DBGame mDBGame;
-    private static Firebase mDBGameReference;
-    private static ValueEventListener mGameListener;
-    private static List<GameFollower> followers = new ArrayList<GameFollower>();
+    private GameType gameType;
 
-    private Game() {
+    private boolean scoreEnabled;
 
-    }
+    private int score;
 
-    public static Game getInstance(Firebase gameReference) {
-        instance = new Game();
-        mDBGameReference = gameReference;
-        mGameListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Game has been successfully updated for game: " + mDBGameReference.getKey());
-                mDBGame = dataSnapshot.getValue(DBGame.class);
-                notifyFollowers();
-            }
+    private boolean timeEnabled;
 
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.e(TAG, "Game failed to update for game: " + mDBGameReference.getKey(), firebaseError.toException());
-            }
-        };
+    private int minutes;
 
-        mDBGameReference.addValueEventListener(mGameListener);
-        enableListeners();
-        return instance;
-    }
+    private int maxTeamSize;
 
-    public static Game getInstance() {
-        if (instance==null) {
-            instance = new Game();
-        }
-        return instance;
-    }
+    private boolean privateMatch;
 
-    public String getKey() {
-        return mDBGameReference.getKey();
-    }
+    private boolean friendlyFire;
 
-    public Firebase getReference() {
-        return mDBGameReference;
-    }
+    private boolean gameReady = false;
 
-    public DBGame getDBGame() {
-        return mDBGame;
-    }
+    private boolean gameOver = false;
+
+    private Map<String, List<String>> fullKeys = new HashMap<>();
+
+    public DBGame() {}
 
     public String getHost() {
-        return mDBGame.getHost();
+        return host;
     }
 
     public void setHost(String host) {
-        mDBGame.setHost(host);
+        this.host = host;
     }
 
     public GameType getGameType() {
-        return mDBGame.getGameType();
+        return gameType;
     }
 
     public void setGameType(GameType gameType) {
-        mDBGame.setGameType(gameType);
+        this.gameType = gameType;
     }
 
     public boolean getScoreEnabled() {
-        return mDBGame.getScoreEnabled();
+        return scoreEnabled;
     }
 
     public void setScoreEnabled(boolean scoreEnabled) {
-        mDBGame.setScoreEnabled(scoreEnabled);
+        this.scoreEnabled = scoreEnabled;
     }
 
     public int getScore() {
-        return mDBGame.getScore();
+        return score;
     }
 
     public void setScore(int score) {
-        mDBGame.setScore(score);
+        this.score = score;
     }
 
     public boolean getTimeEnabled() {
-        return mDBGame.getTimeEnabled();
+        return timeEnabled;
     }
 
     public void setTimeEnabled(boolean timeEnabled) {
-        mDBGame.setTimeEnabled(timeEnabled);
+        this.timeEnabled = timeEnabled;
     }
 
     public int getMinutes() {
-        return mDBGame.getMinutes();
+        return minutes;
     }
 
     public void setMinutes(int minutes) {
-        mDBGame.setMinutes(minutes);
+        this.minutes = minutes;
     }
 
     public int getMaxTeamSize() {
-        return mDBGame.getMaxTeamSize();
+        return maxTeamSize;
     }
 
     public void setMaxTeamSize(int size) {
-        mDBGame.setMaxTeamSize(size);
+        this.maxTeamSize = size;
     }
 
     public boolean getPrivateMatch() {
-        return mDBGame.getPrivateMatch();
+        return privateMatch;
     }
 
     public void setPrivateMatch(boolean privateMatch) {
-        mDBGame.setPrivateMatch(privateMatch);
+        this.privateMatch = privateMatch;
     }
 
     public boolean getFriendlyFire() {
-        return mDBGame.getFriendlyFire();
+        return friendlyFire;
     }
 
     public void setFriendlyFire(boolean friendlyFire) {
-        mDBGame.setFriendlyFire(friendlyFire);
+        this.friendlyFire = friendlyFire;
     }
 
     public boolean isGameReady() {
-        return mDBGame.isGameReady();
+        return gameReady;
     }
 
     public boolean isGameOver() {
-        return mDBGame.isGameOver();
+        return gameOver;
     }
 
     public Map<String, List<String>> getFullKeys() {
-        return mDBGame.getFullKeys();
+        return fullKeys;
     }
 
-    public void endGame(){
-        mDBGameReference.child("gameOver").setValue(true);
+    public void setFullKeys(Map<String, List<String>> fullKeys) { this.fullKeys = fullKeys; }
+
+    public void endGame(Firebase game){
+        game.child("gameOver").setValue(true);
     }
 
-    public static void enableListeners() {
+    public void enableListeners(Firebase reference){
 
-        mDBGameReference.child("fullKeys").addChildEventListener(new ChildEventListener() {
+        reference.child("fullKeys").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             }
@@ -192,41 +160,41 @@ public class Game {
         });
     }
 
-    public boolean createTeamWithGlobalPlayer(final Team team){
+    public boolean createTeamWithGlobalPlayer(final Team team, final Firebase gameReference){
         if (teamNameExists(team)){
             return false;
         }
-        addGlobalPlayer(team.getName() + ":~");
+        addGlobalPlayer(team.getName() + ":~", gameReference);
 
         return true;
     }
 
     //teamFullKey ends in ":~" for new team
-    public boolean addGlobalPlayer(final String teamFullKey){
+    public boolean addGlobalPlayer(final String teamFullKey, final Firebase gameReference){
         String currentTeamFullKey = findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid());
 
         if (!currentTeamFullKey.equals("")){
             // player is on a team
-            removeGlobalPlayer(currentTeamFullKey);
+            removeGlobalPlayer(currentTeamFullKey, gameReference);
         } else if (currentTeamFullKey.equals(teamFullKey)) {
             //global player on team already, don't need to re-add
             return true;
-        } else if (!teamFullKey.endsWith(":~") && mDBGame.getFullKeys().get(teamFullKey).size() >= mDBGame.getMaxTeamSize()){
+        } else if (!teamFullKey.endsWith(":~") && fullKeys.get(teamFullKey).size() >= maxTeamSize){
             //team full
             return false;
         }
 
-        mDBGameReference.runTransaction(new Transaction.Handler() {
+        gameReference.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData currentData) {
-                if (currentData.getValue(DBGame.class) == null) {
+                if (currentData.getValue() == null) {
                     //should never happen
-                    currentData.setValue(new DBGame());
+                    currentData.setValue(DBGame.this);
                 } else {
-                    DBGame dbGame = currentData.getValue(DBGame.class);
+                    Game game = currentData.getValue(Game.class);
 
                     //if the team isn't in the game's map
-                    if (dbGame.getFullKeys().get(teamFullKey) == null) {
+                    if (game.getFullKeys().get(teamFullKey) == null) {
                         Team team = new Team(teamFullKey.split(":~")[0]);
 
                         // add global player to new team
@@ -237,17 +205,17 @@ public class Game {
                         if (teamFullKey.endsWith(":~")) {
                             Firebase ref = LaserTagApplication.firebaseReference.child("teams").push();
                             ref.setValue(team);
-                            dbGame.getFullKeys().put(teamFullKey + ref.getKey(), playerKey);
+                            game.getFullKeys().put(teamFullKey + ref.getKey(), playerKey);
                         } else {
                             //existing team not on game map (due to database propogation)
                             LaserTagApplication.firebaseReference.child("teams").child(teamFullKey).setValue(team);
-                            dbGame.getFullKeys().put(teamFullKey, playerKey);
+                            game.getFullKeys().put(teamFullKey, playerKey);
                         }
 
                     } else {
-                        dbGame.getFullKeys().get(teamFullKey).add(LaserTagApplication.firebaseReference.getAuth().getUid());
+                        game.getFullKeys().get(teamFullKey).add(LaserTagApplication.firebaseReference.getAuth().getUid());
                     }
-                    currentData.setValue(dbGame);
+                    currentData.setValue(game);
                 }
 
                 return Transaction.success(currentData);
@@ -261,8 +229,8 @@ public class Game {
                             .child(LaserTagApplication.firebaseReference.getAuth().getUid())
                             .child("player")
                             .child("activeGameKey")
-                            .setValue(mDBGameReference.getKey());
-                    restoreGameMap(currentData.getValue(DBGame.class));
+                            .setValue(gameReference.getKey());
+                    restoreGameMap(currentData.getValue(Game.class));
                 }
             }
         });
@@ -270,23 +238,23 @@ public class Game {
         return true;
     }
 
-    public boolean removeGlobalPlayer(final String teamFullKey) {
+    public boolean removeGlobalPlayer(final String teamFullKey, Firebase gameReference) {
 
-        mDBGameReference.runTransaction(new Transaction.Handler() {
+        gameReference.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData currentData) {
-                if (currentData.getValue(DBGame.class) == null) {
-                    currentData.setValue(new DBGame());
+                if (currentData.getValue() == null) {
+                    currentData.setValue(DBGame.this);
                 } else {
-                    DBGame dbGame = currentData.getValue(DBGame.class);
-                    dbGame.getFullKeys().get(teamFullKey).remove(LaserTagApplication.firebaseReference.getAuth().getUid());
+                    Game game = currentData.getValue(Game.class);
+                    game.getFullKeys().get(teamFullKey).remove(LaserTagApplication.firebaseReference.getAuth().getUid());
 
                     //empty team -> remove team from database
-                    if (dbGame.getFullKeys().get(teamFullKey).isEmpty()) {
-                        dbGame.getFullKeys().remove(teamFullKey);
+                    if (game.getFullKeys().get(teamFullKey).isEmpty()) {
+                        game.getFullKeys().remove(teamFullKey);
                     }
 
-                    currentData.setValue(dbGame);
+                    currentData.setValue(game);
                 }
 
                 return Transaction.success(currentData);
@@ -302,23 +270,23 @@ public class Game {
                             .child("player")
                             .child("ready")
                             .setValue(false);
-                    restoreGameMap(currentData.getValue(DBGame.class));
+                    restoreGameMap(currentData.getValue(Game.class));
                 }
             }
         });
         return true;
     }
 
-    public boolean removeGlobalPlayer() {
-        return removeGlobalPlayer(findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()));
+    public boolean removeGlobalPlayer(Firebase gameReference){
+        return removeGlobalPlayer(findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()),gameReference);
     }
 
-    public void restoreGameMap(DBGame dbGame){
-        mDBGame.setFullKeys(dbGame.getFullKeys());
+    public void restoreGameMap(Game game){
+        this.fullKeys = game.getFullKeys();
     }
 
     private boolean teamNameExists(Team team){
-        for(String fullKey : mDBGame.getFullKeys().keySet()){
+        for(String fullKey : fullKeys.keySet()){
             if (team.getName().equals(fullKey.split(":~")[0])){
                 return true;
             }
@@ -327,7 +295,7 @@ public class Game {
     }
 
     private String getTeamFullKey(Team team){
-        for(String fullKey : mDBGame.getFullKeys().keySet()){
+        for(String fullKey : fullKeys.keySet()){
             if (team.getName().equals(fullKey.split(":~")[0])){
                 return fullKey;
             }
@@ -339,7 +307,7 @@ public class Game {
     // else ""
     public String findPlayer(String playerUID){
 
-        for (Map.Entry<String, List<String>> entry: mDBGame.getFullKeys().entrySet()){
+        for (Map.Entry<String, List<String>> entry: fullKeys.entrySet()){
             for (String playerFoundUID:entry.getValue()){
                 if (playerUID.equals(playerFoundUID)){
                     return entry.getKey();
@@ -388,67 +356,4 @@ public class Game {
 
         return description.toString();
     }
-
-    public void startGameListeners() {
-        mDBGameReference.child("gameOver").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot gameOverSnapshot) {
-                Boolean gameOver = gameOverSnapshot.getValue(Boolean.class);
-                if (gameOver!=null && gameOver){
-                    FPSActivity.gameOver();
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
-
-    public void deleteGame() {
-        mDBGameReference.setValue(null);
-        mDBGameReference.removeEventListener(mGameListener);
-        mDBGame = null;
-        mDBGameReference = null;
-    }
-
-    public void resetDBGame() {
-        mDBGame = null;
-        mDBGameReference = null;
-    }
-
-    private static void notifyFollowers() {
-        for (GameFollower follower : followers) {
-            follower.notifyGameUpdated();
-        }
-    }
-
-    public void registerForUpdates(GameFollower follower) {
-        if (!followers.contains(follower)) {
-            followers.add(follower);
-
-            if (mDBGame != null) {
-                notifyFollowers();
-            }
-        }
-    }
-
-    public void unregisterForUpdates(GameFollower follower) {
-        followers.remove(follower);
-        if (followers.isEmpty()) {
-            if (mDBGameReference != null) {
-                mDBGameReference.removeEventListener(mGameListener);
-            }
-        }
-    }
-
-    public void setGameReady() {
-        mDBGameReference.child("gameReady").setValue(true);
-    }
-
-    public void clearGameReady() {
-        mDBGameReference.child("gameReady").setValue(false);
-    }
-
 }

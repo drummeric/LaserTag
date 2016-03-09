@@ -33,23 +33,19 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.game.GameFollower;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 
-public class GameLobbyFragment extends Fragment {
+public class GameLobbyFragment extends Fragment implements GameFollower {
 
     private final String TAG = "GameLobbyFragment";
 
     private static final String GAME_KEY_PARAM = "gameKey";
 
     private OnFragmentInteractionListener mListener;
-    private Game mGame;
-    private Firebase mGameReference;
-    //stored to be cleared when we leave on back press
-    private ValueEventListener mGameReferenceListener;
     private boolean FPSStarted = false;
 
-    private boolean gameInitialized = false;
     private boolean firstTime = true;
 
     public GameLobbyFragment() {
@@ -63,23 +59,20 @@ public class GameLobbyFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            Game.getInstance(LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM)));
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //todo investigate this firstTime hack
-        //racing the init called from Attach with this init call
-        // we want to call from Attach the first time b/c getActivity sometimes
-        // returns null from here
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
-        if (!gameInitialized && !firstTime) {
-            gameInitialized = true;
-            init(view);
-        }
+        Game.getInstance().registerForUpdates(this);
 
         //reset Player
         Player.getInstance().resetHealthScoreAndReady();
@@ -97,67 +90,6 @@ public class GameLobbyFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-
-    }
-
-    @Override
-    public void onAttach(final Activity activity){
-        super.onAttach(activity);
-        if (getArguments() != null) {
-            mGameReference = LaserTagApplication.firebaseReference.child("games").child(getArguments().getString(GAME_KEY_PARAM));
-
-            mGameReferenceListener = new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue(Game.class) != null) {
-                        mGame = dataSnapshot.getValue(Game.class);
-                        mGame.enableListeners(mGameReference);
-                        if (!gameInitialized) {
-                            gameInitialized = true;
-                            firstTime = false;
-                            init(getView());
-                        }
-                        Log.i(TAG, "Game with the following key updated: " + mGameReference.getKey());
-
-                        //only start one instance of FPSActivity
-                        if (mGame.isGameReady()&&!FPSStarted){
-                            //if you're on a team when the game starts, reset your health and go to FPSActivity
-                            FPSStarted = true;
-                            mGameReference.child("gameReady").setValue(false);
-                            if (Player.getInstance().isReady()) {
-                                LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
-                                ((MenuActivity) activity).launchFPS(mGameReference.getKey());
-                            } else {
-                                //kicks you out of the lobby if the game starts and you arent on a team
-                                Toast.makeText(getContext(), "The game has started and you were not on a team", Toast.LENGTH_SHORT).show();
-                                getActivity().getSupportFragmentManager()
-                                        .beginTransaction()
-                                        .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
-                                        .commit();
-                                getActivity().getSupportFragmentManager().popBackStack();
-                            }
-                        }
-                    } else { //Game has been deleted because the host left the lobby
-                        if (!Player.getInstance().getName().equals(mGame.getHost())) {
-                            Toast.makeText(getContext(), "The game host, " + mGame.getHost() + ", has left the lobby!", Toast.LENGTH_SHORT).show();
-                            Player.getInstance().resetActiveGameKey();
-                            getActivity().getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
-                                    .commit();
-                            getActivity().getSupportFragmentManager().popBackStack();
-                        }
-                    }
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(TAG, "Game with the following key failed to update: " + mGameReference.getKey(), firebaseError.toException());
-                }
-            };
-
-            mGameReference.addValueEventListener(mGameReferenceListener);
-        }
     }
 
     @Override
@@ -166,23 +98,64 @@ public class GameLobbyFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void notifyGameUpdated() {
+        if (Game.getInstance().getDBGame() != null) {
+            if (firstTime) {
+                init(getView());
+            }
+
+            //only start one instance of FPSActivity
+            if (Game.getInstance().isGameReady()&&!FPSStarted){
+                //if you're on a team when the game starts, reset your health and go to FPSActivity
+                FPSStarted = true;
+                Game.getInstance().getReference().child("gameReady").setValue(false);
+                Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
+                if (Player.getInstance().isReady()) {
+                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
+                    ((MenuActivity) getActivity()).launchFPS(Game.getInstance().getKey());
+                } else {
+                    //kicks you out of the lobby if the game starts and you arent on a team
+                    Toast.makeText(getContext(), "The game has started and you were not on a team", Toast.LENGTH_SHORT).show();
+                    getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                            .commit();
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
+            }
+        } else { //Game has been deleted because the host left the lobby
+            Toast.makeText(LaserTagApplication.getAppContext(), "The game host has left the lobby!", Toast.LENGTH_SHORT).show();
+            Player.getInstance().resetActiveGameKey();
+            Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
+                    .commit();
+            getActivity().getSupportFragmentManager().popBackStack();
+        }
+    }
+
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 
     private void init(final View view){
-        initBackButton(view);
+        if (view != null && Game.getInstance().getDBGame() != null) {
+            firstTime = false;
+            initBackButton(view);
 
-        //set game description at top of screen
-        final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
-        gameInfo.setText(mGame.toString());
+            //set game description at top of screen
+            final TextView gameInfo = (TextView) getView().findViewById(R.id.text_game_info);
+            gameInfo.setText(Game.getInstance().toString());
 
-        initCreateTeamButton(view);
+            initCreateTeamButton(view);
 
-        initReadyButton(view);
+            initReadyButton(view);
 
-        initRecyclerView(view);
+            initRecyclerView(view);
+        }
     }
 
     private void initBackButton(View view){
@@ -192,14 +165,14 @@ public class GameLobbyFragment extends Fragment {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    if (mGame.getHost().equals(Player.getInstance().getName())){
-                        mGameReference.setValue(null);
+                    if (Game.getInstance().getHost().equals(Player.getInstance().getName())){
+                        Game.getInstance().deleteGame();
                         Player.getInstance().resetActiveGameKey();
                     } else {
-                        mGame.removeGlobalPlayer(mGameReference);
+                        Game.getInstance().removeGlobalPlayer();
                     }
+                    Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
 
-                    mGameReference.removeEventListener(mGameReferenceListener);
                     getActivity().getSupportFragmentManager()
                             .beginTransaction()
                             .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
@@ -217,8 +190,6 @@ public class GameLobbyFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 CreateTeamDialogFragment dialog = new CreateTeamDialogFragment();
-                dialog.setGame(mGame);
-                dialog.setGameReference(mGameReference);
                 dialog.show(getActivity().getSupportFragmentManager(), "create_team_dialog_fragment");
             }
         });
@@ -230,7 +201,7 @@ public class GameLobbyFragment extends Fragment {
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals("")) {
+                if (!Game.getInstance().findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals("")) {
                     if (readyButton.isStuck()){
                         readyButton.reset();
                         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
@@ -238,7 +209,7 @@ public class GameLobbyFragment extends Fragment {
                         readyButton.setPressed();
                         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
 
-                        Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(mGameReference.getKey());
+                        Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(Game.getInstance().getKey());
                         queryRef.keepSynced(true);
                         queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -251,7 +222,7 @@ public class GameLobbyFragment extends Fragment {
                                 }
 
                                 if (gameReady) {
-                                    mGameReference.child("gameReady").setValue(true);
+                                    Game.getInstance().setGameReady();
                                 }
                             }
 
@@ -271,7 +242,7 @@ public class GameLobbyFragment extends Fragment {
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
         //todo use Map.Entry<K,V> instead of Object
-        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Object, TeamViewHolder>(Object.class, R.layout.card_team, TeamViewHolder.class, mGameReference.child("fullKeys")) {
+        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<Object, TeamViewHolder>(Object.class, R.layout.card_team, TeamViewHolder.class, Game.getInstance().getReference().child("fullKeys")) {
 
             @Override
             public void populateViewHolder(final TeamViewHolder holder, Object team, int position) {
@@ -279,7 +250,7 @@ public class GameLobbyFragment extends Fragment {
 
                 holder.teamName.setText(teamReference.split(":~")[0]);
 
-                if (mGame.findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals(teamReference)){
+                if (Game.getInstance().findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).equals(teamReference)){
                     holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
                 } else {
                     holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
@@ -289,19 +260,19 @@ public class GameLobbyFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
-                            if (mGame.addGlobalPlayer(teamReference, mGameReference)){
+                            if (Game.getInstance().addGlobalPlayer(teamReference)){
                                 holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
                             } else {
                                 Toast.makeText(getActivity().getApplicationContext(), "This team is full", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            mGame.removeGlobalPlayer(teamReference, mGameReference);
+                            Game.getInstance().removeGlobalPlayer(teamReference);
                             holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
                         }
                     }
                 });
 
-                holder.playersListView.setAdapter(new FirebaseListAdapter<String>(getActivity(), String.class, R.layout.list_item_player, mGameReference.child("fullKeys").child(teamReference)) {
+                holder.playersListView.setAdapter(new FirebaseListAdapter<String>(getActivity(), String.class, R.layout.list_item_player, Game.getInstance().getReference().child("fullKeys").child(teamReference)) {
                     @Override
                     protected void populateView(View view, String playerUID, final int position) {
                         final TextView playerName = ((TextView) view.findViewById(R.id.text_player_name));
@@ -335,8 +306,7 @@ public class GameLobbyFragment extends Fragment {
                         colorButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                gameInitialized = false;
-                                SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(mGame.getFullKeys().get(teamReference).get(position));
+                                SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(Game.getInstance().getFullKeys().get(teamReference).get(position));
                                 ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "set_player_color_fragment");
                             }
                         });
