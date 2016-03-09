@@ -98,6 +98,24 @@ public class DBPlayer{
                 .setValue("");
     }
 
+    public void saveActiveGameKey(String gameKey){
+        LaserTagApplication.firebaseReference
+                .child("users")
+                .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                .child("player")
+                .child("activeGameKey")
+                .setValue(gameKey);
+    }
+
+    public void resetReady(){
+        LaserTagApplication.firebaseReference
+                .child("users")
+                .child(LaserTagApplication.firebaseReference.getAuth().getUid())
+                .child("player")
+                .child("ready")
+                .setValue(false);
+    }
+
     //can only increment my score, does not take in playerUID
     private void incrementScore(final int value, final String teamUID){
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").runTransaction(new Transaction.Handler() {

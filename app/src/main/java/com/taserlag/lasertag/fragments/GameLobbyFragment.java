@@ -95,6 +95,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     @Override
     public void onDetach() {
         super.onDetach();
+        Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
         mListener = null;
     }
 
@@ -110,7 +111,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                 //if you're on a team when the game starts, reset your health and go to FPSActivity
                 FPSStarted = true;
                 Game.getInstance().getReference().child("gameReady").setValue(false);
-                Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
                 if (Player.getInstance().isReady()) {
                     LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                     ((MenuActivity) getActivity()).launchFPS(Game.getInstance().getKey());
@@ -127,7 +127,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
         } else { //Game has been deleted because the host left the lobby
             Toast.makeText(LaserTagApplication.getAppContext(), "The game host has left the lobby!", Toast.LENGTH_SHORT).show();
             Player.getInstance().resetActiveGameKey();
-            Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
             getActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
@@ -171,7 +170,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                     } else {
                         Game.getInstance().removeGlobalPlayer();
                     }
-                    Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
 
                     getActivity().getSupportFragmentManager()
                             .beginTransaction()
