@@ -12,6 +12,9 @@ import com.taserlag.lasertag.weapon.FastWeapon;
 import com.taserlag.lasertag.weapon.StrongWeapon;
 import com.taserlag.lasertag.weapon.Weapon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Player{
 
     private static final String TAG = "Player";
@@ -26,6 +29,7 @@ public class Player{
     private Shield mShield = new Shield();
     private static DBPlayer dbPlayer;
     private static ValueEventListener playerListener;
+    private static List<PlayerFollower> followers = new ArrayList<>();
 
     private static Player instance = null;
 
@@ -37,7 +41,15 @@ public class Player{
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (LaserTagApplication.firebaseReference.getAuth().getUid() != null) {
                         Log.i(TAG, "Player has been successfully updated for user: " + LaserTagApplication.firebaseReference.getAuth().getUid());
-                        dbPlayer = dataSnapshot.getValue(DBPlayer.class);
+                        DBPlayer newDBPlayer = dataSnapshot.getValue(DBPlayer.class);
+                        if (newDBPlayer!=null && dbPlayer!=null) {
+                            if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
+                                instance.decrementHealth(newDBPlayer.getHealth());
+                            }
+
+                        }
+                        dbPlayer = newDBPlayer;
+                        notifyFollowers();
                     }
                 }
 
@@ -92,7 +104,7 @@ public class Player{
 
     // decrement realHealth by the damage not absorbed by the shield
     public boolean decrementHealth(int value){
-        int realHealthDamage = mShield.decStrength(realHealth+mShield.getStrength()-value);
+        int realHealthDamage = mShield.decStrength(realHealth + mShield.getStrength() - value);
         if (realHealthDamage!=0){
             realHealth -= realHealthDamage;
             FPSActivity.updateHealthText();
@@ -191,6 +203,26 @@ public class Player{
     // returns false if you try to decrement your own health
     public boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){
         return dbPlayer.decrementHealthAndIncMyScore(value, playerUID, teamUID);
+    }
+
+    private static void notifyFollowers() {
+        for (PlayerFollower follower : followers) {
+            follower.notifyPlayerUpdated();
+        }
+    }
+
+    public void registerForUpdates(PlayerFollower follower) {
+        if (!followers.contains(follower)) {
+            followers.add(follower);
+
+            if (dbPlayer != null) {
+                notifyFollowers();
+            }
+        }
+    }
+
+    public void unregisterForUpdates(PlayerFollower follower) {
+        followers.remove(follower);
     }
 
 }

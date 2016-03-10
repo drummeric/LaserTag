@@ -233,23 +233,6 @@ public class Game {
         return "";
     }
 
-    public void startGameListeners() {
-        mDBGameReference.child("gameOver").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot gameOverSnapshot) {
-                Boolean gameOver = gameOverSnapshot.getValue(Boolean.class);
-                if (gameOver!=null && gameOver){
-                    FPSActivity.gameOver();
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
-
     public void deleteGame() {
         mDBGameReference.setValue(null);
         mDBGameReference.removeEventListener(mGameListener);
@@ -257,6 +240,7 @@ public class Game {
         mDBGameReference = null;
     }
 
+    //called when you enter join game or create game screens
     public void resetDBGame() {
         mDBGame = null;
         mDBGameReference = null;
@@ -271,10 +255,13 @@ public class Game {
     public void registerForUpdates(GameFollower follower) {
         if (!followers.contains(follower)) {
             followers.add(follower);
-
-            if (mDBGame != null) {
-                notifyFollowers();
+            if (mDBGameReference!=null) {
+                mDBGameReference.addValueEventListener(mGameListener);
             }
+        }
+
+        if (mDBGame != null) {
+            notifyFollowers();
         }
     }
 

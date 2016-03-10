@@ -28,7 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
@@ -37,21 +36,22 @@ import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.game.GameFollower;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.player.PlayerFollower;
 import com.taserlag.lasertag.shooter.ColorShooterTask;
 import com.taserlag.lasertag.shooter.ShooterCallback;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class FPSActivity extends AppCompatActivity implements MapHandler{
+public class FPSActivity extends AppCompatActivity implements MapHandler, GameFollower, PlayerFollower{
 
     private final String TAG = "FPSActivity";
-    private static final String GAME_REF_PARAM = "gameRef";
 
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
@@ -62,6 +62,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private Camera mCamera;
     private CameraPreview mPreview;
     private Zoom mCameraZoom = Zoom.NONE;
+
     private TextView mClipAmmoText;
     private TextView mTotalAmmoText;
     private TextView mWeaponText;
@@ -72,6 +73,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
     private static ImageView mScreenFlash;
     private TextView mScoreText;
     private TextView mZoomText;
+
     private MapAssistant mapAss = MapAssistant.getInstance(this);
 
     private SoundPool mSoundPool;
@@ -112,57 +114,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             }
         });
         mShootSound = mSoundPool.load(this, R.raw.m4a1single, 1);
-
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/health").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Integer.class) < Player.getInstance().getTotalHealth()) {
-                    // Player and shield in charge of updating health and shield UI
-                    // since we don't know if its health or shield strength being decremented
-                    if (Player.getInstance().decrementHealth(dataSnapshot.getValue(Integer.class))){
-                        //I just died
-                        final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
-                        alertDialog.setTitle("You Died!");
-                        alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS/1000) + " seconds");
-                        alertDialog.setCancelable(false);
-                        alertDialog.show();
-
-                        new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
-                            @Override
-                            public void onTick(long millisUntilFinished) {
-                                alertDialog.setMessage("Respawning in "+(millisUntilFinished/1000)+" seconds");
-                            }
-
-                            @Override
-                            public void onFinish() {
-                                alertDialog.dismiss();
-                                //reset health, weapons and shields
-                                resetUIOnRespawn();
-                            }
-                        }.start();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-            }
-        });
-
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player/score").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue(Integer.class)!=null) {
-                    updateScoreText(dataSnapshot.getValue(Integer.class));
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-            }
-        });
-
-        Game.getInstance().startGameListeners();
+        Player.getInstance().registerForUpdates(this);
+        Game.getInstance().registerForUpdates(this);
     }
 
     @Override
@@ -202,6 +155,44 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
         Intent intent = new Intent(this, MenuActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void notifyPlayerUpdated() {
+        updateScoreText(Player.getInstance().getScore());
+        if (Player.getInstance().getRealHealth()<=0){
+            final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
+            alertDialog.setTitle("You Died!");
+            alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS/1000) + " seconds");
+            alertDialog.setCancelable(false);
+            alertDialog.show();
+
+            new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    alertDialog.setMessage("Respawning in "+(millisUntilFinished/1000)+" seconds");
+                }
+
+                @Override
+                public void onFinish() {
+                    alertDialog.dismiss();
+                    //reset health, weapons and shields
+                    resetUIOnRespawn();
+                    hideSystemUI();
+                }
+            }.start();
+        }
+    }
+
+    @Override
+    public void notifyGameUpdated() {
+        if (Game.getInstance().isGameOver()){
+            gameOver();
+        }
+    }
+
+    public void gameOver() {
+        Toast.makeText(LaserTagApplication.getAppContext(), "Game over!", Toast.LENGTH_SHORT).show();
     }
 
     //Shows countdown dialog once everyone in game has loaded FPSActivity
@@ -349,7 +340,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
             public void run() {
                 mScreenFlash.setVisibility(View.INVISIBLE);
             }
-        },500);
+        }, 500);
 
     }
 
@@ -570,9 +561,5 @@ public class FPSActivity extends AppCompatActivity implements MapHandler{
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    public static void gameOver() {
-        Toast.makeText(LaserTagApplication.getAppContext(),"Game over!", Toast.LENGTH_SHORT).show();
     }
 } // FPSActivity

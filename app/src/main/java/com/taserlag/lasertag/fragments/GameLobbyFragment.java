@@ -72,8 +72,9 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_game_lobby, container, false);        // Inflate the layout for this fragment
+        firstTime = true;
         Game.getInstance().registerForUpdates(this);
-
+        init(view);
         //reset Player
         Player.getInstance().resetHealthScoreAndReady();
         Player.reset();
@@ -95,7 +96,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     @Override
     public void onDetach() {
         super.onDetach();
-        Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
         mListener = null;
     }
 
@@ -111,6 +111,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                 //if you're on a team when the game starts, reset your health and go to FPSActivity
                 FPSStarted = true;
                 Game.getInstance().getReference().child("gameReady").setValue(false);
+                Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
                 if (Player.getInstance().isReady()) {
                     LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
                     ((MenuActivity) getActivity()).launchFPS(Game.getInstance().getKey());
@@ -125,6 +126,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                 }
             }
         } else { //Game has been deleted because the host left the lobby
+            Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
             Toast.makeText(LaserTagApplication.getAppContext(), "The game host has left the lobby!", Toast.LENGTH_SHORT).show();
             Player.getInstance().resetActiveGameKey();
             getActivity().getSupportFragmentManager()
@@ -146,7 +148,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             initBackButton(view);
 
             //set game description at top of screen
-            final TextView gameInfo = (TextView) getView().findViewById(R.id.text_game_info);
+            final TextView gameInfo = (TextView) view.findViewById(R.id.text_game_info);
             gameInfo.setText(Game.getInstance().toString());
 
             initCreateTeamButton(view);
@@ -164,6 +166,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
                     if (Game.getInstance().getHost().equals(Player.getInstance().getName())){
                         Game.getInstance().deleteGame();
                         Player.getInstance().resetActiveGameKey();
