@@ -1,47 +1,50 @@
 package com.taserlag.lasertag.shield;
 
-import com.taserlag.lasertag.activity.FPSActivity;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 public class Shield {
 
     protected int maxStrength = 100;
     protected int strength = 0;
     protected long rechargeTime = 10000;
-    private long failureTime = 0;
-    private boolean active = false;
+    private ShieldState mShieldState = new ReadyShieldState();
 
     public int getStrength() {
         return strength;
     }
 
-    public boolean deploy(){
-        boolean canDeploy = strength == 0 && (System.currentTimeMillis()-failureTime>=rechargeTime);
-        if (canDeploy){
-            strength = maxStrength;
-            active = true;
-        }
-        return canDeploy;
+    public void setStrength(int strength) {
+        this.strength = strength;
+    }
+
+    public int getMaxStrength() {
+        return maxStrength;
     }
 
     //returns remainder of damage not absorbed by shield
     public int decStrength(int damage) {
         if (strength > damage) {
             strength -= damage;
-            FPSActivity.updateShieldUI();
             return 0;
         } else {
+            //shield is dead/has died
             int remainder = damage - strength;
-
-            // shield isn't active, don't update UI or failure time
-            if (active) {
-                failureTime = System.currentTimeMillis();
-                strength = 0;
-                FPSActivity.updateShieldUI();
-                FPSActivity.rechargeShieldImage();
-            }
-            active = false;
+            strength = 0;
             return remainder;
         }
     }
 
+    public void setShieldState(ShieldState state, TextView shieldTextView, ImageView shieldImageView){
+        mShieldState = state;
+        updateUI(shieldTextView, shieldImageView);
+    }
+
+    public void updateUI(TextView shieldTextView, ImageView shieldImageView){
+        mShieldState.updateUI(this, shieldTextView, shieldImageView);
+    }
+
+    public boolean deploy(TextView shieldTextView, ImageView shieldImageView){
+        return mShieldState.deploy(this, shieldTextView, shieldImageView);
+    }
 }

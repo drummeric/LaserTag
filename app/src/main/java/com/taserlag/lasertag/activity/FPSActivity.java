@@ -43,6 +43,7 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.player.PlayerFollower;
+import com.taserlag.lasertag.shield.ReadyShieldState;
 import com.taserlag.lasertag.shooter.ColorShooterTask;
 import com.taserlag.lasertag.shooter.ShooterCallback;
 
@@ -151,6 +152,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     //Clears back stack and finishes activity. Returns to new MenuActivity
     @Override
     public void onBackPressed(){
+        Player.getInstance().unregisterForUpdates(this);
+        Game.getInstance().unregisterForUpdates(this);
         getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         Intent intent = new Intent(this, MenuActivity.class);
         startActivity(intent);
@@ -160,6 +163,24 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     public void notifyPlayerUpdated() {
         updateScoreText(Player.getInstance().getScore());
+    }
+
+    // health has decreased
+    @Override
+    public void notifyPlayerHealthUpdated(){
+        Player.getInstance().getShield().updateUI(mShieldText,mShieldImage);
+        updateHealthText();
+
+        //flash the screen red
+        mScreenFlash.setVisibility(View.VISIBLE);
+        Handler flashHandler = new Handler();
+        flashHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mScreenFlash.setVisibility(View.INVISIBLE);
+            }
+        }, 500);
+
         if (Player.getInstance().getRealHealth()<=0){
             final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
             alertDialog.setTitle("You Died!");
@@ -256,72 +277,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void resetUIOnRespawn(){
         //reset health, weapons and shield
         Player.reset();
+        Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
         updateHealthText();
-        updateShieldUI();
-        readyShieldImage();
         updateAmmoText();
         updateWeaponText();
-    }
-
-// todo replace with path calculation through string concatenation
-    private static void updateShieldImage(){
-        switch(Player.getInstance().getShield().getStrength()/10){
-            case 10:
-                mShieldImage.setImageResource(R.drawable.shield10);
-                break;
-            case 9:
-                mShieldImage.setImageResource(R.drawable.shield9);
-                break;
-            case 8:
-                mShieldImage.setImageResource(R.drawable.shield8);
-                break;
-            case 7:
-                mShieldImage.setImageResource(R.drawable.shield7);
-                break;
-            case 6:
-                mShieldImage.setImageResource(R.drawable.shield6);
-                break;
-            case 5:
-                mShieldImage.setImageResource(R.drawable.shield5);
-                break;
-            case 4:
-                mShieldImage.setImageResource(R.drawable.shield4);
-                break;
-            case 3:
-                mShieldImage.setImageResource(R.drawable.shield3);
-                break;
-            case 2:
-                mShieldImage.setImageResource(R.drawable.shield2);
-                break;
-            case 1:
-                mShieldImage.setImageResource(R.drawable.shield1);
-                break;
-            default:
-                mShieldImage.setImageResource(R.drawable.shield0);
-                break;
-        }
-    }
-
-    //10 seconds after charging starts, transition to ready animation
-    public static void rechargeShieldImage(){
-        mShieldImage.setImageResource(R.drawable.shield_fill_animation);
-        AnimationDrawable rechargeAnimation = (AnimationDrawable) mShieldImage.getDrawable();
-        rechargeAnimation.start();
-
-        Handler animationHandler = new Handler();
-        animationHandler.postDelayed(new Runnable() {
-
-            public void run() {
-                readyShieldImage();
-            }
-        }, 10000);
-    }
-
-    // shield ready (used on init)
-    private static void readyShieldImage(){
-        mShieldImage.setImageResource(R.drawable.shield_ready_animation);
-        AnimationDrawable rechargeAnimation = (AnimationDrawable) mShieldImage.getDrawable();
-        rechargeAnimation.start();
     }
 
     private void updateScoreText(int score){
@@ -331,24 +290,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     // health values read from singleton Player
     public static  void updateHealthText(){
         mHealthText.setText(String.valueOf(Player.getInstance().getRealHealth()));
-
-        //flash the screen red
-        mScreenFlash.setVisibility(View.VISIBLE);
-        Handler flashHandler = new Handler();
-        flashHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mScreenFlash.setVisibility(View.INVISIBLE);
-            }
-        }, 500);
-
-    }
-
-    // shield values read from singleton Player
-    // updates image based on current shield health
-    public static void updateShieldUI(){
-        mShieldText.setText(String.valueOf(Player.getInstance().getShield().getStrength()));
-        updateShieldImage();
     }
 
     //rotates gun image over 75 ms, plays sound and updates ammo text view
@@ -394,8 +335,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                             Animation animationGrowShrink = AnimationUtils.loadAnimation(FPSActivity.this, R.anim.growshrink);
                             reticle.startAnimation(animationGrowShrink);
 
-                            Handler flashHandler = new Handler();
-                            flashHandler.postDelayed(new Runnable() {
+                            Handler hitHandler = new Handler();
+                            hitHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     reticle.setImageResource(R.drawable.reticle1);
@@ -417,9 +358,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     //onClick listener
     public void deployShield(View view){
-        if (Player.getInstance().deployShield()) {
-            updateShieldUI();
-        }
+        Player.getInstance().deployShield(mShieldText, mShieldImage);
     }
 
     public void reloadWeapon(View view) {

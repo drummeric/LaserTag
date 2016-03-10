@@ -1,11 +1,12 @@
 package com.taserlag.lasertag.player;
 
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.shield.Shield;
 import com.taserlag.lasertag.weapon.FastWeapon;
@@ -45,6 +46,7 @@ public class Player{
                         if (newDBPlayer!=null && dbPlayer!=null) {
                             if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
                                 instance.decrementHealth(newDBPlayer.getHealth());
+                                notifyHealthFollowers();
                             }
 
                         }
@@ -86,12 +88,12 @@ public class Player{
         }
     }
 
-    public boolean deployShield(){
-        boolean deployable = mShield.deploy();
-        if (deployable) {
+    public boolean deployShield(TextView shieldTextView, ImageView shieldImageView){
+        boolean deployed = mShield.deploy(shieldTextView,shieldImageView);
+        if (deployed) {
             dbPlayer.incrementHealth(mShield.getStrength());
         }
-        return deployable;
+        return deployed;
     }
 
     public Shield getShield() {
@@ -107,7 +109,6 @@ public class Player{
         int realHealthDamage = mShield.decStrength(realHealth + mShield.getStrength() - value);
         if (realHealthDamage!=0){
             realHealth -= realHealthDamage;
-            FPSActivity.updateHealthText();
         }
         return realHealth == 0;
     }
@@ -208,6 +209,13 @@ public class Player{
     private static void notifyFollowers() {
         for (PlayerFollower follower : followers) {
             follower.notifyPlayerUpdated();
+        }
+    }
+
+    //notify followers that health has decreased
+    private static void notifyHealthFollowers() {
+        for (PlayerFollower follower : followers) {
+            follower.notifyPlayerHealthUpdated();
         }
     }
 
