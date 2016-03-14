@@ -106,7 +106,7 @@ public class Team{
     }
 
     public boolean removeDBPlayer() {
-        return mDBTeam.removeDBPlayer(mDBTeamReference);
+        return mDBTeam!=null && mDBTeam.removeDBPlayer(mDBTeamReference);
     }
 
     public void incrementScore(final int value) {

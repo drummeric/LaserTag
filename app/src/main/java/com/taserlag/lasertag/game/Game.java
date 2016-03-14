@@ -37,7 +37,9 @@ public class Game {
         mGameListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Game has been successfully updated for game: " + mDBGameReference.getKey());
+                //crashes here when rebuilding when you were in a game already
+                // real users are not expected to crash here, so we won't worry about it
+                Log.i(TAG, "Game has been successfully updated for game: " + ((mDBGameReference != null) ? mDBGameReference.getKey() : "null"));
                 DBGame newDBGame = dataSnapshot.getValue(DBGame.class);
                 if (mDBGame!=null&&newDBGame!=null){
 

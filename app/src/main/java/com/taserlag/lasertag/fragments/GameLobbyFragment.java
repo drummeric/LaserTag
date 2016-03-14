@@ -162,7 +162,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                     Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
                     if (Game.getInstance().getHost().equals(Player.getInstance().getName())){
                         Game.getInstance().deleteGame();
-                    } else {
+                    } else if (Team.getInstance().getDBTeam()!=null){
                         Team.getInstance().removeDBPlayer();
                     }
 
@@ -230,7 +230,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                     @Override
                     public void onClick(View v) {
                         if (holder.joinButton.getText().equals(getString(R.string.game_lobby_button_join_team))) {
-                            if (dbTeam.addDBPlayer(getRef(position))){
+                            if (dbTeam.addDBPlayer(dbTeam.getName())){
                                 holder.joinButton.setText(getString(R.string.game_lobby_button_leave_team));
                             } else {
                                 Toast.makeText(getActivity().getApplicationContext(), "This team is full", Toast.LENGTH_SHORT).show();

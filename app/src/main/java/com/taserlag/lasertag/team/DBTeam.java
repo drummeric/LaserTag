@@ -136,6 +136,17 @@ public class DBTeam {
         });
     }
 
+    //reset player map. ONLY CALLED FROM addDBPlayer!!!!!!!
+    // used to avoid bringing players back to teams they left as I join their team
+    private void resetPlayers(){
+        players = new HashMap<>();
+    }
+
+    //called from game lobby in recycler view's list view
+    public boolean addDBPlayer(String teamName){
+        return addDBPlayer(Game.getInstance().getReference().child("teams").child(teamName));
+    }
+
     /*TODO BUG: If two people try to add themselves to a team that only has
       one spot left, they will pass the first check and then be added asynchronously.
       One person will be added, and one person will not be added and see no error message*/
@@ -147,17 +158,21 @@ public class DBTeam {
                 removeDBPlayer(Team.getInstance().getDBTeamReference());
             }
 
-            reference.child("players").runTransaction(new Transaction.Handler() {
+            reference.runTransaction(new Transaction.Handler() {
                 @Override
                 public Transaction.Result doTransaction(MutableData currentData) {
-                    Map<String, DBPlayer> dbPlayers = currentData.getValue(Map.class);
-                    if (dbPlayers == null) {
-                        dbPlayers = new HashMap<>();
+                    DBTeam dbTeam = currentData.getValue(DBTeam.class);
+
+                    if (dbTeam == null) {
+                        dbTeam = DBTeam.this;
+                        dbTeam.resetPlayers();
                     }
+
+                    Map<String, DBPlayer> dbPlayers = dbTeam.getPlayers();
 
                     if (dbPlayers.size() < Game.getInstance().getMaxTeamSize()) {
                         dbPlayers.put(Player.getInstance().getName(), new DBPlayer(Player.getInstance().getName()));
-                        currentData.setValue(dbPlayers);
+                        currentData.setValue(dbTeam);
                     } else {
                         return Transaction.abort();
                     }
