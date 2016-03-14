@@ -72,11 +72,6 @@ public class DBPlayer{
         reference.child("ready").setValue(ready);
     }
 
-    //can only increment my score, does not take in playerUID
-    private void incrementScore(final int value, Firebase reference){
-        playerStats.incrementScore(value, reference.child("playerStats"));
-    }
-
     public void resetHealth(Firebase reference){
        reference.child("health").runTransaction(new Transaction.Handler() {
             @Override
@@ -133,8 +128,9 @@ public class DBPlayer{
                         if (health > 0) {
                             mutableData.setValue(health);
                         } else {
-                            //they're dead, inc my score by 1
-                            incrementScore(1, myReference);
+                            //they're dead, inc my score and kills by 1
+                            playerStats.incrementScore(1, myReference.child("playerStats"));
+                            playerStats.incrementKills(myReference.child("playerStats"));
                             mutableData.setValue(0);
                         }
                     }

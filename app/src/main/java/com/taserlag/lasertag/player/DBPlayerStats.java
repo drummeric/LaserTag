@@ -115,4 +115,13 @@ public class DBPlayerStats {
             }
         });
     }
+
+    public void incrementDeaths(Firebase reference){
+        reference.child("deaths").setValue(++deaths);
+    }
+
+    //for now kills has the same value as score
+    public void incrementKills(Firebase reference){
+        reference.child("kills").setValue(++kills);
+    }
 }

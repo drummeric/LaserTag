@@ -52,6 +52,10 @@ public class Player{
                         if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
                             instance.decrementHealth(newDBPlayer.getHealth());
                             notifyHealthFollowers();
+
+                            if (newDBPlayer.getHealth()==0){
+                                dbPlayer.getPlayerStats().incrementDeaths(dbPlayerReference.child("playerStats"));
+                            }
                         }
 
                         if (newDBPlayer.getPlayerStats().getColor()!=dbPlayer.getPlayerStats().getColor()){
