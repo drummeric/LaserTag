@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.RotateAnimation;
+import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -50,7 +51,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
-    private final int TIMER_LENGTH_MS = 1000;
+    private final int TIMER_LENGTH_MS = 3000;
     private final int RESPAWN_TIMER_LENGTH_MS = 5000;
 
     private Camera mCamera;
@@ -65,6 +66,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private static ImageView mShieldImage;
     private ImageView mGunImage;
     private static ImageView mScreenFlash;
+    private TextView mTimeText;
     private TextView mScoreText;
     private TextView mZoomText;
     private AlertDialog mGameLoadingAlertDialog;
@@ -93,6 +95,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             //wait for game to load
         }
 
+        mTimeText = (TextView) findViewById(R.id.text_view_fps_game_time);
         mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
@@ -237,6 +240,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             @Override
             public void onFinish() {
                 mGameLoadingAlertDialog.dismiss();
+                startTimer();
             }
         };
         timer.start();
@@ -283,12 +287,39 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }.start();
     }
 
+    //todo BUG: when coming back to FPS after leaving, the timer isn't correctly set
+    // Solution: store game start time in database and calculate
+    private void startTimer(){
+        if (Game.getInstance().getTimeEnabled()){
+            new CountDownTimer(Game.getInstance().getEndMinutes()*60*1000, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    mTimeText.setText(String.format("%02d:%02d",(millisUntilFinished/(1000*60))%60,(millisUntilFinished/1000)%60));
+                }
+
+                @Override
+                public void onFinish() {
+                   Game.getInstance().endGame();
+                }
+            }.start();
+        } else {
+            Chronometer stopwatch = (Chronometer) findViewById(R.id.chronometer_fps);
+            stopwatch.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+                @Override
+                public void onChronometerTick(Chronometer chronometer) {
+                    mTimeText.setText(chronometer.getText());
+                }
+            });
+            stopwatch.start();
+        }
+    }
+
     private void updateScoreText(int score){
         mScoreText.setText(String.valueOf(score));
     }
 
     // health values read from singleton Player
-    public static  void updateHealthText(){
+    private static void updateHealthText(){
         mHealthText.setText(String.valueOf(Player.getInstance().getRealHealth()));
     }
 
