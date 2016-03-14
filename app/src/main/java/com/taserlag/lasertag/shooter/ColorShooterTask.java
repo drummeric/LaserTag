@@ -7,6 +7,7 @@ import com.taserlag.lasertag.camera.CameraHelper;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamIterator;
 
 public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
@@ -57,10 +58,12 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
             DBPlayer dbPlayer = iterator.next();
 
             if (!dbPlayer.getName().equals(Player.getInstance().getName())) {
-                totalDiff = checkPlayerColors(hitColor, dbPlayer.getPlayerStats().getColor());
-                if (totalDiff <= distance) {
-                    smallestTeamPlayer = iterator.currentTeam() + ":~" + dbPlayer.getName();
-                    distance = totalDiff;
+                if (!(Team.getInstance().getName().equals(iterator.currentTeam()) && !Game.getInstance().getFriendlyFire())) {
+                    totalDiff = checkPlayerColors(hitColor, dbPlayer.getPlayerStats().getColor());
+                    if (totalDiff <= distance) {
+                        smallestTeamPlayer = iterator.currentTeam() + ":~" + dbPlayer.getName();
+                        distance = totalDiff;
+                    }
                 }
             }
         }
