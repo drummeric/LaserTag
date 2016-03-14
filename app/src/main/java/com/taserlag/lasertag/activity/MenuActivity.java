@@ -73,10 +73,8 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     //Passes game reference to FPSActivity
-    public void launchFPS(String gameReference) {
-        Intent intent = new Intent(this, FPSActivity.class);
-        intent.putExtra(GAME_REF_PARAM,gameReference);
-        startActivity(intent);
+    public void launchFPS() {
+        startActivity(new Intent(this, FPSActivity.class));
         finish();
     }
 
@@ -88,7 +86,7 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     }
 
     public void logOut(View view) {
-        Player.getInstance().disconnect();
+        Player.disconnect();
         LaserTagApplication.firebaseReference.unauth();
         Intent intent = new Intent(this, LoginActivity.class);
         finish();

@@ -22,4 +22,8 @@ public class LaserTagApplication extends Application {
     public static Context getAppContext() {
         return LaserTagApplication.context;
     }
+
+    public static String getUid(){
+        return LaserTagApplication.firebaseReference.getAuth().getUid();
+    }
 }

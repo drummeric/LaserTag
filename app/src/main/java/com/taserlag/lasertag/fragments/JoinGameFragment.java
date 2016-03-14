@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
@@ -18,6 +19,9 @@ import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.DBTeam;
+import com.taserlag.lasertag.team.Team;
 
 
 public class JoinGameFragment extends Fragment{
@@ -40,7 +44,8 @@ public class JoinGameFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_join_game, container, false);
-        Game.getInstance().resetDBGame();
+        //just in case
+        Game.getInstance().leaveGame();
         init(view);
         return view;
     }
@@ -81,8 +86,21 @@ public class JoinGameFragment extends Fragment{
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        GameLobbyFragment fragment = GameLobbyFragment.newInstance(getRef(position).getKey());
-                        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
+                        Game.getInstance(dbGame, getRef(position));
+                        DBTeam foundTeam = Game.getInstance().findPlayer(Player.getInstance().getName());
+                        if (Game.getInstance().isGameOver()){
+                            Toast.makeText(LaserTagApplication.getAppContext(),"This game is over!", Toast.LENGTH_SHORT).show();
+                        } else if (Game.getInstance().isGameReady()){
+                            if (foundTeam!=null) {
+                                Team.getInstance(foundTeam);
+                                Player.getInstance().join();
+                                ((MenuActivity) getActivity()).launchFPS();
+                            } else {
+                                Toast.makeText(LaserTagApplication.getAppContext(),"This game has started already!",Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
+                        }
                     }
                 });
             }

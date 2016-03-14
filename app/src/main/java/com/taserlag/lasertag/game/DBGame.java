@@ -1,18 +1,19 @@
 package com.taserlag.lasertag.game;
 
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
+import com.taserlag.lasertag.team.TeamIterator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
 public class DBGame{
@@ -23,11 +24,11 @@ public class DBGame{
 
     private boolean scoreEnabled;
 
-    private int score;
+    private int endScore;
 
     private boolean timeEnabled;
 
-    private int minutes;
+    private int endMinutes;
 
     private int maxTeamSize;
 
@@ -37,9 +38,11 @@ public class DBGame{
 
     private boolean gameReady = false;
 
+    private boolean gameLoaded = false;
+
     private boolean gameOver = false;
 
-    private Map<String, List<String>> fullKeys = new HashMap<>();
+    private Map<String, DBTeam> teams = new HashMap<>();
 
     public DBGame() {}
 
@@ -67,12 +70,12 @@ public class DBGame{
         this.scoreEnabled = scoreEnabled;
     }
 
-    public int getScore() {
-        return score;
+    public int getEndScore() {
+        return endScore;
     }
 
-    public void setScore(int score) {
-        this.score = score;
+    public void setEndScore(int score) {
+        this.endScore = score;
     }
 
     public boolean getTimeEnabled() {
@@ -83,12 +86,12 @@ public class DBGame{
         this.timeEnabled = timeEnabled;
     }
 
-    public int getMinutes() {
-        return minutes;
+    public int getEndMinutes() {
+        return endMinutes;
     }
 
-    public void setMinutes(int minutes) {
-        this.minutes = minutes;
+    public void setEndMinutes(int minutes) {
+        this.endMinutes = minutes;
     }
 
     public int getMaxTeamSize() {
@@ -119,127 +122,128 @@ public class DBGame{
         return gameReady;
     }
 
+    private void setReady(boolean ready) {
+        this.gameReady = ready;
+    }
+
+    public void resetReady(Firebase reference) {
+        reference.child("gameReady").setValue(false);
+    }
+
+    public boolean isGameLoaded() {
+        return gameLoaded;
+    }
+
+    private void setLoaded(){
+        gameLoaded = true;
+    }
+
     public boolean isGameOver() {
         return gameOver;
     }
 
-    public Map<String, List<String>> getFullKeys() {
-        return fullKeys;
+    public Map<String, DBTeam> getTeams() {
+        return teams;
     }
 
-    public void setFullKeys(Map<String, List<String>> fullKeys) { this.fullKeys = fullKeys; }
-
-    public static void endGame(Firebase game){
-        game.child("gameOver").setValue(true);
-    }
-
-    public static void enableTeamListeners(Firebase reference){
-
-        reference.child("fullKeys").addChildEventListener(new ChildEventListener() {
+    //sets ready if its teams are ready
+    public void checkReady(final Firebase reference){
+        reference.runTransaction(new Transaction.Handler() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            }
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                DBGame dbGame = mutableData.getValue(DBGame.class);
+                boolean ready = true;
+                if (dbGame != null) {
+                    for (DBTeam dbTeam : dbGame.getTeams().values()) {
+                        ready &= dbTeam.isReady();
+                    }
 
-            //player added
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            }
+                    dbGame.setReady(ready);
 
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                LaserTagApplication.firebaseReference.child("teams").child(dataSnapshot.getKey().split(":~")[1]).setValue(null);
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                    mutableData.setValue(dbGame);
+                    return Transaction.success(mutableData);
+                } else {
+                    return Transaction.abort();
+                }
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
+            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot dataSnapshot) {
+
             }
         });
     }
 
-    //teamFullKey ends in ":~" for new team
-    public static boolean addGlobalPlayer(final String teamFullKey, final Firebase gameReference){
-        gameReference.runTransaction(new Transaction.Handler() {
+    //sets loaded if its teams are loaded
+    public void checkLoaded(final Firebase reference){
+        reference.runTransaction(new Transaction.Handler() {
             @Override
-            public Transaction.Result doTransaction(MutableData currentData) {
-                if (currentData.getValue(DBGame.class) == null) {
-                    //should never happen
-                    currentData.setValue(new DBGame());
-                } else {
-                    DBGame dbGame = currentData.getValue(DBGame.class);
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                DBGame dbGame = mutableData.getValue(DBGame.class);
+                boolean loaded = true;
+                if (dbGame!=null){
+                    for (DBTeam dbTeam: dbGame.getTeams().values()){
+                        loaded &= dbTeam.isLoaded();
+                    }
 
-                    //if the team isn't in the game's map
-                    if (dbGame.getFullKeys().get(teamFullKey) == null) {
-                        Team team = new Team(teamFullKey.split(":~")[0]);
-
-                        // add global player to new team
-                        List<String> playerKey = new ArrayList<String>();
-                        playerKey.add(LaserTagApplication.firebaseReference.getAuth().getUid());
-
-                        // if this is a new team
-                        if (teamFullKey.endsWith(":~")) {
-                            Firebase ref = LaserTagApplication.firebaseReference.child("teams").push();
-                            ref.setValue(team);
-                            dbGame.getFullKeys().put(teamFullKey + ref.getKey(), playerKey);
-                        } else {
-                            //existing team not on game map (due to database propogation)
-                            LaserTagApplication.firebaseReference.child("teams").child(teamFullKey).setValue(team);
-                            dbGame.getFullKeys().put(teamFullKey, playerKey);
-                        }
-
+                    if (loaded){
+                        dbGame.setLoaded();
                     } else {
-                        dbGame.getFullKeys().get(teamFullKey).add(LaserTagApplication.firebaseReference.getAuth().getUid());
+                        return Transaction.abort();
                     }
-                    currentData.setValue(dbGame);
-                }
 
+                    mutableData.setValue(dbGame);
+
+                    return Transaction.success(mutableData);
+                } else {
+                    return Transaction.abort();
+                }
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot dataSnapshot) {
+
+            }
+        });
+    }
+
+    //adds new team to game and puts me on it
+    // updates static Team class with new DBTeam
+    // updates User's activeGameKey
+    public boolean createTeamWithPlayer(final DBTeam dbTeam, final Firebase reference){
+
+        reference.child("teams").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData currentData) {
+                Map<String, DBTeam> dbTeams = currentData.getValue(Map.class);
+                if (dbTeams == null) {
+                    //should never happen
+                    dbTeams = new HashMap<>();
+                }
+                dbTeams.put(dbTeam.getName(), dbTeam);
+
+                currentData.setValue(dbTeams);
                 return Transaction.success(currentData);
             }
 
             @Override
             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
-                if (committed) {
-                    Player.getInstance().saveActiveGameKey(gameReference.getKey());
-                }
+                //adds me to the team
+                dbTeam.addDBPlayer(reference.child("teams").child(dbTeam.getName()));
             }
         });
 
         return true;
     }
 
-    public static boolean removeGlobalPlayer(final String teamFullKey, Firebase gameReference) {
-        gameReference.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData currentData) {
-                if (currentData.getValue(DBGame.class) == null) {
-                    currentData.setValue(new DBGame());
-                } else {
-                    DBGame dbGame = currentData.getValue(DBGame.class);
-                    dbGame.getFullKeys().get(teamFullKey).remove(LaserTagApplication.firebaseReference.getAuth().getUid());
+    public void endGame(Firebase reference){
+        reference.child("gameOver").setValue(true);
+    }
 
-                    //empty team -> remove team from database
-                    if (dbGame.getFullKeys().get(teamFullKey).isEmpty()) {
-                        dbGame.getFullKeys().remove(teamFullKey);
-                    }
-
-                    currentData.setValue(dbGame);
-                }
-
-                return Transaction.success(currentData);
-            }
-
-            @Override
-            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
-                if (committed) {
-                    Player.getInstance().resetActiveGameKey();
-                    Player.getInstance().resetReady();
-                }
-            }
-        });
-        return true;
+    public Firebase saveNewGame(){
+        Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
+        ref.setValue(this);
+        return ref;
     }
 
     @Override
@@ -255,14 +259,14 @@ public class DBGame{
         description.append(getGameType()).append(" game ");
 
         if (getScoreEnabled()) {
-            description.append("to ").append(getScore()).append(" points");
+            description.append("to ").append(getEndScore()).append(" points");
         }
 
         if (getTimeEnabled()) {
             if(getScoreEnabled()) {
                 description.append(" or ");
             }
-            description.append("until ").append(getMinutes()).append(" minutes have elapsed");
+            description.append("until ").append(getEndMinutes()).append(" minutes have elapsed");
         }
 
         description.append(". Friendly fire is ");
@@ -278,5 +282,35 @@ public class DBGame{
         }
 
         return description.toString();
+    }
+
+    public TeamIterator<DBPlayer> makeIterator(){
+        return new TeamIterator<DBPlayer>() {
+            Iterator<DBPlayer> currentIterator;
+            String currentTeamName;
+            Iterator<DBTeam> teamIterator = teams.values().iterator();
+
+            @Override
+            public boolean hasNext() {
+                if ((currentIterator==null || !currentIterator.hasNext()) && teamIterator.hasNext()){
+                    DBTeam currentTeam = teamIterator.next();
+                    currentTeamName = currentTeam.getName();
+                    currentIterator = currentTeam.makeIterator();
+                } else {
+                    return false;
+                }
+                return currentIterator.hasNext() || teamIterator.hasNext();
+            }
+
+            @Override
+            public DBPlayer next() {
+                return currentIterator.next();
+            }
+
+            @Override
+            public String currentTeam(){
+                return currentTeamName;
+            }
+        };
     }
 }

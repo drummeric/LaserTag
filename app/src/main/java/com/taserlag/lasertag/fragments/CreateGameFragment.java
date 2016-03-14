@@ -45,7 +45,8 @@ public class CreateGameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_game, container, false);
-        Game.getInstance().resetDBGame();
+        //just in case
+        Game.getInstance().leaveGame();
 
         gameTypeButtons[0] = (StickyButton) view.findViewById(R.id.button_tdm);
         gameTypeButtons[0].setText(GameType.TDM.toString());
@@ -120,18 +121,16 @@ public class CreateGameFragment extends Fragment {
         dbGame.setHost(Player.getInstance().getName());
         dbGame.setGameType(gameType);
         dbGame.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
-        dbGame.setScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
+        dbGame.setEndScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
         dbGame.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
-        dbGame.setMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
+        dbGame.setEndMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
         dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         dbGame.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         dbGame.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
 
-        Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
-        ref.setValue(dbGame);
-
-        GameLobbyFragment fragment = GameLobbyFragment.newInstance(ref.getKey());
-        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "game_lobby_fragment");
+        //save new game to DB (with push) and start game lobby
+        Game.getInstance(dbGame, dbGame.saveNewGame());
+        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
     }
 
 }

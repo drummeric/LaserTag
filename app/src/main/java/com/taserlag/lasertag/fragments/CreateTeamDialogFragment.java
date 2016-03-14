@@ -3,7 +3,6 @@ package com.taserlag.lasertag.fragments;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -11,10 +10,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.firebase.client.Firebase;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.game.Game;
-import com.taserlag.lasertag.team.Team;
+import com.taserlag.lasertag.team.DBTeam;
 
 public class CreateTeamDialogFragment extends DialogFragment {
 
@@ -51,12 +49,11 @@ public class CreateTeamDialogFragment extends DialogFragment {
                         if (teamName.getText().toString().isEmpty()){
                             teamName.setError(getString(R.string.create_team_dialog_empty_name));
                         } else {
-                            Team team = new Team(teamName.getText().toString());
 
-                            if (Game.getInstance() != null && !Game.getInstance().createTeamWithGlobalPlayer(team)) {
-                                teamName.setError(getString(R.string.create_team_dialog_team_exists));
-                            } else {
+                            if (Game.getInstance() != null && Game.getInstance().createTeamWithPlayer(new DBTeam(teamName.getText().toString()))) {
                                 d.dismiss();
+                            } else {
+                                teamName.setError(getString(R.string.create_team_dialog_team_exists));
                             }
                         }
                     }

@@ -3,67 +3,137 @@ package com.taserlag.lasertag.team;
 import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.MutableData;
-import com.firebase.client.Transaction;
-import com.taserlag.lasertag.activity.FPSActivity;
-import com.taserlag.lasertag.application.LaserTagApplication;
+import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.Player;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class Team{
 
     private final static String TAG = "Team";
+    
+    private static ValueEventListener mTeamListener;
+    private static Firebase mDBTeamReference;
+    private static DBTeam mDBTeam;
+    private static Team instance;
+    private static List<TeamFollower> followers = new ArrayList<>();
 
-    private String name = "Team Name";
+    private Team() {
+    }
 
-    private int score = 0;
+    public static Team getInstance(DBTeam dbTeam) {
+        instance = new Team();
+        mDBTeam = dbTeam;
+        mDBTeamReference = Game.getInstance().getReference().child("teams").child(mDBTeam.getName());
+        mTeamListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (mDBTeamReference!=null) {
+                    Log.i(TAG, "Team has been successfully updated for team: " + mDBTeamReference.getKey());
+                    mDBTeam = dataSnapshot.getValue(DBTeam.class);
+                    notifyFollowers();
+                }
+            }
 
-    public Team() {}
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                if (mDBTeamReference!=null) {
+                    Log.e(TAG, "Team failed to update for team: " + mDBTeamReference.getKey(), firebaseError.toException());
+                }
+            }
+        };
 
-    public Team(String name) {
-        this.name = name;
+        mDBTeamReference.addValueEventListener(mTeamListener);
+        return instance;
+    }
+
+    public static Team getInstance() {
+        if (instance==null) {
+            instance = new Team();
+        }
+        return instance;
+    }
+
+    public DBTeam getDBTeam(){
+        return mDBTeam;
     }
 
     public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        return mDBTeam.getName();
     }
 
     public int getScore(){
-        return score;
+        return mDBTeam.getScore();
     }
 
-    public static void incScore(final int value, final String teamUID){
-        LaserTagApplication.firebaseReference.child("teams").child(teamUID).child("score").runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                if (mutableData.getValue(Integer.class) == null) {
-                    mutableData.setValue(0);
-                } else {
-                    mutableData.setValue(mutableData.getValue(Integer.class) + value);
-                }
-                if (Game.getInstance().getScoreEnabled()&&Game.getInstance().getScore()<=mutableData.getValue(Integer.class)){
-                    Game.getInstance().endGame();
-                }
-                return Transaction.success(mutableData);
+    public void checkReady(){
+        mDBTeam.checkReady(mDBTeamReference);
+    }
+
+    public void resetReady(){
+        mDBTeam.resetReady(mDBTeamReference);
+    }
+
+    public void checkLoaded() {
+        mDBTeam.checkLoaded(mDBTeamReference);
+    }
+
+    public Firebase getDBTeamReference(){
+        return mDBTeamReference;
+    }
+
+    public Map<String, DBPlayer> getPlayers() {
+        return mDBTeam.getPlayers();
+    }
+
+    //called when you enter join Team or create Team screens
+    // or when you leave a team in game lobby
+    // Also resets Player's dbPlayer
+    public void leaveTeam() {
+        mDBTeam = null;
+        if (mDBTeamReference!=null) {
+            mDBTeamReference.removeEventListener(mTeamListener);
+            mDBTeamReference = null;
+        }
+        Player.getInstance().leave();
+    }
+
+    public boolean removeDBPlayer() {
+        return mDBTeam.removeDBPlayer(mDBTeamReference);
+    }
+
+    public void incrementScore(final int value) {
+        mDBTeam.incrementScore(value, mDBTeamReference);
+    }
+
+    private static void notifyFollowers() {
+        for (TeamFollower follower : followers) {
+            follower.notifyTeamUpdated();
+        }
+    }
+
+    public void registerForUpdates(TeamFollower follower) {
+        if (!followers.contains(follower)) {
+            followers.add(follower);
+
+            if (mDBTeam != null) {
+                notifyFollowers();
             }
-
-            @Override
-            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
-                Log.i(TAG, "Successfully incremented score for teamUID" + teamUID);
-            }
-        });
+        }
     }
 
-    @Override
-    public boolean equals(Object team){
-        return (team instanceof Team) && (((Team) team).getName().equals(name));
+    public void unregisterForUpdates(TeamFollower follower) {
+        followers.remove(follower);
     }
 
-    public void setCaptain(){
-       //todo write this function
+    public Iterator<DBPlayer> makeIterator(){
+        return mDBTeam.makeIterator();
     }
 }

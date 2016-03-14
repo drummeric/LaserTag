@@ -1,24 +1,17 @@
 package com.taserlag.lasertag.game;
 
-import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.MutableData;
-import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
-import com.taserlag.lasertag.activity.FPSActivity;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.player.DBPlayer;
-import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
+import com.taserlag.lasertag.team.TeamIterator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,20 +23,40 @@ public class Game {
     private static DBGame mDBGame;
     private static Firebase mDBGameReference;
     private static ValueEventListener mGameListener;
-    private static List<GameFollower> followers = new ArrayList<GameFollower>();
+    private static List<GameFollower> followers = new ArrayList<>();
 
     private Game() {
 
     }
 
-    public static Game getInstance(Firebase gameReference) {
+    // Called to initialize a new game on the game reference.
+    public static Game getInstance(DBGame dbGame, Firebase gameReference) {
         instance = new Game();
+        mDBGame = dbGame;
         mDBGameReference = gameReference;
         mGameListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.i(TAG, "Game has been successfully updated for game: " + mDBGameReference.getKey());
-                mDBGame = dataSnapshot.getValue(DBGame.class);
+                DBGame newDBGame = dataSnapshot.getValue(DBGame.class);
+                if (mDBGame!=null&&newDBGame!=null){
+
+                    if (!mDBGame.isGameLoaded()&&newDBGame.isGameLoaded()){
+                        notifyFollowersLoaded();
+                    }
+
+                    if (!mDBGame.isGameReady()&&newDBGame.isGameReady()){
+                        notifyFollowersReady();
+                    }
+
+                    if (!mDBGame.isGameOver()&&newDBGame.isGameOver()){
+                        notifyFollowersOver();
+                    }
+                } else if (newDBGame==null) {
+                    notifyFollowersDeleted();
+                }
+
+                mDBGame = newDBGame;
                 notifyFollowers();
             }
 
@@ -54,7 +67,6 @@ public class Game {
         };
 
         mDBGameReference.addValueEventListener(mGameListener);
-        mDBGame.enableTeamListeners(mDBGameReference);
         return instance;
     }
 
@@ -81,156 +93,96 @@ public class Game {
         return mDBGame.getHost();
     }
 
-    public void setHost(String host) {
-        mDBGame.setHost(host);
-    }
-
     public GameType getGameType() {
         return mDBGame.getGameType();
-    }
-
-    public void setGameType(GameType gameType) {
-        mDBGame.setGameType(gameType);
     }
 
     public boolean getScoreEnabled() {
         return mDBGame.getScoreEnabled();
     }
 
-    public void setScoreEnabled(boolean scoreEnabled) {
-        mDBGame.setScoreEnabled(scoreEnabled);
-    }
-
-    public int getScore() {
-        return mDBGame.getScore();
-    }
-
-    public void setScore(int score) {
-        mDBGame.setScore(score);
+    public int getEndScore() {
+        return mDBGame.getEndScore();
     }
 
     public boolean getTimeEnabled() {
         return mDBGame.getTimeEnabled();
     }
 
-    public void setTimeEnabled(boolean timeEnabled) {
-        mDBGame.setTimeEnabled(timeEnabled);
-    }
-
-    public int getMinutes() {
-        return mDBGame.getMinutes();
-    }
-
-    public void setMinutes(int minutes) {
-        mDBGame.setMinutes(minutes);
+    public int getEndMinutes() {
+        return mDBGame.getEndMinutes();
     }
 
     public int getMaxTeamSize() {
         return mDBGame.getMaxTeamSize();
     }
 
-    public void setMaxTeamSize(int size) {
-        mDBGame.setMaxTeamSize(size);
-    }
-
     public boolean getPrivateMatch() {
         return mDBGame.getPrivateMatch();
-    }
-
-    public void setPrivateMatch(boolean privateMatch) {
-        mDBGame.setPrivateMatch(privateMatch);
     }
 
     public boolean getFriendlyFire() {
         return mDBGame.getFriendlyFire();
     }
 
-    public void setFriendlyFire(boolean friendlyFire) {
-        mDBGame.setFriendlyFire(friendlyFire);
-    }
-
     public boolean isGameReady() {
         return mDBGame.isGameReady();
+    }
+
+    public boolean isLoaded() {
+        return mDBGame.isGameLoaded();
+    }
+
+    public void checkLoaded(){
+        mDBGame.checkLoaded(mDBGameReference);
     }
 
     public boolean isGameOver() {
         return mDBGame.isGameOver();
     }
 
-    public Map<String, List<String>> getFullKeys() {
-        return mDBGame.getFullKeys();
+    public Map<String, DBTeam> getTeams() {
+        return mDBGame.getTeams();
+    }
+
+    public void checkReady() {
+        mDBGame.checkReady(mDBGameReference);
+    }
+
+    public void resetReady() {
+        mDBGame.resetReady(mDBGameReference);
     }
 
     public void endGame(){
         mDBGame.endGame(mDBGameReference);
     }
 
-    public boolean createTeamWithGlobalPlayer(final Team team){
-        if (teamNameExists(team)){
-            return false;
-        }
-        addGlobalPlayer(team.getName() + ":~");
-
-        return true;
-    }
-
-    //teamFullKey ends in ":~" for new team
-    public boolean addGlobalPlayer(final String teamFullKey){
-        String currentTeamFullKey = findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid());
-
-        if (!currentTeamFullKey.equals("")){
-            // player is on a team
-            removeGlobalPlayer(currentTeamFullKey);
-        } else if (currentTeamFullKey.equals(teamFullKey)) {
-            //global player on team already, don't need to re-add
-            return true;
-        } else if (!teamFullKey.endsWith(":~") && mDBGame.getFullKeys().get(teamFullKey).size() >= mDBGame.getMaxTeamSize()){
-            //team full
-            return false;
+    // finds player in game (call as little as possible)
+    // returns the team of player found
+    public DBTeam findPlayer(String name){
+        for (Map.Entry<String, DBTeam> teamEntry:mDBGame.getTeams().entrySet()){
+            for (String playerName:teamEntry.getValue().getPlayers().keySet()){
+                if (playerName.equals(name)){
+                    return teamEntry.getValue();
+                }
+            }
         }
 
-        return mDBGame.addGlobalPlayer(teamFullKey, mDBGameReference);
+        return null;
     }
 
-    //faster than the no-param version because you dont have to call findPlayer()
-    //use this version when you can (aka when you know the team's fullkey that you're on)
-    public boolean removeGlobalPlayer(final String teamFullKey) {
-        return mDBGame.removeGlobalPlayer(teamFullKey, mDBGameReference);
+    //if the team name doesn't exist, create the team in DB and put me on it
+    public boolean createTeamWithPlayer(DBTeam team){
+        return !teamNameExists(team) && mDBGame.createTeamWithPlayer(team, mDBGameReference);
     }
 
-    public boolean removeGlobalPlayer() {
-        return removeGlobalPlayer(findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()));
-    }
-
-    private boolean teamNameExists(Team team){
-        for(String fullKey : mDBGame.getFullKeys().keySet()){
-            if (team.getName().equals(fullKey.split(":~")[0])){
+    private boolean teamNameExists(DBTeam team){
+        for(String name : mDBGame.getTeams().keySet()){
+            if (team.getName().equals(name)){
                 return true;
             }
         }
         return false;
-    }
-
-    private String getTeamFullKey(Team team){
-        for(String fullKey : mDBGame.getFullKeys().keySet()){
-            if (team.getName().equals(fullKey.split(":~")[0])){
-                return fullKey;
-            }
-        }
-        return null;
-    }
-
-    //Returns teamfullkey of team to which player belongs
-    // else ""
-    public String findPlayer(String playerUID){
-        for (Map.Entry<String, List<String>> entry: mDBGame.getFullKeys().entrySet()){
-            for (String playerFoundUID:entry.getValue()){
-                if (playerUID.equals(playerFoundUID)){
-                    return entry.getKey();
-                }
-            }
-        }
-        return "";
     }
 
     public void deleteGame() {
@@ -241,14 +193,44 @@ public class Game {
     }
 
     //called when you enter join game or create game screens
-    public void resetDBGame() {
+    // and game lobby when you get kicked out of the lobby
+    //Resets Team and Player
+    public void leaveGame(){
         mDBGame = null;
+        if (mDBGameReference!=null){
+            mDBGameReference.removeEventListener(mGameListener);
+        }
         mDBGameReference = null;
+        Team.getInstance().leaveTeam();
     }
 
     private static void notifyFollowers() {
         for (GameFollower follower : followers) {
             follower.notifyGameUpdated();
+        }
+    }
+
+    private static void notifyFollowersLoaded() {
+        for (GameFollower follower : followers) {
+            follower.notifyGameLoaded();
+        }
+    }
+
+    private static void notifyFollowersReady() {
+        for (GameFollower follower : followers) {
+            follower.notifyGameReady();
+        }
+    }
+
+    private static void notifyFollowersOver() {
+        for (GameFollower follower : followers) {
+            follower.notifyGameOver();
+        }
+    }
+
+    private static void notifyFollowersDeleted() {
+        for (GameFollower follower : followers) {
+            follower.notifyGameDeleted();
         }
     }
 
@@ -274,16 +256,12 @@ public class Game {
         }
     }
 
-    public void setGameReady() {
-        mDBGameReference.child("gameReady").setValue(true);
-    }
-
-    public void clearGameReady() {
-        mDBGameReference.child("gameReady").setValue(false);
-    }
-
     @Override
     public String toString(){
         return mDBGame.toString();
+    }
+
+    public TeamIterator<DBPlayer> makeIterator() {
+        return mDBGame.makeIterator();
     }
 }

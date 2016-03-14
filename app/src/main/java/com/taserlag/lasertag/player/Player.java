@@ -5,10 +5,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.shield.Shield;
+import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.weapon.FastWeapon;
 import com.taserlag.lasertag.weapon.StrongWeapon;
 import com.taserlag.lasertag.weapon.Weapon;
@@ -16,6 +18,7 @@ import com.taserlag.lasertag.weapon.Weapon;
 import java.util.ArrayList;
 import java.util.List;
 
+//ties 3 player classes together and keeps player stuff not in DB
 public class Player{
 
     private static final String TAG = "Player";
@@ -29,7 +32,10 @@ public class Player{
     private Weapon mSecondaryWeapon = new StrongWeapon();
     private Shield mShield = new Shield();
     private static DBPlayer dbPlayer;
+    private static DBUser dbUser;
+    private static Firebase dbPlayerReference;
     private static ValueEventListener playerListener;
+    private static ValueEventListener userListener;
     private static List<PlayerFollower> followers = new ArrayList<>();
 
     private static Player instance = null;
@@ -40,44 +46,118 @@ public class Player{
             playerListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (LaserTagApplication.firebaseReference.getAuth().getUid() != null) {
-                        Log.i(TAG, "Player has been successfully updated for user: " + LaserTagApplication.firebaseReference.getAuth().getUid());
-                        DBPlayer newDBPlayer = dataSnapshot.getValue(DBPlayer.class);
-                        if (newDBPlayer!=null && dbPlayer!=null) {
-                            if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
-                                instance.decrementHealth(newDBPlayer.getHealth());
-                                notifyHealthFollowers();
-                            }
-
+                    Log.i(TAG, "Player has been successfully updated for player:" + instance.getName());
+                    DBPlayer newDBPlayer = dataSnapshot.getValue(DBPlayer.class);
+                    if (newDBPlayer!=null && dbPlayer!=null) {
+                        if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
+                            instance.decrementHealth(newDBPlayer.getHealth());
+                            notifyHealthFollowers();
                         }
-                        dbPlayer = newDBPlayer;
-                        notifyFollowers();
+
+                        if (newDBPlayer.getPlayerStats().getColor()!=dbPlayer.getPlayerStats().getColor()){
+                            dbUser.saveColor(newDBPlayer.getPlayerStats().getColor());
+                        }
+
+                    }
+                    dbPlayer = newDBPlayer;
+                    notifyFollowers();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Log.e(TAG, "Player failed to update for player: " + instance.getName(), firebaseError.toException());
+                }
+            };
+
+            userListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dbUserSnapshot) {
+                    Log.i(TAG, "Player user has been successfully updated for user: " + LaserTagApplication.getUid());
+                    DBUser updatedUser = dbUserSnapshot.getValue(DBUser.class);
+
+                    if (updatedUser!=null) {
+                        dbUser = updatedUser;
                     }
                 }
 
                 @Override
                 public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(TAG, "Player failed to update for user: " + LaserTagApplication.firebaseReference.getAuth().getUid(), firebaseError.toException());
+                    Log.e(TAG, "Player user failed to update for user: " + LaserTagApplication.getUid());
                 }
             };
-
-            LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").addValueEventListener(playerListener);
+            
+            LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.getUid()).addValueEventListener(userListener);
         }
         return instance;
     }
 
-    public static void reset(){
-        //reinits shields and weapons to new objects
-        instance = new Player();
-        resetHealth();
+    public String getName() {
+        return dbUser.getUsername();
     }
 
-    private static void resetHealth(){
-        dbPlayer.resetHealth();
+    public int getScore() {
+        return dbPlayer.getPlayerStats().getScore();
+    }
+
+    public boolean isCaptain() {
+        return dbPlayer.getPlayerStats().isCaptain();
+    }
+
+    public void setCaptain(boolean captain) {
+        dbPlayer.getPlayerStats().setCaptain(captain);
+    }
+
+    public int[] getColor() {
+        return dbUser.getColor();
+    }
+
+    //call when you leave a team/game
+    public void leave(){
+        if (dbPlayerReference!=null) {
+            dbPlayerReference.removeEventListener(playerListener);
+        }
+        dbPlayerReference = null;
+        dbPlayer = null;
+    }
+
+    //call when you join a team
+    public void join(){
+        if (dbPlayerReference!=null) {
+            dbPlayerReference.removeEventListener(playerListener);
+        }
+        dbPlayerReference = Team.getInstance().getDBTeamReference().child("players").child(getName());
+        dbPlayerReference.addValueEventListener(playerListener);
+
+        //so we don't have to wait for the listener to update dbPlayer
+        dbPlayer = new DBPlayer(dbUser.getUsername());
+    }
+
+    public boolean isLoaded() {
+        return dbPlayer.isLoaded();
+    }
+
+    public void loadUp() {
+        dbPlayer.loadUp(dbPlayerReference);
+    }
+
+    public boolean isReady() {
+        return dbPlayer.isReady();
+    }
+
+    public void readyUp() {
+        dbPlayer.readyUp(dbPlayerReference);
+    }
+
+    public void resetReady(){
+        dbPlayer.resetReady(dbPlayerReference);
     }
 
     public boolean isPrimaryWeaponActive() {
         return mPrimaryWeaponActive;
+    }
+
+    public DBPlayer getDBPlayer(){
+        return dbPlayer;
     }
 
     public Weapon retrieveActiveWeapon() {
@@ -86,22 +166,6 @@ public class Player{
         } else {
             return mSecondaryWeapon;
         }
-    }
-
-    public boolean deployShield(TextView shieldTextView, ImageView shieldImageView){
-        boolean deployed = mShield.deploy(shieldTextView,shieldImageView);
-        if (deployed) {
-            dbPlayer.incrementHealth(mShield.getStrength());
-        }
-        return deployed;
-    }
-
-    public Shield getShield() {
-        return mShield;
-    }
-
-    public void swapWeapon() {
-        mPrimaryWeaponActive = !mPrimaryWeaponActive;
     }
 
     // decrement realHealth by the damage not absorbed by the shield
@@ -117,93 +181,42 @@ public class Player{
         return realHealth;
     }
 
-    public int getTotalHealth(){
-        return realHealth + mShield.getStrength();
+    // decrement other people's health, cannot hurt yourself
+    // returns false if you try to decrement your own health
+    public boolean decrementHealthAndIncMyScore(final int value,final Firebase reference){
+        return dbPlayer.decrementHealthAndIncMyScore(value, reference, dbPlayerReference);
     }
 
+    public boolean deployShield(TextView shieldTextView, ImageView shieldImageView){
+        boolean deployed = mShield.deploy(shieldTextView, shieldImageView);
+        if (deployed) {
+            dbPlayer.incrementHealth(mShield.getStrength(), dbPlayerReference);
+        }
+        return deployed;
+    }
+
+    public Shield getShield() {
+        return mShield;
+    }
+
+    public void swapWeapon() {
+        mPrimaryWeaponActive = !mPrimaryWeaponActive;
+    }
+
+    //reinits shields and weapons to new objects
+    public static void reset(){
+        instance = new Player();
+    }
+
+    public static void respawn(){
+        instance = new Player();
+        dbPlayer.resetHealth(dbPlayerReference);
+    }
 
     public static void disconnect(){
         instance = null;
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").removeEventListener(playerListener);
-    }
-
-    public String getName() {
-        return dbPlayer.getName();
-    }
-
-    public void setName(String name) {
-        dbPlayer.setName(name);
-    }
-
-    public int getScore() {
-        return dbPlayer.getScore();
-    }
-
-    public void setScore(int score) {
-        dbPlayer.setScore(score);
-    }
-
-    public int getHealth() {
-        return dbPlayer.getHealth();
-    }
-
-    public void setHealth(int health) {
-        dbPlayer.setHealth(health);
-    }
-
-    public boolean isCaptain() {
-        return dbPlayer.isCaptain();
-    }
-
-    public void setCaptain(boolean captain) {
-        dbPlayer.setCaptain(captain);
-    }
-
-    public int[] getColor() {
-        return dbPlayer.getColor();
-    }
-
-    public void setColor(int[] color) {
-        dbPlayer.setColor(color);
-    }
-
-    public String getActiveGameKey() {
-        return dbPlayer.getActiveGameKey();
-    }
-
-    public void setActiveGameKey(String activeGameKey) {
-        dbPlayer.setActiveGameKey(activeGameKey);
-    }
-
-    public boolean isReady() {
-        return dbPlayer.isReady();
-    }
-
-    public void setReady(boolean ready) {
-        dbPlayer.setReady(ready);
-    }
-
-    public void resetActiveGameKey(){
-        dbPlayer.resetActiveGameKey();
-    }
-
-    public void saveActiveGameKey(String gameKey){
-        dbPlayer.saveActiveGameKey(gameKey);
-    }
-
-    public void resetReady(){
-        dbPlayer.resetReady();
-    }
-
-    // can only reset my health, does not take playerUID
-    public void resetHealthScoreAndReady(){
-        dbPlayer.resetHealthScoreAndReady();
-    }
-
-    // decrement other people's health, cannot hurt yourself
-    // returns false if you try to decrement your own health
-    public boolean decrementHealthAndIncMyScore(final int value,final String playerUID, final String teamUID){
-        return dbPlayer.decrementHealthAndIncMyScore(value, playerUID, teamUID);
+        dbUser = null;
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.getUid()).removeEventListener(userListener);
     }
 
     private static void notifyFollowers() {
@@ -215,7 +228,7 @@ public class Player{
     //notify followers that health has decreased
     private static void notifyHealthFollowers() {
         for (PlayerFollower follower : followers) {
-            follower.notifyPlayerHealthUpdated();
+            follower.notifyPlayerHealthDecremented();
         }
     }
 

@@ -3,18 +3,17 @@ package com.taserlag.lasertag.shooter;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.taserlag.lasertag.activity.FPSActivity;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraHelper;
+import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
-
-import java.util.Map;
+import com.taserlag.lasertag.team.TeamIterator;
 
 public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
     protected ShooterCallback fpsCallback;
     private static final String TAG = "ColorShooterTask";
+    private final int TOLERANCE = 60;
 
     public ColorShooterTask(ShooterCallback fps){
         fpsCallback = fps;
@@ -45,33 +44,37 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
         Log.i(TAG, "Shot argb: " + hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
 
-        String hitPlayer = checkColors(hitColor, 40);
-
-        return hitPlayer;
+        return checkColors(hitColor);
     }
 
-    // returns playerUID with the closest color within tolerance or ""
-    private String checkColors(int[] hitColor, int tolerance){
-        String smallestPlayer = "";
-        int distance = tolerance *3;
+    // returns "TeamName"+":~"+"PlayerName" with the closest color within tolerance or ""
+    private String checkColors(int[] hitColor){
+        String smallestTeamPlayer = "";
+        int distance = TOLERANCE *3;
         int totalDiff;
-        for (Map.Entry<String, DBPlayer> dbPlayer: FPSActivity.dbPlayerMap.entrySet()){
-            totalDiff = checkPlayerColors(hitColor, dbPlayer.getValue().getColor(),tolerance);
-            if (totalDiff <= distance){
-                smallestPlayer = dbPlayer.getKey();
-                distance = totalDiff;
+        TeamIterator<DBPlayer> iterator = Game.getInstance().makeIterator();
+        while (iterator.hasNext()){
+            DBPlayer dbPlayer = iterator.next();
+
+            if (!dbPlayer.getName().equals(Player.getInstance().getName())) {
+                totalDiff = checkPlayerColors(hitColor, dbPlayer.getPlayerStats().getColor());
+                if (totalDiff <= distance) {
+                    smallestTeamPlayer = iterator.currentTeam() + ":~" + dbPlayer.getName();
+                    distance = totalDiff;
+                }
             }
         }
-        return smallestPlayer;
+
+        return smallestTeamPlayer;
     }
 
     //returns MAX integer value on no match
     // returns total color difference across rgb values for player and hit color
-    private int checkPlayerColors(int[] hitColor, int[] playerColor, int tolerance){
+    private int checkPlayerColors(int[] hitColor, int[] playerColor){
         boolean colorMatch = true;
         int colorDiff = 0;
         for (int i = 0; i<hitColor.length; i++){
-            colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= tolerance;
+            colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= TOLERANCE;
             colorDiff += Math.abs(hitColor[i]-playerColor[i]);
         }
         if (colorMatch) {

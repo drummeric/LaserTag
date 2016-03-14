@@ -14,16 +14,15 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraHelper;
 import com.taserlag.lasertag.camera.CameraPreview;
+import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.DBPlayerStats;
 
 public class SetPlayerColorFragment extends Fragment {
-    private static final String PLAYER_UID_PARAM = "playerUID";
+    private static final String PLAYER_NAME_PARAM = "playerName";
+    private static final String TEAM_NAME_PARAM = "teamName";
 
     private final String TAG = "SetPlayerColorFragment";
 
@@ -32,8 +31,8 @@ public class SetPlayerColorFragment extends Fragment {
     private int mShots = 0;
     private int[] mARGB = new int[4];
 
-    private String mPlayerUID;
     private String mPlayerName = "";
+    private String mTeamName = "";
 
     private OnFragmentInteractionListener mListener;
 
@@ -41,10 +40,11 @@ public class SetPlayerColorFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static SetPlayerColorFragment newInstance(String playerUID) {
+    public static SetPlayerColorFragment newInstance(String playerName, String teamName) {
         SetPlayerColorFragment fragment = new SetPlayerColorFragment();
         Bundle args = new Bundle();
-        args.putString(PLAYER_UID_PARAM, playerUID);
+        args.putString(PLAYER_NAME_PARAM, playerName);
+        args.putString(TEAM_NAME_PARAM, teamName);
         fragment.setArguments(args);
         return fragment;
     }
@@ -53,7 +53,8 @@ public class SetPlayerColorFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mPlayerUID = getArguments().getString(PLAYER_UID_PARAM);
+            mPlayerName = getArguments().getString(PLAYER_NAME_PARAM);
+            mTeamName = getArguments().getString(TEAM_NAME_PARAM);
         }
     }
 
@@ -65,21 +66,7 @@ public class SetPlayerColorFragment extends Fragment {
 
         final TextView playerColorPrompt = (TextView) view.findViewById(R.id.text_view_set_player_color_prompt);
 
-
-        LaserTagApplication.firebaseReference.child("users").child(mPlayerUID).child("player").child("name").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null) {
-                    mPlayerName = dataSnapshot.getValue(String.class);
-                    playerColorPrompt.setText("Shoot " + mPlayerName + " " + (5 - mShots) + " times.");
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        playerColorPrompt.setText("Shoot " + mPlayerName + " " + (5 - mShots) + " times.");
 
         mCamera = getCameraInstance();
 
@@ -110,7 +97,7 @@ public class SetPlayerColorFragment extends Fragment {
                             Log.i(TAG, "Average recorded argb: "+ mARGB[0] + " " + mARGB[1] + " " + mARGB[2] + " " + mARGB[3] + ".");
 
                             //save player color to database and pop back to GameLobby
-                            LaserTagApplication.firebaseReference.child("users").child(mPlayerUID).child("player").child("color").setValue(mARGB);
+                            DBPlayerStats.saveColor(mARGB, Game.getInstance().getReference().child("teams").child(mTeamName).child("players").child(mPlayerName).child("playerStats"));
                             Toast.makeText(getContext(), mPlayerName + "'s color updated!", Toast.LENGTH_SHORT).show();
                             getActivity().getSupportFragmentManager().popBackStack();
                         }

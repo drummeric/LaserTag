@@ -16,9 +16,8 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
-import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.DBUser;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class LoginSignupFragment extends Fragment {
@@ -130,14 +129,9 @@ public class LoginSignupFragment extends Fragment {
             public void onSuccess(Map<String, Object> stringObjectMap) {
                 Log.i(TAG, "Signed up a user with id: " + stringObjectMap.get("uid"));
 
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("username",username);
-                LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(map);
-
-                DBPlayer newPlayer = new DBPlayer(username);
-                newPlayer.setColor(new int[]{255,0,0,0});
-                LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).child("player").setValue(newPlayer);
-
+                DBUser newUser = new DBUser(username);
+                newUser.setColor(new int[]{255, 0, 0, 0});
+                LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(newUser);
 
                 CharSequence text = username + ", your account has been created.";
                 Toast.makeText(getActivity().getApplicationContext(), text, Toast.LENGTH_SHORT).show();

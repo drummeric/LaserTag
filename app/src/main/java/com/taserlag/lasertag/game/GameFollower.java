@@ -2,6 +2,13 @@ package com.taserlag.lasertag.game;
 
 public interface GameFollower {
 
-    public void notifyGameUpdated();
+    void notifyGameUpdated();
 
+    void notifyGameLoaded();
+
+    void notifyGameReady();
+
+    void notifyGameOver();
+
+    void notifyGameDeleted();
 }

@@ -3,7 +3,6 @@ package com.taserlag.lasertag.activity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.AnimationDrawable;
 import android.hardware.Camera;
 import android.location.Location;
 import android.media.AudioManager;
@@ -27,10 +26,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
@@ -40,17 +35,15 @@ import com.taserlag.lasertag.game.GameFollower;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
-import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.player.PlayerFollower;
 import com.taserlag.lasertag.shield.ReadyShieldState;
 import com.taserlag.lasertag.shooter.ColorShooterTask;
 import com.taserlag.lasertag.shooter.ShooterCallback;
+import com.taserlag.lasertag.team.Team;
+import com.taserlag.lasertag.team.TeamFollower;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class FPSActivity extends AppCompatActivity implements MapHandler, GameFollower, PlayerFollower{
+public class FPSActivity extends AppCompatActivity implements MapHandler, GameFollower, TeamFollower, PlayerFollower{
 
     private final String TAG = "FPSActivity";
 
@@ -74,6 +67,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private static ImageView mScreenFlash;
     private TextView mScoreText;
     private TextView mZoomText;
+    private AlertDialog mGameLoadingAlertDialog;
 
     private MapAssistant mapAss = MapAssistant.getInstance(this);
 
@@ -82,14 +76,22 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private static final int SOURCE_QUALITY = 0;
     private int mShootSound;
 
-    public static Map<String, DBPlayer> dbPlayerMap = new HashMap<>();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fps);
 
-        doStartCountdown();
+        // waiting on players countdown
+        if (!Game.getInstance().isLoaded()) {
+            mGameLoadingAlertDialog = new AlertDialog.Builder(this).create();
+            mGameLoadingAlertDialog.setTitle("Game Starting in:");
+            mGameLoadingAlertDialog.setMessage("Waiting on players...");
+            mGameLoadingAlertDialog.setCancelable(false);
+            mGameLoadingAlertDialog.show();
+            Player.getInstance().loadUp();
+            hideSystemUI();
+            //wait for game to load
+        }
 
         mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
@@ -103,7 +105,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
 
         //init UI (health, weapons, ammo, shield)
-        resetUIOnRespawn();
+        initUI();
 
         //init score text
         updateScoreText(Player.getInstance().getScore());
@@ -116,6 +118,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         });
         mShootSound = mSoundPool.load(this, R.raw.m4a1single, 1);
         Player.getInstance().registerForUpdates(this);
+        Team.getInstance().registerForUpdates(this);
         Game.getInstance().registerForUpdates(this);
     }
 
@@ -153,11 +156,43 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     public void onBackPressed(){
         Player.getInstance().unregisterForUpdates(this);
+        Team.getInstance().unregisterForUpdates(this);
         Game.getInstance().unregisterForUpdates(this);
         getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         Intent intent = new Intent(this, MenuActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void initUI(){
+        //if you left FPS and someone killed you while out of FPS
+        if (Player.getInstance().getRealHealth()<=0){
+            startRespawnDialog();
+        }
+        Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
+        updateHealthText();
+        updateAmmoText();
+        updateWeaponText();
+    }
+
+    private void respawn(){
+        //reset health, weapons and shield
+        Player.respawn();
+        Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
+        updateHealthText();
+        updateAmmoText();
+        updateWeaponText();
+    }
+
+    public void gameOver() {
+        Toast.makeText(LaserTagApplication.getAppContext(), "Game over!", Toast.LENGTH_SHORT).show();
+        //send people back to main menu
+        onBackPressed();
+    }
+
+    @Override
+    public void notifyTeamUpdated(){
+        //update UI accordingly
     }
 
     @Override
@@ -167,8 +202,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     // health has decreased
     @Override
-    public void notifyPlayerHealthUpdated(){
-        Player.getInstance().getShield().updateUI(mShieldText,mShieldImage);
+    public void notifyPlayerHealthDecremented(){
+        Player.getInstance().getShield().updateUI(mShieldText, mShieldImage);
         updateHealthText();
 
         //flash the screen red
@@ -182,105 +217,70 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }, 500);
 
         if (Player.getInstance().getRealHealth()<=0){
-            final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
-            alertDialog.setTitle("You Died!");
-            alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS/1000) + " seconds");
-            alertDialog.setCancelable(false);
-            alertDialog.show();
-
-            new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    alertDialog.setMessage("Respawning in "+(millisUntilFinished/1000)+" seconds");
-                }
-
-                @Override
-                public void onFinish() {
-                    alertDialog.dismiss();
-                    //reset health, weapons and shields
-                    resetUIOnRespawn();
-                    hideSystemUI();
-                }
-            }.start();
+            startRespawnDialog();
         }
     }
 
     @Override
     public void notifyGameUpdated() {
-        if (Game.getInstance().isGameOver()){
-            gameOver();
-        }
+        // no op for now
     }
 
-    public void gameOver() {
-        Toast.makeText(LaserTagApplication.getAppContext(), "Game over!", Toast.LENGTH_SHORT).show();
-    }
-
-    //Shows countdown dialog once everyone in game has loaded FPSActivity
-    private void doStartCountdown(){
-        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle("Game Starting in:");
-        alertDialog.setMessage("Waiting on players...");
-        alertDialog.setCancelable(false);
-        alertDialog.show();
-
+    @Override
+    public void notifyGameLoaded(){
         final CountDownTimer timer = new CountDownTimer(TIMER_LENGTH_MS, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                alertDialog.setMessage((millisUntilFinished/1000)+" seconds");
+                mGameLoadingAlertDialog.setMessage((millisUntilFinished/1000)+" seconds");
             }
 
             @Override
             public void onFinish() {
-                alertDialog.dismiss();
+                mGameLoadingAlertDialog.dismiss();
             }
         };
-
-        //Player has loaded FPSActivity, player ready flag set
-        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(true);
-
-        //Get players in game
-        //Check to see if everyone has successfully started FPSActivity -> start timer
-        final Query queryRef = LaserTagApplication.firebaseReference.child("users").orderByChild("player/activeGameKey").equalTo(Game.getInstance().getKey());
-        queryRef.keepSynced(true);
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean gameReady = true;
-
-                for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                    DBPlayer dbPlayer = userSnaphot.child("player").getValue(DBPlayer.class);
-                    gameReady &= dbPlayer.isReady();
-                }
-
-                if (gameReady) {
-                    timer.start();
-                    //timer has started, player ready flag clear
-                    LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.firebaseReference.getAuth().getUid()).child("player").child("ready").setValue(false);
-                    queryRef.removeEventListener(this);
-
-                    //init dbPlayerMap now that the query is finalized
-                    for (DataSnapshot userSnaphot : dataSnapshot.getChildren()) {
-                        DBPlayer dbPlayer = userSnaphot.child("player").getValue(DBPlayer.class);
-                        dbPlayerMap.put(userSnaphot.getKey(), dbPlayer);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        timer.start();
     }
 
-    private void resetUIOnRespawn(){
-        //reset health, weapons and shield
-        Player.reset();
-        Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
-        updateHealthText();
-        updateAmmoText();
-        updateWeaponText();
+    @Override
+    public void notifyGameReady(){
+        //no op
+    }
+
+    @Override
+    public void notifyGameOver(){
+        gameOver();
+    }
+
+    @Override
+    public void notifyGameDeleted(){
+        //better not happen
+    }
+
+    private void startRespawnDialog(){
+        final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
+        alertDialog.setTitle("You Died!");
+        alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS / 1000) + " seconds");
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+        hideSystemUI();
+
+        new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                alertDialog.setMessage("Respawning in " + (millisUntilFinished/1000)+" seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                if (!Game.getInstance().isGameOver()) {
+                    alertDialog.dismiss();
+                    //reset health, weapons and shields
+                    respawn();
+                    hideSystemUI();
+                }
+            }
+        }.start();
     }
 
     private void updateScoreText(int score){
@@ -325,9 +325,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
 
                 @Override
-                public void onFinishShoot(String playerHitUID) {
-                    if (!playerHitUID.equals("")) {
-                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), playerHitUID, Game.getInstance().findPlayer(LaserTagApplication.firebaseReference.getAuth().getUid()).split(":~")[1])){
+                public void onFinishShoot(String teamPlayerHit) {
+
+                    if (!teamPlayerHit.equals("")) {
+                        String teamName = teamPlayerHit.split(":~")[0];
+                        String playerName = teamPlayerHit.split(":~")[1];
+                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))){
                             final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
                             reticle.setImageResource(R.drawable.redreticle);
 
