@@ -56,6 +56,16 @@ public class Scoreboard{
                     mTopScore.setText(String.valueOf(topTeam.getScore()));
                     mBotTeamName.setText(botTeam.getName());
                     mBotScore.setText(String.valueOf(botTeam.getScore()));
+                } else {
+                    mTopTeamName.setTypeface(null, Typeface.BOLD_ITALIC);
+                    mTopScore.setTypeface(null, Typeface.BOLD_ITALIC);
+                    mBotTeamName.setTypeface(null, Typeface.NORMAL);
+                    mBotScore.setTypeface(null, Typeface.NORMAL);
+
+                    mBotTeamName.setVisibility(View.GONE);
+                    mBotScore.setVisibility(View.GONE);
+                    mTopTeamName.setText(Team.getInstance().getName());
+                    mTopScore.setText(String.valueOf(Team.getInstance().getScore()));
                 }
             }
 

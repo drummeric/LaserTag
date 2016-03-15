@@ -2,6 +2,7 @@ package com.taserlag.lasertag.activity;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.location.Location;
@@ -9,6 +10,7 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -49,9 +51,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     private final String TAG = "FPSActivity";
 
+    public static final String PREFS_NAME = "LaserTag";
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
-
     private final int TIMER_LENGTH_MS = 3000;
     private final int RESPAWN_TIMER_LENGTH_MS = 5000;
 
@@ -70,6 +72,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private TextView mTimeText;
     private TextView mZoomText;
 
+    private View mHUD;
     private Scoreboard mScoreboard;
     private AlertDialog mGameLoadingAlertDialog;
 
@@ -79,6 +82,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private static final int MAX_STREAMS = 1;
     private static final int SOURCE_QUALITY = 0;
     private int mShootSound;
+
+    private float touchDownY;
+    private boolean hudVisible = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,8 +101,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             Player.getInstance().loadUp();
             hideSystemUI();
             //wait for game to load
+        } else {
+            startTimer();
         }
 
+        mHUD = findViewById(R.id.layout_fps_hud);
         mTimeText = (TextView) findViewById(R.id.text_view_fps_game_time);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
@@ -239,6 +248,13 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             @Override
             public void onFinish() {
                 mGameLoadingAlertDialog.dismiss();
+
+                //save start time locally
+                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putLong("gameStartTime", System.currentTimeMillis());
+                editor.commit();
+
                 startTimer();
             }
         };
@@ -286,11 +302,14 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }.start();
     }
 
-    //todo BUG: when coming back to FPS after leaving, the timer isn't correctly set
-    // Solution: store game start time in database and calculate
     private void startTimer(){
+        //load local start time
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        long time = settings.getLong("gameStartTime", 0L);
+
         if (Game.getInstance().getTimeEnabled()){
-            new CountDownTimer(Game.getInstance().getEndMinutes()*60*1000, 1000) {
+            long timeLeft = Game.getInstance().getEndMinutes()*60*1000 - (System.currentTimeMillis() - time);
+            new CountDownTimer(timeLeft, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     mTimeText.setText(String.format("%02d:%02d",(millisUntilFinished/(1000*60))%60,(millisUntilFinished/1000)%60));
@@ -303,6 +322,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             }.start();
         } else {
             Chronometer stopwatch = (Chronometer) findViewById(R.id.chronometer_fps);
+            stopwatch.setBase(SystemClock.elapsedRealtime() - (System.currentTimeMillis() - time));
             stopwatch.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
                 @Override
                 public void onChronometerTick(Chronometer chronometer) {
@@ -347,40 +367,61 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            touchDownY = event.getY();
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (event.getY() > touchDownY + 200){
+                if (hudVisible) {
+                    //swipe down - hide HUD
+                    Animation slideOff = AnimationUtils.loadAnimation(this, R.anim.slide_off);
+                    mHUD.startAnimation(slideOff);
+                    //would use setVisibility(invisible) but SurfaceView bugs out
+                    mHUD.setVisibility(View.GONE);
+                    hudVisible = false;
+                }
+            }else if (event.getY() < touchDownY - 200) {
+                if (!hudVisible) {
+                    //swipe up - show HUD
+                    Animation slideOn = AnimationUtils.loadAnimation(this, R.anim.slide_on);
+                    mHUD.startAnimation(slideOn);
+                    mHUD.setVisibility(View.VISIBLE);
+                    hudVisible = true;
+                }
+            } else {
+                ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
 
-                @Override
-                public void onFinishShoot(String teamPlayerHit) {
+                    @Override
+                    public void onFinishShoot(String teamPlayerHit) {
 
-                    if (!teamPlayerHit.equals("")) {
-                        String teamName = teamPlayerHit.split(":~")[0];
-                        String playerName = teamPlayerHit.split(":~")[1];
-                        if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))){
-                            final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
-                            reticle.setImageResource(R.drawable.redreticle);
+                        if (!teamPlayerHit.equals("")) {
+                            String teamName = teamPlayerHit.split(":~")[0];
+                            String playerName = teamPlayerHit.split(":~")[1];
+                            if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
+                                final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
+                                reticle.setImageResource(R.drawable.redreticle);
 
-                            //animation lasts 500 ms total
-                            Animation animationGrowShrink = AnimationUtils.loadAnimation(FPSActivity.this, R.anim.growshrink);
-                            reticle.startAnimation(animationGrowShrink);
+                                //animation lasts 500 ms total
+                                Animation animationGrowShrink = AnimationUtils.loadAnimation(FPSActivity.this, R.anim.growshrink);
+                                reticle.startAnimation(animationGrowShrink);
 
-                            Handler hitHandler = new Handler();
-                            hitHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    reticle.setImageResource(R.drawable.reticle1);
-                                }
-                            }, 500);
+                                Handler hitHandler = new Handler();
+                                hitHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        reticle.setImageResource(R.drawable.reticle1);
+                                    }
+                                }, 500);
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void updateGUI(){
-                    updateGunUI();
-                }
-            });
-            asyncTask.execute(mPreview.getCameraData());
+                    @Override
+                    public void updateGUI() {
+                        updateGunUI();
+                    }
+                });
+                asyncTask.execute(mPreview.getCameraData());
+            }
         }
         return true;
     }
