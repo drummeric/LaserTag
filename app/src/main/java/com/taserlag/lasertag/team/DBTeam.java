@@ -195,6 +195,11 @@ public class DBTeam {
         return false;
     }
 
+    //called from game lobby in recycler view's list view
+    public boolean removeDBPlayer(String teamName){
+        return removeDBPlayer(Game.getInstance().getReference().child("teams").child(teamName));
+    }
+
     public boolean removeDBPlayer(final Firebase reference) {
         reference.child("players").runTransaction(new Transaction.Handler() {
             @Override

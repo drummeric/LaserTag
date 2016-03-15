@@ -1,8 +1,12 @@
 package com.taserlag.lasertag.activity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,7 +23,9 @@ import com.taserlag.lasertag.player.Player;
 public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener, SetPlayerColorFragment.OnFragmentInteractionListener{
 
     private final String TAG = "MenuActivity";
-    private static final String GAME_REF_PARAM = "gameRef";
+
+    private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
+    private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +38,48 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
         if (getSupportFragmentManager().findFragmentById(R.id.menu_frame) == null) {
             MainMenuFragment mf = new MainMenuFragment();
             addFragment(R.id.menu_frame, mf, "main_menu_fragment");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Check camera and location permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            // If permission not granted, request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        } else if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // If permission not granted, request permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Camera permission was granted
+                } else {
+                    // Camera permission was denied
+                    // Exit the application
+                    System.exit(0);
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Location permission was granted
+                } else {
+                    // Location permission was denied
+                    // Exit the application
+                    System.exit(0);
+                }
+                return;
+            }
         }
     }
 

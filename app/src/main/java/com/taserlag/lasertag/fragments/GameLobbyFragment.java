@@ -1,5 +1,6 @@
 package com.taserlag.lasertag.fragments;
 
+import android.widget.ArrayAdapter;
 import android.widget.StickyButton;
 import android.content.Context;
 import android.graphics.Color;
@@ -20,7 +21,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.ui.FirebaseListAdapter;
 import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
@@ -31,6 +31,8 @@ import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
+
+import java.util.ArrayList;
 
 public class GameLobbyFragment extends Fragment implements GameFollower {
 
@@ -236,43 +238,14 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                                 Toast.makeText(getActivity().getApplicationContext(), "This team is full", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            dbTeam.removeDBPlayer(getRef(position));
+                            dbTeam.removeDBPlayer(dbTeam.getName());
                             holder.joinButton.setText(getString(R.string.game_lobby_button_join_team));
                         }
                     }
                 });
 
-                holder.playersListView.setAdapter(new FirebaseListAdapter<DBPlayer>(getActivity(), DBPlayer.class, R.layout.list_item_player, Game.getInstance().getReference().child("teams").child(dbTeam.getName()).child("players")) {
-                    @Override
-                    protected void populateView(View view, final DBPlayer dbPlayer, final int position) {
-                        final TextView playerName = ((TextView) view.findViewById(R.id.text_player_name));
-                        final Button colorButton = (Button) view.findViewById(R.id.button_game_lobby_set_player_color);
-                        final TextView playerReady = ((TextView) view.findViewById(R.id.text_player_ready));
+                holder.playersListView.setAdapter(new PlayersAdapter(GameLobbyFragment.this.getContext(), new ArrayList<DBPlayer>(dbTeam.getPlayers().values()), dbTeam));
 
-                        playerName.setText(dbPlayer.getName());
-                        int[] color = dbPlayer.getPlayerStats().getColor();
-                        colorButton.setBackgroundColor(Color.argb(color[0], color[1], color[2], color[3]));
-
-                        if (dbPlayer.isReady()) {
-                            playerReady.setVisibility(View.VISIBLE);
-                        } else {
-                            playerReady.setVisibility(View.INVISIBLE);
-                        }
-
-                        colorButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Player.getInstance().resetReady();
-                                SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(dbPlayer.getName(),dbTeam.getName());
-                                ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "set_player_color_fragment");
-                            }
-                        });
-
-                        setListViewHeightBasedOnItems(holder.playersListView);
-                    }
-                });
-
-                ((FirebaseListAdapter) holder.playersListView.getAdapter()).notifyDataSetChanged();
                 setListViewHeightBasedOnItems(holder.playersListView);
             }
         };
@@ -311,6 +284,61 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             teamName = (TextView) itemView.findViewById(R.id.text_team_name);
             playersListView = (ListView) itemView.findViewById(R.id.list_view_team);
             joinButton = (Button) itemView.findViewById(R.id.button_join_or_leave_team);
+        }
+    }
+
+    public class PlayersAdapter extends ArrayAdapter<DBPlayer> {
+        private DBTeam dbTeam;
+
+        public PlayersAdapter(Context context, ArrayList<DBPlayer> players, DBTeam dbTeam) {
+            super(context, 0, players);
+            this.dbTeam = dbTeam;
+        }
+
+        @Override
+        public View getView(int position, View view, ViewGroup parent) {
+            // Get the data item for this position
+            final DBPlayer dbPlayer = getItem(position);
+            // Check if an existing view is being reused, otherwise inflate the view
+            PlayerViewHolder viewHolder; // view lookup cache stored in tag
+            if (view == null) {
+                viewHolder = new PlayerViewHolder();
+                LayoutInflater inflater = LayoutInflater.from(getContext());
+                view = inflater.inflate(R.layout.list_item_player, parent, false);
+                viewHolder.playerName = ((TextView) view.findViewById(R.id.text_player_name));
+                viewHolder.colorButton = (Button) view.findViewById(R.id.button_game_lobby_set_player_color);
+                viewHolder.playerReady = ((TextView) view.findViewById(R.id.text_player_ready));
+                view.setTag(viewHolder);
+            } else {
+                viewHolder = (PlayerViewHolder) view.getTag();
+            }
+
+            viewHolder.playerName.setText(dbPlayer.getName());
+            int[] color = dbPlayer.getPlayerStats().getColor();
+            viewHolder.colorButton.setBackgroundColor(Color.argb(color[0], color[1], color[2], color[3]));
+
+            if (dbPlayer.isReady()) {
+                viewHolder.playerReady.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.playerReady.setVisibility(View.INVISIBLE);
+            }
+
+            viewHolder.colorButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Player.getInstance().resetReady();
+                    SetPlayerColorFragment fragment = SetPlayerColorFragment.newInstance(dbPlayer.getName(), dbTeam.getName());
+                    ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, fragment, "set_player_color_fragment");
+                }
+            });
+
+            return view;
+        }
+
+        private class PlayerViewHolder {
+            TextView playerName;
+            Button colorButton;
+            TextView playerReady;
         }
     }
 }
