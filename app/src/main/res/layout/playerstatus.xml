@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/rectangle"
+    android:gravity="right"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/layout_fps_top_row">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/lasergun"
+            android:id="@+id/image_view_fps_gun"
+            android:layout_gravity="center_vertical"
+            android:adjustViewBounds="true"
+            android:maxWidth="60dp"
+            android:maxHeight="34dp"
+            android:scaleType="fitCenter"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="reloadWeapon"
+            android:id="@+id/text_view_fps_clip_ammo"
+            android:layout_marginEnd="10dp"
+            android:text="50"
+            android:textStyle="bold"
+            android:textSize="50sp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/layout_fps_weapon_and_total_ammo"
+            android:gravity="center_horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/text_view_fps_total_ammo"
+                android:layout_marginTop="5dp"
+                android:text="/150 "
+                android:textSize="25sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="swapWeapon"
+                android:id="@+id/text_view_fps_weapon"
+                android:text="[ weapon ]"
+                android:textStyle="bold"
+                android:textSize="15sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/layout_fps_bottom_row">
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:id="@+id/layout_fps_scope"
+            android:onClick="scopeClick"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/border"
+            android:padding="5dp"
+            >
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/reticle1"
+                android:scaleType="fitCenter"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/text_view_fps_zoom"
+                android:text=""
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:layout_centerInParent="true"
+                />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/layout_fps_shield"
+            android:onClick="deployShield"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/border"
+            android:padding="5dp"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/image_view_fps_shield"
+                android:src="@drawable/shield"
+                android:adjustViewBounds="true"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:maxWidth="20dp"
+                android:maxHeight="20dp"
+                android:scaleType="fitCenter"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:id="@+id/text_view_fps_shield"
+                android:text="100"
+                android:textStyle="bold"
+                android:textSize="25sp"
+                />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/layout_fps_health"
+            android:background="@drawable/border"
+            android:gravity="center_vertical"
+            android:padding="5dp"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/plus_health"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:adjustViewBounds="true"
+                android:maxWidth="20dp"
+                android:maxHeight="20dp"
+                android:scaleType="fitCenter"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:id="@+id/text_view_fps_health"
+                android:text="100"
+                android:textStyle="bold"
+                android:textSize="25sp"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+</LinearLayout>

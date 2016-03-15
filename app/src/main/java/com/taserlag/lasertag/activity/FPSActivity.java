@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
+import com.taserlag.lasertag.fpsui.Scoreboard;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameFollower;
 import com.taserlag.lasertag.map.MapAssistant;
@@ -67,8 +68,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private ImageView mGunImage;
     private static ImageView mScreenFlash;
     private TextView mTimeText;
-    private TextView mScoreText;
     private TextView mZoomText;
+
+    private Scoreboard mScoreboard;
     private AlertDialog mGameLoadingAlertDialog;
 
     private MapAssistant mapAss = MapAssistant.getInstance(this);
@@ -96,7 +98,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }
 
         mTimeText = (TextView) findViewById(R.id.text_view_fps_game_time);
-        mScoreText = (TextView) findViewById(R.id.text_view_fps_score);
         mWeaponText = (TextView) findViewById(R.id.text_view_fps_weapon);
         mHealthText = (TextView) findViewById(R.id.text_view_fps_health);
         mShieldText = (TextView) findViewById(R.id.text_view_fps_shield);
@@ -106,12 +107,10 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
+        mScoreboard = new Scoreboard(findViewById(android.R.id.content));
 
         //init UI (health, weapons, ammo, shield)
         initUI();
-
-        //init score text
-        updateScoreText(Player.getInstance().getScore());
 
         mSoundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, SOURCE_QUALITY);
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
@@ -200,7 +199,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void notifyPlayerUpdated() {
-        updateScoreText(Player.getInstance().getScore());
+        //no op
     }
 
     // health has decreased
@@ -312,10 +311,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             });
             stopwatch.start();
         }
-    }
-
-    private void updateScoreText(int score){
-        mScoreText.setText(String.valueOf(score));
     }
 
     // health values read from singleton Player

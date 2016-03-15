@@ -28,7 +28,7 @@ import com.taserlag.lasertag.R;
 
 public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
-    private final int MAP_SIZE = 175;
+    private final int MAP_SIZE = 125;
     private final int MAP_MARGIN = 10;
     private final int MAP_ANIMATION_DURATION = 100;
 
@@ -80,7 +80,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         // Move map to last known location
         if (location != null){
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18f);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17f);
             this.googleMap.moveCamera(cameraUpdate);
         }
 
@@ -174,7 +174,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
     public void animateCamera(Location location){
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18f);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17f);
         googleMap.animateCamera(cameraUpdate);
     }
 
