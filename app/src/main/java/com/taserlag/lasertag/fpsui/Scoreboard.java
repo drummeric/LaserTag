@@ -42,10 +42,14 @@ public class Scoreboard{
                     if (!topTeam.getName().equals(Team.getInstance().getName())){
                         botTeam = Team.getInstance().getDBTeam();
                         mTopTeamName.setTypeface(null, Typeface.NORMAL);
+                        mTopScore.setTypeface(null, Typeface.NORMAL);
                         mBotTeamName.setTypeface(null, Typeface.BOLD_ITALIC);
+                        mBotScore.setTypeface(null, Typeface.BOLD_ITALIC);
                     } else {
                         mTopTeamName.setTypeface(null, Typeface.BOLD_ITALIC);
+                        mTopScore.setTypeface(null, Typeface.BOLD_ITALIC);
                         mBotTeamName.setTypeface(null, Typeface.NORMAL);
+                        mBotScore.setTypeface(null, Typeface.NORMAL);
                     }
 
                     mTopTeamName.setText(topTeam.getName());

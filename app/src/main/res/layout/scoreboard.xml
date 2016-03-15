@@ -3,28 +3,23 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="125dp"
+    <TableLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/rectangle"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:orientation="vertical"
         android:padding="10dp">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/layout_fps_top_team"
-            >
+        <TableRow>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:id="@+id/text_view_fps_top_name"
                 android:text="TeamName1"
-                android:textStyle="bold"
                 android:textSize="15sp"
+                android:layout_marginEnd="20dp"
                 />
             <TextView
                 android:layout_width="wrap_content"
@@ -32,24 +27,19 @@
                 android:layout_alignParentEnd="true"
                 android:id="@+id/text_view_fps_top_score"
                 android:text="0"
-                android:textStyle="bold"
                 android:textSize="15sp"
                 />
-        </RelativeLayout>
+        </TableRow>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/layout_fps_bot_team"
-            >
+        <TableRow>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:id="@+id/text_view_fps_bot_name"
                 android:text="TeamName2"
-                android:textStyle="bold"
                 android:textSize="15sp"
+                android:layout_marginEnd="20dp"
                 />
             <TextView
                 android:layout_width="wrap_content"
@@ -57,16 +47,15 @@
                 android:layout_alignParentEnd="true"
                 android:id="@+id/text_view_fps_bot_score"
                 android:text="0"
-                android:textStyle="bold"
                 android:textSize="15sp"
                 />
-        </RelativeLayout>
+        </TableRow>
+    </TableLayout>
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/recycler_view_fps_scoreboard"
             android:visibility="gone"/>
-    </LinearLayout>
 
 </LinearLayout>
