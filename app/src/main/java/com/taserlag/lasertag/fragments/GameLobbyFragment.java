@@ -273,14 +273,12 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     }
 
     public static class TeamViewHolder extends RecyclerView.ViewHolder {
-        CardView cv;
         TextView teamName;
         Button joinButton;
         ListView playersListView;
 
         public TeamViewHolder(View itemView) {
             super(itemView);
-            cv = (CardView) itemView.findViewById(R.id.card_view_team);
             teamName = (TextView) itemView.findViewById(R.id.text_team_name);
             playersListView = (ListView) itemView.findViewById(R.id.list_view_team);
             joinButton = (Button) itemView.findViewById(R.id.button_join_or_leave_team);

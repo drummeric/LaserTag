@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/tablerow_scoreboard_player">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_height="wrap_content"
+        android:id="@+id/text_player_scoreboard_name"
+        android:text=""
+        android:textSize="10sp"
+        android:paddingStart="2dp"
+        />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:id="@+id/text_player_scoreboard_score"
+        android:text="Score"
+        android:textSize="10sp"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:id="@+id/text_player_scoreboard_kd"
+        android:text="K / D"
+        android:textSize="10sp"
+        android:gravity="center_horizontal"/>
+
+</TableRow>

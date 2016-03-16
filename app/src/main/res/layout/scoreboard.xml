@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    android:background="@drawable/rectangle"
     android:id="@+id/layout_fps_scoreboard">
 
     <TableLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/rectangle"
+        android:id="@+id/table_scoreboard_teams"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:visibility="visible">
 
         <TableRow>
             <TextView
@@ -53,10 +55,29 @@
         </TableRow>
     </TableLayout>
 
+    <RelativeLayout
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:id="@+id/layout_scoreboard_expanded"
+        android:visibility="gone">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_scoreboard_minimize"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="Minimize"
+            />
+
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_above="@id/button_scoreboard_minimize"
             android:id="@+id/recycler_view_fps_scoreboard"
-            android:visibility="gone"/>
+            />
+    </RelativeLayout>
 
 </LinearLayout>

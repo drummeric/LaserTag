@@ -116,7 +116,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
-        mScoreboard = new Scoreboard(findViewById(android.R.id.content));
+        mScoreboard = new Scoreboard(findViewById(android.R.id.content),FPSActivity.this);
 
         //init UI (health, weapons, ammo, shield)
         initUI();
