@@ -30,6 +30,8 @@ public class JoinGameFragment extends Fragment{
 
     private OnFragmentInteractionListener mListener;
 
+    private FirebaseRecyclerAdapter mAdapter;
+
     public JoinGameFragment() {
         // Required empty public constructor
     }
@@ -62,6 +64,12 @@ public class JoinGameFragment extends Fragment{
     }
 
     @Override
+    public void onDestroyView(){
+        super.onDestroyView();
+        mAdapter.cleanup();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
@@ -76,7 +84,7 @@ public class JoinGameFragment extends Fragment{
 
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_game);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<DBGame, GameViewHolder>(DBGame.class, R.layout.card_game, GameViewHolder.class, LaserTagApplication.firebaseReference.child("games")) {
+        mAdapter = new FirebaseRecyclerAdapter<DBGame, GameViewHolder>(DBGame.class, R.layout.card_game, GameViewHolder.class, LaserTagApplication.firebaseReference.child("games")) {
 
             @Override
             public void populateViewHolder(final GameViewHolder holder, final DBGame dbGame, final int position) {

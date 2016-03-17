@@ -39,6 +39,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     private final String TAG = "GameLobbyFragment";
 
     private OnFragmentInteractionListener mListener;
+    private FirebaseRecyclerAdapter mAdapter;
     private boolean FPSStarted = false;
 
     public GameLobbyFragment() {
@@ -76,6 +77,12 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+    }
+
+    @Override
+    public void onDestroyView(){
+        super.onDestroyView();
+        mAdapter.cleanup();
     }
 
     @Override
@@ -216,7 +223,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     private void initRecyclerView(View view){
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_team);
         recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        FirebaseRecyclerAdapter mAdapter = new FirebaseRecyclerAdapter<DBTeam, TeamViewHolder>(DBTeam.class, R.layout.card_team, TeamViewHolder.class, Game.getInstance().getReference().child("teams")) {
+        mAdapter = new FirebaseRecyclerAdapter<DBTeam, TeamViewHolder>(DBTeam.class, R.layout.card_team, TeamViewHolder.class, Game.getInstance().getReference().child("teams")) {
 
             @Override
             public void populateViewHolder(final TeamViewHolder holder, final DBTeam dbTeam, final int position) {
