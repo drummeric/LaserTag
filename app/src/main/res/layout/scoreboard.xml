@@ -66,7 +66,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/button_scoreboard_minimize"
             android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
             android:text="Minimize"
@@ -75,7 +75,7 @@
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@id/button_scoreboard_minimize"
+            android:layout_below="@id/button_scoreboard_minimize"
             android:id="@+id/recycler_view_fps_scoreboard"
             />
     </RelativeLayout>

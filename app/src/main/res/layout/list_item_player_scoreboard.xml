@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/tablerow_scoreboard_player">
+    android:orientation="horizontal"
+    android:id="@+id/layout_player_scoreboard">
 
     <TextView
         android:layout_width="0dp"
@@ -32,4 +33,4 @@
         android:textSize="10sp"
         android:gravity="center_horizontal"/>
 
-</TableRow>
+</LinearLayout>

@@ -163,6 +163,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         releaseCamera();
     }
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        mScoreboard.cleanup();
+    }
+
     //Clears back stack and finishes activity. Returns to new MenuActivity
     @Override
     public void onBackPressed(){

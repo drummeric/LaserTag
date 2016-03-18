@@ -35,15 +35,19 @@
                 android:textSize="15sp"
                 android:textStyle="bold"/>
 
-            <TableLayout
+            <include layout="@layout/list_item_player_scoreboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/text_team_scoreboard_name"
                 android:layout_centerHorizontal="true"
-                android:id="@+id/table_scoreboard_players">
+                android:layout_below="@id/text_team_scoreboard_name"
+                android:id="@+id/blank_player_scoreboard"/>
 
-                <include layout="@layout/list_item_player_scoreboard"/>
-            </TableLayout>
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/blank_player_scoreboard"
+                android:id="@+id/list_view_scoreboard_players" />
 
         </RelativeLayout>
 
