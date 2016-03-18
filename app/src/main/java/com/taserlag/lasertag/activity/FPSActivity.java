@@ -27,12 +27,11 @@ import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
+import com.taserlag.lasertag.fpsui.GameOver;
 import com.taserlag.lasertag.fpsui.Scoreboard;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameFollower;
@@ -74,6 +73,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     private View mHUD;
     private Scoreboard mScoreboard;
+    private GameOver mGameOver;
     private AlertDialog mGameLoadingAlertDialog;
 
     private MapAssistant mapAss = MapAssistant.getInstance(this);
@@ -116,7 +116,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mTotalAmmoText = (TextView) findViewById(R.id.text_view_fps_total_ammo);
         mClipAmmoText = (TextView) findViewById(R.id.text_view_fps_clip_ammo);
         mZoomText = (TextView) findViewById(R.id.text_view_fps_zoom);
-        mScoreboard = new Scoreboard(findViewById(android.R.id.content),FPSActivity.this);
+
+        //init UI helper objects
+        View content = findViewById(android.R.id.content);
+        mScoreboard = new Scoreboard(content,this);
+        mGameOver = new GameOver(content);
 
         //init UI (health, weapons, ammo, shield)
         initUI();
@@ -201,12 +205,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         updateWeaponText();
     }
 
-    public void gameOver() {
-        Toast.makeText(LaserTagApplication.getAppContext(), "Game over!", Toast.LENGTH_SHORT).show();
-        //send people back to main menu
-        onBackPressed();
-    }
-
     @Override
     public void notifyTeamUpdated(){
         //update UI accordingly
@@ -274,7 +272,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void notifyGameOver(){
-        gameOver();
+        Player.getInstance().unregisterForUpdates(FPSActivity.this);
+        Team.getInstance().unregisterForUpdates(this);
+        Game.getInstance().unregisterForUpdates(this);
+        mScoreboard.endGame();
+        mGameOver.endGame();
     }
 
     @Override
@@ -375,7 +377,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             touchDownY = event.getY();
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+        } else if (event.getAction() == MotionEvent.ACTION_UP && !Game.getInstance().isGameOver()) {
             if (event.getY() > touchDownY + 200){
                 if (hudVisible) {
                     //swipe down - hide HUD

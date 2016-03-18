@@ -292,14 +292,24 @@ public class DBGame{
 
             @Override
             public boolean hasNext() {
-                if ((currentIterator==null || !currentIterator.hasNext()) && teamIterator.hasNext()){
+                //only happens first time
+                if (currentIterator==null){
                     DBTeam currentTeam = teamIterator.next();
                     currentTeamName = currentTeam.getName();
                     currentIterator = currentTeam.makeIterator();
-                } else {
-                    return false;
                 }
-                return currentIterator.hasNext() || teamIterator.hasNext();
+
+                if (!currentIterator.hasNext()){
+                    if (teamIterator.hasNext()){
+                        DBTeam currentTeam = teamIterator.next();
+                        currentTeamName = currentTeam.getName();
+                        currentIterator = currentTeam.makeIterator();
+                    } else {
+                        return false;
+                    }
+                }
+
+                return true;
             }
 
             @Override

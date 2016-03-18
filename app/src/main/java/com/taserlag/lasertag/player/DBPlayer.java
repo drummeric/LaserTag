@@ -6,13 +6,11 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
-import com.firebase.client.Query;
 import com.firebase.client.Transaction;
-import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.team.Team;
 // player stuff stored in DB for use IN game (not after game)
-public class DBPlayer{
+public class DBPlayer implements Comparable<DBPlayer>{
 
     private static final String TAG = "DBPlayer";
 
@@ -146,5 +144,20 @@ public class DBPlayer{
         }
 
         return !hitYourself;
+    }
+
+    @Override
+    public int compareTo(DBPlayer other) {
+        if (name.equals(other.getName())) {
+            return 0;
+        } else if (playerStats.getScore() != other.getPlayerStats().getScore()) {
+            return other.getPlayerStats().getScore() - playerStats.getScore();
+        } else if (playerStats.getKills() != other.getPlayerStats().getKills()) {
+            return other.getPlayerStats().getKills() - playerStats.getKills();
+        } else if (playerStats.getDeaths() != other.getPlayerStats().getDeaths()) {
+            return getPlayerStats().getDeaths() - other.playerStats.getDeaths();
+        } else {
+            return 0;
+        }
     }
 }

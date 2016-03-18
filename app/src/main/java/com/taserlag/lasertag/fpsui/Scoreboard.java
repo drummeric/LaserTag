@@ -1,7 +1,9 @@
 package com.taserlag.lasertag.fpsui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
@@ -14,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
@@ -21,6 +24,9 @@ import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.activity.FPSActivity;
+import com.taserlag.lasertag.activity.MenuActivity;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.team.DBTeam;
@@ -28,7 +34,6 @@ import com.taserlag.lasertag.team.Team;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 
 public class Scoreboard{
@@ -39,20 +44,29 @@ public class Scoreboard{
     private ValueEventListener mTeamListener;
     private FirebaseRecyclerAdapter mExpandedScoreboardAdapter;
 
-    public Scoreboard(final View view, final Context context) {
+    private View playerStatus;
+    private View collapsedScoreboard;
+    private View expandedScoreboard;
+    private Button minimizeButton;
+
+    private FPSActivity mFPS;
+
+    public Scoreboard(final View view, FPSActivity FPS) {
+        mFPS = FPS;
+
+        playerStatus = view.findViewById(R.id.layout_fps_player_status);
+        collapsedScoreboard = view.findViewById(R.id.table_scoreboard_teams);
+        expandedScoreboard = view.findViewById(R.id.layout_scoreboard_expanded);
+
         initOnClicks(view);
-
         initCollapsedScoreboard(view);
-
-        initExpandedScoreboard(view, context);
+        initExpandedScoreboard(view);
     }
 
     private void initOnClicks(View view){
-        Button minimizeButton = (Button) view.findViewById(R.id.button_scoreboard_minimize);
-        View scoreboard = view.findViewById(R.id.layout_fps_scoreboard);
-        final View playerStatus = view.findViewById(R.id.layout_fps_player_status);
-        final View collapsedScoreboard = view.findViewById(R.id.table_scoreboard_teams);
-        final View expandedScoreboard = view.findViewById(R.id.layout_scoreboard_expanded);
+        minimizeButton = (Button) view.findViewById(R.id.button_scoreboard_minimize);
+        View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
+
         scoreboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -132,8 +146,7 @@ public class Scoreboard{
         mTeamQuery.addValueEventListener(mTeamListener);
     }
 
-    private void initExpandedScoreboard(View view, final Context context){
-
+    private void initExpandedScoreboard(View view){
         RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_fps_scoreboard);
         mExpandedScoreboardAdapter = new FirebaseRecyclerAdapter<DBTeam, TeamScoreboardViewHolder>(DBTeam.class, R.layout.card_team_scoreboard, TeamScoreboardViewHolder.class, Game.getInstance().getReference().child("teams").orderByChild("score")) {
 
@@ -143,18 +156,13 @@ public class Scoreboard{
                     holder.teamName.setText(dbTeam.getName());
                     holder.teamScore.setText(String.valueOf(dbTeam.getScore()));
                     ArrayList<DBPlayer> players = new ArrayList<>(dbTeam.getPlayers().values());
-                    Collections.sort(players, new Comparator<DBPlayer>() {
-                        @Override
-                        public int compare(DBPlayer lhs, DBPlayer rhs) {
-                            return rhs.getPlayerStats().getScore() - lhs.getPlayerStats().getScore();
-                        }
-                    });
-                    holder.playerListView.setAdapter(new PlayerScoreAdapter(context, players));
-                    setListViewHeightBasedOnItems(holder.playerListView, context);
+                    Collections.sort(players);
+                    holder.playerListView.setAdapter(new PlayerScoreAdapter(mFPS, players));
+                    setListViewHeightBasedOnItems(holder.playerListView);
                 }
             }
         };
-        LinearLayoutManager manager = new LinearLayoutManager(context);
+        LinearLayoutManager manager = new LinearLayoutManager(mFPS);
         manager.setReverseLayout(true);
         manager.setStackFromEnd(true);
         recycler.setLayoutManager(manager);
@@ -166,6 +174,26 @@ public class Scoreboard{
         mExpandedScoreboardAdapter.cleanup();
     }
 
+    public void endGame(){
+        minimizeButton.setText("EXIT GAME");
+        minimizeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(LaserTagApplication.getAppContext(), "Thanks for playing!", Toast.LENGTH_SHORT).show();
+                mFPS.getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                Intent intent = new Intent(mFPS, MenuActivity.class);
+                mFPS.startActivity(intent);
+                mFPS.finish();
+            }
+        });
+
+        playerStatus.setVisibility(View.GONE);
+        collapsedScoreboard.setVisibility(View.GONE);
+        expandedScoreboard.setVisibility(View.VISIBLE);
+        expanded = true;
+        mExpandedScoreboardAdapter.notifyDataSetChanged();
+    }
+
     //returns semi transparent form of passed color
     private int getIntFromColor(int[] color){
         int red = (color[1] << 16) & 0x00FF0000; //Shift red 16-bits and mask out other stuff
@@ -175,13 +203,13 @@ public class Scoreboard{
         return 0x88000000 | red | green | blue; //0x88000000 for 50% Alpha. Bitwise OR everything together.
     }
 
-    private void setListViewHeightBasedOnItems(ListView listView, Context context) {
+    private void setListViewHeightBasedOnItems(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
         if (listAdapter != null) {
             int numberOfItems = listAdapter.getCount();
 
             // Get total height of all items.
-            float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 14, context.getResources().getDisplayMetrics());
+            float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 14, mFPS.getResources().getDisplayMetrics());
             float totalItemsHeight = size * numberOfItems;
 
             // Get total height of all item dividers.
