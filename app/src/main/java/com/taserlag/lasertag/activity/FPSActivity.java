@@ -256,7 +256,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                 //save start time locally
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
-                editor.putLong("gameStartTime", System.currentTimeMillis());
+                editor.putLong("gameStartTime"+Game.getInstance().getKey(), System.currentTimeMillis());
                 editor.commit();
 
                 startTimer();
@@ -277,6 +277,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         Game.getInstance().unregisterForUpdates(this);
         mScoreboard.endGame();
         mGameOver.endGame();
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        settings.edit().remove("gameStartTime"+Game.getInstance().getKey()).commit();
     }
 
     @Override
@@ -313,7 +315,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void startTimer(){
         //load local start time
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        long time = settings.getLong("gameStartTime", 0L);
+        long time = settings.getLong("gameStartTime"+Game.getInstance().getKey(), 0L);
 
         if (Game.getInstance().getTimeEnabled()){
             long timeLeft = Game.getInstance().getEndMinutes()*60*1000 - (System.currentTimeMillis() - time);
