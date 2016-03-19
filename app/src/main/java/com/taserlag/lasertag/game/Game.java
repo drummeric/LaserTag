@@ -7,6 +7,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamIterator;
@@ -54,7 +55,7 @@ public class Game {
                     if (!mDBGame.isGameOver()&&newDBGame.isGameOver()){
                         notifyFollowersOver();
                     }
-                } else if (newDBGame==null) {
+                } else if (newDBGame==null && !Player.getInstance().getName().equals(mDBGame.getHost())) {
                     notifyFollowersDeleted();
                 }
 
@@ -240,6 +241,7 @@ public class Game {
         if (!followers.contains(follower)) {
             followers.add(follower);
             if (mDBGameReference!=null) {
+                mDBGameReference.removeEventListener(mGameListener);
                 mDBGameReference.addValueEventListener(mGameListener);
             }
         }
