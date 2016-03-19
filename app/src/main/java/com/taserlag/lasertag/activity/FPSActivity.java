@@ -120,7 +120,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         //init UI helper objects
         View content = findViewById(android.R.id.content);
         mScoreboard = new Scoreboard(content,this);
-        mGameOver = new GameOver(content);
+        mGameOver = new GameOver(content, this);
 
         //init UI (health, weapons, ammo, shield)
         initUI();

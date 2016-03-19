@@ -1,6 +1,9 @@
 package com.taserlag.lasertag.fpsui;
 
+import android.content.Context;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.taserlag.lasertag.R;
@@ -22,11 +25,15 @@ public class GameOver {
     private View mTimeView;
     private View mReticleView;
 
-    public GameOver(View view){
+    private Context mContext;
+
+    public GameOver(View view, Context context){
+        mContext = context;
+
         mTeamTextView = (TextView) view.findViewById(R.id.text_gameover_team);
         mMVPTextView = (TextView) view.findViewById(R.id.text_gameover_mvp);
         mGameOverView = view.findViewById(R.id.layout_hud_gameover);
-        mMapView = view.findViewById(R.id.map);
+        mMapView = (View) view.findViewById(R.id.map).getParent();
         mTimeView = view.findViewById(R.id.text_view_fps_game_time);
         mReticleView = view.findViewById(R.id.reticle_image_view);
         mGameOverView.setVisibility(View.GONE);
@@ -38,6 +45,9 @@ public class GameOver {
         mMapView.setVisibility(View.GONE);
         mTimeView.setVisibility(View.GONE);
         mReticleView.setVisibility(View.GONE);
+
+        Animation slideOn = AnimationUtils.loadAnimation(mContext, R.anim.slide_on_from_left);
+        mGameOverView.startAnimation(slideOn);
         mGameOverView.setVisibility(View.VISIBLE);
     }
 

@@ -58,6 +58,7 @@ public class Scoreboard{
     private ValueEventListener mTeamListener;
     private FirebaseRecyclerAdapter mExpandedScoreboardAdapter;
 
+    private View mScoreboard;
     private View playerStatus;
     private View collapsedScoreboard;
     private View expandedScoreboard;
@@ -79,14 +80,14 @@ public class Scoreboard{
     }
 
     private void calculateScoreboardDimensions(View view) {
-        final View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
+        mScoreboard = view.findViewById(R.id.layout_hud_scoreboard);
 
         // Needed this, because you must get current width and height AFTER it is drawn on screen
-        scoreboard.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        mScoreboard.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                mScoreboardWidth = scoreboard.getMeasuredWidth();
-                mScoreboardHeight = scoreboard.getMeasuredHeight();
+                mScoreboardWidth = mScoreboard.getMeasuredWidth();
+                mScoreboardHeight = mScoreboard.getMeasuredHeight();
 
                 Resources r = mFPS.getResources();
                 DisplayMetrics metrics = new DisplayMetrics();
@@ -95,68 +96,26 @@ public class Scoreboard{
                 float margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCOREBOARD_MARGIN, r.getDisplayMetrics());
                 float width = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCOREBOARD_EXPANDED_WIDTH, r.getDisplayMetrics());
                 mScoreboardExpandedWidth = Math.round(width);
-                mScoreboardExpandedHeight = Math.round(metrics.heightPixels - 2*margin);
-                scoreboard.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                mScoreboardExpandedHeight = Math.round(metrics.heightPixels - 2 * margin);
+                mScoreboard.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
     }
 
     private void initOnClicks(View view){
         minimizeButton = (Button) view.findViewById(R.id.button_scoreboard_minimize);
-        final View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
 
-        scoreboard.setOnClickListener(new View.OnClickListener() {
+        mScoreboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!expanded) {
-                    ResizeAnimation anim = new ResizeAnimation(scoreboard, mScoreboardExpandedWidth, mScoreboardExpandedHeight);
-                    anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
-                    anim.setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {
-                            playerStatus.setVisibility(View.GONE);
-                            collapsedScoreboard.setVisibility(View.GONE);
-                            expandedScoreboard.setVisibility(View.VISIBLE);
-                            expanded = true;
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
-                            mExpandedScoreboardAdapter.notifyDataSetChanged();
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {}
-                    });
-                    scoreboard.startAnimation(anim);
-                }
+                expandScoreboard();
             }
         });
 
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (expanded) {
-                    ResizeAnimation anim = new ResizeAnimation(scoreboard, mScoreboardWidth, mScoreboardHeight);
-                    anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
-                    anim.setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {
-                            expandedScoreboard.setVisibility(View.GONE);
-                            collapsedScoreboard.setVisibility(View.VISIBLE);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
-                            playerStatus.setVisibility(View.VISIBLE);
-                            expanded = false;
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {}
-                    });
-                    scoreboard.startAnimation(anim);
-                }
+                collapseScoreboard();
             }
         });
     }
@@ -237,6 +196,56 @@ public class Scoreboard{
         recycler.setAdapter(mExpandedScoreboardAdapter);
     }
 
+    private void expandScoreboard(){
+        if (!expanded) {
+            ResizeAnimation anim = new ResizeAnimation(mScoreboard, mScoreboardExpandedWidth, mScoreboardExpandedHeight);
+            anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
+            anim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    playerStatus.setVisibility(View.GONE);
+                    collapsedScoreboard.setVisibility(View.GONE);
+                    expandedScoreboard.setVisibility(View.VISIBLE);
+                    expanded = true;
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mExpandedScoreboardAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {}
+            });
+            mScoreboard.startAnimation(anim);
+        }
+    }
+
+    private void collapseScoreboard(){
+        if (expanded) {
+            ResizeAnimation anim = new ResizeAnimation(mScoreboard, mScoreboardWidth, mScoreboardHeight);
+            anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
+            anim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    expandedScoreboard.setVisibility(View.GONE);
+                    collapsedScoreboard.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    playerStatus.setVisibility(View.VISIBLE);
+                    expanded = false;
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
+            mScoreboard.startAnimation(anim);
+        }
+    }
+
     public void cleanup(){
         mTeamQuery.removeEventListener(mTeamListener);
         mExpandedScoreboardAdapter.cleanup();
@@ -255,11 +264,7 @@ public class Scoreboard{
             }
         });
 
-        playerStatus.setVisibility(View.GONE);
-        collapsedScoreboard.setVisibility(View.GONE);
-        expandedScoreboard.setVisibility(View.VISIBLE);
-        expanded = true;
-        mExpandedScoreboardAdapter.notifyDataSetChanged();
+        expandScoreboard();
     }
 
     //returns semi transparent form of passed color
