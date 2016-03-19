@@ -53,6 +53,7 @@ public class GameOver {
 
     private String getWinningTeams(){
         StringBuilder result = new StringBuilder();
+        result.append("Winner: ");
         List<DBTeam> teams = new ArrayList<>(Game.getInstance().getTeams().values());
         Collections.sort(teams, new Comparator<DBTeam>() {
             @Override
@@ -63,20 +64,12 @@ public class GameOver {
 
         int winner = teams.get(0).getScore();
         result.append(teams.get(0).getName());
-        boolean tied = false;
         for (int i = 1; i < teams.size(); i++){
             if (teams.get(i).getScore()==winner){
-                tied = true;
-                result.append(" and "+teams.get(i).getName());
+                result.append(", " + teams.get(i).getName());
             } else {
                 break;
             }
-        }
-
-        if (tied){
-            result.append(" tied!");
-        } else {
-            result.append(" won!");
         }
 
         return result.toString();
@@ -98,6 +91,6 @@ public class GameOver {
             }
         }
 
-        return mvp.getName() + " is the game's MVP!";
+        return "MVP: " + mvp.getName();
     }
 }

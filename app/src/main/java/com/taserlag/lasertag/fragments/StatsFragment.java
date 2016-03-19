@@ -62,23 +62,25 @@ public class StatsFragment extends Fragment {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         final DBGame dbGame = dataSnapshot.getValue(DBGame.class);
-                        holder.gameName.setText(dbGame.getHost() + "'s " + dbGame.getGameType().toString());
-                        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yy");
-                        holder.gameDate.setText(dateFormat.format(dbGame.getDate()));
-                        DBPlayer dbPlayer = dbGame.findPlayer(Player.getInstance().getName()).getPlayers().get(Player.getInstance().getName());
-                        holder.playerScore.setText("Score: " + dbPlayer.getPlayerStats().getScore());
-                        holder.playerKD.setText("KD: " + dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
-                        holder.playerHP.setText("HP: " + String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
-                        holder.playerStatsView.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
+                        if (dbGame != null) {
+                            holder.gameName.setText(dbGame.getHost() + "'s " + dbGame.getGameType().toString());
+                            DateFormat dateFormat = new SimpleDateFormat("MM/dd/yy");
+                            holder.gameDate.setText(dateFormat.format(dbGame.getDate()));
+                            DBPlayer dbPlayer = dbGame.findPlayer(Player.getInstance().getName()).getPlayers().get(Player.getInstance().getName());
+                            holder.playerScore.setText("Score: " + dbPlayer.getPlayerStats().getScore());
+                            holder.playerKD.setText("KD: " + dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
+                            holder.playerHP.setText("HP: " + String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
+                            holder.playerStatsView.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
 
-                        holder.itemView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                StatsDialogFragment dialog = new StatsDialogFragment();
-                                dialog.setDBGame(dbGame, gameKey);
-                                dialog.show(getActivity().getSupportFragmentManager(), "stats_dialog_fragment");
-                            }
-                        });
+                            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    StatsDialogFragment dialog = new StatsDialogFragment();
+                                    dialog.setDBGame(dbGame, gameKey);
+                                    dialog.show(getActivity().getSupportFragmentManager(), "stats_dialog_fragment");
+                                }
+                            });
+                        }
                     }
 
                     @Override
