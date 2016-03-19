@@ -30,8 +30,6 @@ public class CreateGameFragment extends Fragment {
 
     private GameType gameType = GameType.TDM;
 
-    private OnFragmentInteractionListener mListener;
-
     public CreateGameFragment() {
         // Required empty public constructor
     }
@@ -66,28 +64,6 @@ public class CreateGameFragment extends Fragment {
         gameTypeButtons[0].setPressed();
         gameType = GameType.TDM;
         return view;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 
     private class TouchListener implements View.OnTouchListener{

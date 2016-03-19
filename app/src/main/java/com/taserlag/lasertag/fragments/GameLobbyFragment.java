@@ -38,7 +38,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
 
     private final String TAG = "GameLobbyFragment";
 
-    private OnFragmentInteractionListener mListener;
     private FirebaseRecyclerAdapter mAdapter;
     private boolean FPSStarted = false;
 
@@ -69,26 +68,9 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
     public void onDestroyView(){
         super.onDestroyView();
         mAdapter.cleanup();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -138,11 +120,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
                 .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
                 .commit();
         getActivity().getSupportFragmentManager().popBackStack();
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 
     private void init(final View view){

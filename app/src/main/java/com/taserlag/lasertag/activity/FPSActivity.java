@@ -262,7 +262,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putLong("gameStartTime"+Game.getInstance().getKey(), System.currentTimeMillis());
-                editor.commit();
+                editor.apply();
 
                 startTimer();
             }
@@ -286,7 +286,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mScoreboard.endGame();
         mGameOver.endGame();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        settings.edit().remove("gameStartTime"+Game.getInstance().getKey()).commit();
+        settings.edit().remove("gameStartTime"+Game.getInstance().getKey()).apply();
     }
 
     @Override

@@ -28,8 +28,6 @@ public class JoinGameFragment extends Fragment{
 
     private final String TAG = "JoinGameFragment";
 
-    private OnFragmentInteractionListener mListener;
-
     private FirebaseRecyclerAdapter mAdapter;
 
     public JoinGameFragment() {
@@ -53,31 +51,9 @@ public class JoinGameFragment extends Fragment{
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
     public void onDestroyView(){
         super.onDestroyView();
         mAdapter.cleanup();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 
     private void init(View view){

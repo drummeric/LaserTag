@@ -34,8 +34,6 @@ public class SetPlayerColorFragment extends Fragment {
     private String mPlayerName = "";
     private String mTeamName = "";
 
-    private OnFragmentInteractionListener mListener;
-
     public SetPlayerColorFragment() {
         // Required empty public constructor
     }
@@ -110,26 +108,9 @@ public class SetPlayerColorFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
     public void onDetach() {
         super.onDetach();
         releaseCamera();
-        mListener = null;
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 
     private Camera getCameraInstance() {

@@ -20,7 +20,7 @@ import com.taserlag.lasertag.fragments.MainMenuFragment;
 import com.taserlag.lasertag.fragments.SetPlayerColorFragment;
 import com.taserlag.lasertag.player.Player;
 
-public class MenuActivity extends AppCompatActivity implements MainMenuFragment.OnFragmentInteractionListener, CreateGameFragment.OnFragmentInteractionListener, GameLobbyFragment.OnFragmentInteractionListener, JoinGameFragment.OnFragmentInteractionListener, SetPlayerColorFragment.OnFragmentInteractionListener{
+public class MenuActivity extends AppCompatActivity {
 
     private final String TAG = "MenuActivity";
 
@@ -101,10 +101,6 @@ public class MenuActivity extends AppCompatActivity implements MainMenuFragment.
     public Fragment findFragmentByTag(String tag){
         return getSupportFragmentManager()
                 .findFragmentByTag(tag);
-    }
-
-    public void onFragmentInteraction(Uri uri){
-        //empty
     }
 
     // main menu to create game fragment
