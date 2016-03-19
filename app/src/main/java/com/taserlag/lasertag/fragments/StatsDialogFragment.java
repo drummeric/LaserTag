@@ -157,7 +157,7 @@ public class StatsDialogFragment extends DialogFragment {
             viewHolder.playerName.setText(dbPlayer.getName());
             viewHolder.playerScore.setText(String.valueOf(dbPlayer.getPlayerStats().getScore()));
             viewHolder.playerKD.setText(dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
-            viewHolder.playerHP.setText(String.format("%.2f", dbPlayer.getPlayerStats().getHitAccuracy() * 100) + "%");
+            viewHolder.playerHP.setText(String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
             viewHolder.layout.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
 
             return view;

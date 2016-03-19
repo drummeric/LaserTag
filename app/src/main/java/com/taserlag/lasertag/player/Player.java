@@ -28,6 +28,9 @@ public class Player{
 
     private boolean mPrimaryWeaponActive = true;
 
+    private int mTotalShots;
+    private int mTotalHits;
+
     private Weapon mPrimaryWeapon = new FastWeapon();
     private Weapon mSecondaryWeapon = new StrongWeapon();
     private Shield mShield = new Shield();
@@ -99,6 +102,34 @@ public class Player{
         return dbUser.getUsername();
     }
 
+    public int getTotalShots() {
+        return mTotalShots;
+    }
+
+    public void setTotalShots(int mTotalShots) {
+        this.mTotalShots = mTotalShots;
+    }
+
+    public void incTotalShots() {
+        mTotalShots++;
+    }
+
+    public int getTotalHits() {
+        return mTotalHits;
+    }
+
+    public void setTotalHits(int mTotalHits) {
+        this.mTotalHits = mTotalHits;
+    }
+
+    public void incTotalHits() {
+        mTotalHits++;
+    }
+
+    private void saveHitPercentage() {
+        dbPlayer.getPlayerStats().saveHitPercentage( mTotalShots != 0 ? (double)mTotalHits/mTotalShots : 0, dbPlayerReference.child("playerStats"));
+    }
+
     public int getScore() {
         return dbPlayer.getPlayerStats().getScore();
     }
@@ -116,6 +147,7 @@ public class Player{
     }
 
     public void archiveGame(String gameKey){
+        saveHitPercentage();
         dbUser.archiveGame(gameKey);
     }
 

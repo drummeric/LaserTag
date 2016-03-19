@@ -68,7 +68,7 @@ public class StatsFragment extends Fragment {
                         DBPlayer dbPlayer = dbGame.findPlayer(Player.getInstance().getName()).getPlayers().get(Player.getInstance().getName());
                         holder.playerScore.setText("Score: " + dbPlayer.getPlayerStats().getScore());
                         holder.playerKD.setText("KD: " + dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
-                        holder.playerHP.setText("HP: " + String.format("%.2f", dbPlayer.getPlayerStats().getHitAccuracy() * 100) + "%");
+                        holder.playerHP.setText("HP: " + String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
                         holder.playerStatsView.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
 
                         holder.itemView.setOnClickListener(new View.OnClickListener() {

@@ -23,7 +23,7 @@ public class DBPlayerStats {
 
     private int deaths = 0;
 
-    private double hitAccuracy = 0;
+    private double hitPercentage = 0;
 
     private int[] color = {255,0,0,0};
 
@@ -57,12 +57,12 @@ public class DBPlayerStats {
         this.deaths = deaths;
     }
 
-    public double getHitAccuracy() {
-        return hitAccuracy;
+    public double getHitPercentage() {
+        return hitPercentage;
     }
 
-    public void setHitAccuracy(double hitAccuracy) {
-        this.hitAccuracy = hitAccuracy;
+    public void setHitPercentage(double hitPercentage) {
+        this.hitPercentage = hitPercentage;
     }
 
     public int[] getColor() {
@@ -123,5 +123,9 @@ public class DBPlayerStats {
     //for now kills has the same value as score
     public void incrementKills(Firebase reference){
         reference.child("kills").setValue(++kills);
+    }
+
+    public void saveHitPercentage(Double hitPercentage, Firebase reference) {
+        reference.child("hitPercentage").setValue(hitPercentage);
     }
 }

@@ -287,6 +287,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mGameOver.endGame();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         settings.edit().remove("gameStartTime"+Game.getInstance().getKey()).apply();
+        settings.edit().remove("totalHits"+Game.getInstance().getKey()).apply();
+        settings.edit().remove("totalShots"+Game.getInstance().getKey()).apply();
     }
 
     @Override
@@ -324,8 +326,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     }
 
     private void startTimer(){
-        //load local start time
+        //load local start time, shots, and hits
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        Player.getInstance().setTotalHits(settings.getInt("totalHits"+Game.getInstance().getKey(),0));
+        Player.getInstance().setTotalShots(settings.getInt("totalShots" + Game.getInstance().getKey(), 0));
+
         long time = settings.getLong("gameStartTime"+Game.getInstance().getKey(), 0L);
 
         if (Game.getInstance().getTimeEnabled()){
@@ -413,11 +418,14 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
                     @Override
                     public void onFinishShoot(String teamPlayerHit) {
-
+                        Player.getInstance().incTotalShots();
+                        getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalShots" + Game.getInstance().getKey(), Player.getInstance().getTotalShots()).apply();
                         if (!teamPlayerHit.equals("")) {
                             String teamName = teamPlayerHit.split(":~")[0];
                             String playerName = teamPlayerHit.split(":~")[1];
                             if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
+                                Player.getInstance().incTotalHits();
+                                getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
                                 final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
                                 reticle.setImageResource(R.drawable.redreticle);
 

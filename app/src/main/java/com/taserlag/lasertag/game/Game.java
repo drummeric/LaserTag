@@ -182,8 +182,18 @@ public class Game {
     }
 
     public void endGame(){
-        LaserTagApplication.firebaseReference.child("finishedGames").child(getKey()).setValue(mDBGame);
-        deleteGame();
+        mDBGameReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                DBGame dbGame = dataSnapshot.getValue(DBGame.class);
+                LaserTagApplication.firebaseReference.child("finishedGames").child(getKey()).setValue(dbGame);
+                deleteGame();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
     }
 
     public void deleteGame() {
