@@ -2,8 +2,8 @@ package com.taserlag.lasertag.game;
 
 
 public enum GameType {
-    TDM("Team Deathmatch"),
-    FFA("Free for All"),
+    TDM("TDM"),
+    FFA("FFA"),
     VIP("VIP");
 
     private String gameName;
@@ -18,9 +18,9 @@ public enum GameType {
 
     public static GameType decodeType(String str){
         switch(str){
-            case "Team Deathmatch":
+            case "TDM":
                 return TDM;
-            case "Free for All":
+            case "FFA":
                 return FFA;
             case "VIP":
                 return VIP;

@@ -12,6 +12,7 @@ import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamIterator;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,6 +44,8 @@ public class DBGame{
     private boolean gameOver = false;
 
     private Map<String, DBTeam> teams = new HashMap<>();
+
+    private Date date;
 
     public DBGame() {}
 
@@ -144,6 +147,14 @@ public class DBGame{
 
     public Map<String, DBTeam> getTeams() {
         return teams;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     //sets ready if its teams are ready
@@ -322,5 +333,19 @@ public class DBGame{
                 return currentTeamName;
             }
         };
+    }
+
+    // finds player in game (call as little as possible)
+    // returns the team of player found
+    public DBTeam findPlayer(String name){
+        for (Map.Entry<String, DBTeam> teamEntry:teams.entrySet()){
+            for (String playerName:teamEntry.getValue().getPlayers().keySet()){
+                if (playerName.equals(name)){
+                    return teamEntry.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 }

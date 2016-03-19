@@ -1,7 +1,5 @@
 package com.taserlag.lasertag.fragments;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,14 +11,14 @@ import android.widget.Spinner;
 import android.widget.StickyButton;
 import android.widget.Switch;
 
-import com.firebase.client.Firebase;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
-import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
 import com.taserlag.lasertag.player.Player;
+
+import java.util.Date;
 
 public class CreateGameFragment extends Fragment {
 
@@ -103,6 +101,7 @@ public class CreateGameFragment extends Fragment {
         dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         dbGame.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         dbGame.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
+        dbGame.setDate(new Date());
 
         //save new game to DB (with push) and start game lobby
         Game.getInstance(dbGame, dbGame.saveNewGame());

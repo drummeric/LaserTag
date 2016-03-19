@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginBottom="@dimen/activity_vertical_margin"
-    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-    android:layout_marginRight="@dimen/activity_horizontal_margin"
+    android:layout_marginLeft="8dp"
+    android:layout_marginRight="8dp"
     android:layout_marginTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
     tools:context="com.taserlag.lasertag.fragments.GameLobbyFragment">
@@ -13,13 +13,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
-        android:text="Select Game"
+        android:text="Name's Stats"
+        android:id="@+id/text_view_stats_fragment_title"
         android:textSize="50sp"
         android:layout_gravity="center_horizontal"/>
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/recycler_view_game"/>
+        android:id="@+id/recycler_view_stats_game"/>
 
 </LinearLayout>

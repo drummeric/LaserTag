@@ -1,7 +1,5 @@
 package com.taserlag.lasertag.fragments;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
@@ -23,7 +21,6 @@ import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
 
-
 public class JoinGameFragment extends Fragment{
 
     private final String TAG = "JoinGameFragment";
@@ -37,7 +34,6 @@ public class JoinGameFragment extends Fragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override

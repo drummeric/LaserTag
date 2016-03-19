@@ -164,15 +164,7 @@ public class Game {
     // finds player in game (call as little as possible)
     // returns the team of player found
     public DBTeam findPlayer(String name){
-        for (Map.Entry<String, DBTeam> teamEntry:mDBGame.getTeams().entrySet()){
-            for (String playerName:teamEntry.getValue().getPlayers().keySet()){
-                if (playerName.equals(name)){
-                    return teamEntry.getValue();
-                }
-            }
-        }
-
-        return null;
+        return mDBGame.findPlayer(name);
     }
 
     //if the team name doesn't exist, create the team in DB and put me on it

@@ -305,6 +305,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
+                if (Game.getInstance().isGameOver()) {
+                    alertDialog.dismiss();
+                }
                 alertDialog.setMessage("Respawning in " + (millisUntilFinished/1000)+" seconds");
             }
 
