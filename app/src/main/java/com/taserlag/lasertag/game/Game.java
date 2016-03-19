@@ -6,6 +6,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
@@ -156,8 +157,8 @@ public class Game {
         mDBGame.resetReady(mDBGameReference);
     }
 
-    public void endGame(){
-        mDBGame.endGame(mDBGameReference);
+    public void saveGameOver(){
+        mDBGame.saveGameOver(mDBGameReference);
     }
 
     // finds player in game (call as little as possible)
@@ -186,6 +187,11 @@ public class Game {
             }
         }
         return false;
+    }
+
+    public void endGame(){
+        LaserTagApplication.firebaseReference.child("finishedGames").child(getKey()).setValue(mDBGame);
+        deleteGame();
     }
 
     public void deleteGame() {

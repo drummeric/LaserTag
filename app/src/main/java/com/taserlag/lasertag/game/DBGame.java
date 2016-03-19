@@ -236,7 +236,7 @@ public class DBGame{
         return true;
     }
 
-    public void endGame(Firebase reference){
+    public void saveGameOver(Firebase reference){
         reference.child("gameOver").setValue(true);
     }
 

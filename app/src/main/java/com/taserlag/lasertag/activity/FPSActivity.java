@@ -176,6 +176,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     //Clears back stack and finishes activity. Returns to new MenuActivity
     @Override
     public void onBackPressed(){
+        //if I'm the host and the game is over
+        if (Game.getInstance()!=null && Game.getInstance().isGameOver() && Player.getInstance().getName().equals(Game.getInstance().getHost())){
+            Game.getInstance().endGame();
+        }
+
         Player.getInstance().unregisterForUpdates(this);
         Team.getInstance().unregisterForUpdates(this);
         Game.getInstance().unregisterForUpdates(this);
@@ -272,6 +277,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void notifyGameOver(){
+        //save a reference to this game for viewing stats
+        Player.getInstance().archiveGame(Game.getInstance().getKey());
+
         Player.getInstance().unregisterForUpdates(FPSActivity.this);
         Team.getInstance().unregisterForUpdates(this);
         Game.getInstance().unregisterForUpdates(this);
@@ -327,7 +335,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
                 @Override
                 public void onFinish() {
-                   Game.getInstance().endGame();
+                   Game.getInstance().saveGameOver();
                 }
             }.start();
         } else {

@@ -247,7 +247,7 @@ public class DBTeam {
                     mutableData.setValue(mutableData.getValue(Integer.class) + value);
                 }
                 if (Game.getInstance().getScoreEnabled()&&Game.getInstance().getEndScore()<=mutableData.getValue(Integer.class)){
-                    Game.getInstance().endGame();
+                    Game.getInstance().saveGameOver();
                 }
                 return Transaction.success(mutableData);
             }

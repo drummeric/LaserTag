@@ -14,7 +14,7 @@ public class DBUser {
 
     private int[] color = new int[4];
 
-    private List<DBPlayerStats> stats = new ArrayList<>();
+    private List<String> previousGames = new ArrayList<>();
 
     public DBUser(){
     }
@@ -40,7 +40,12 @@ public class DBUser {
         color = c;
     }
 
-    public List<DBPlayerStats> getStats() {
-        return stats;
+    public List<String> getPreviousGames() {
+        return previousGames;
+    }
+
+    public void archiveGame(String gameKey){
+        previousGames.add(gameKey);
+        LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.getUid()).child("previousGames").setValue(previousGames);
     }
 }

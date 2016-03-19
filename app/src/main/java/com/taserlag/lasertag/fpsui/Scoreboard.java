@@ -34,6 +34,7 @@ import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.map.ResizeAnimation;
 import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
 
@@ -256,6 +257,9 @@ public class Scoreboard{
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (Game.getInstance().getHost().equals(Player.getInstance().getName())) {
+                    Game.getInstance().endGame();
+                }
                 Toast.makeText(LaserTagApplication.getAppContext(), "Thanks for playing!", Toast.LENGTH_SHORT).show();
                 mFPS.getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 Intent intent = new Intent(mFPS, MenuActivity.class);
@@ -265,6 +269,9 @@ public class Scoreboard{
         });
 
         expandScoreboard();
+
+        //make sure scoreboard no longer updates: game about to get deleted
+        cleanup();
     }
 
     //returns semi transparent form of passed color

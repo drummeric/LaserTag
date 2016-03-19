@@ -115,6 +115,10 @@ public class Player{
         return dbUser.getColor();
     }
 
+    public void archiveGame(String gameKey){
+        dbUser.archiveGame(gameKey);
+    }
+
     //call when you leave a team/game
     public void leave(){
         if (dbPlayerReference!=null) {
