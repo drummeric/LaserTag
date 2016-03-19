@@ -46,15 +46,20 @@
         android:id="@+id/layout_fps_player_status"
         />
 
-    <fragment
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:id="@+id/map"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/rectangle"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        map:mapType="normal"
-        map:uiMapToolbar="false"
-        />
+        android:layout_alignParentStart="true">
+        <fragment
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:id="@+id/map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            map:mapType="normal"
+            map:uiMapToolbar="false"
+            />
+    </RelativeLayout>
 
 </RelativeLayout>

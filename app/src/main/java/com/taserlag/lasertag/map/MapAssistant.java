@@ -117,7 +117,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         if(activity instanceof FragmentActivity) {
             SupportMapFragment mapFragment = (SupportMapFragment) ((FragmentActivity) activity).getSupportFragmentManager().findFragmentById(R.id.map);
             mapFragment.getMapAsync(instance);
-            mMapView = mapFragment.getView();
+            mMapView = (View) mapFragment.getView().getParent();
 
             // Initialize map layout
             calculateMapDimensions();
