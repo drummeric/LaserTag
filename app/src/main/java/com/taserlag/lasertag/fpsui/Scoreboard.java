@@ -2,14 +2,18 @@ package com.taserlag.lasertag.fpsui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,6 +32,7 @@ import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.map.ResizeAnimation;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
@@ -37,6 +42,15 @@ import java.util.Collections;
 import java.util.Iterator;
 
 public class Scoreboard{
+
+    private final int SCOREBOARD_ANIMATION_DURATION = 250;
+    private final int SCOREBOARD_MARGIN = 10;
+    private final int SCOREBOARD_EXPANDED_WIDTH = 205;
+
+    private int mScoreboardWidth;
+    private int mScoreboardHeight;
+    private int mScoreboardExpandedWidth;
+    private int mScoreboardExpandedHeight;
 
     private boolean expanded = false;
 
@@ -58,24 +72,63 @@ public class Scoreboard{
         collapsedScoreboard = view.findViewById(R.id.table_scoreboard_teams);
         expandedScoreboard = view.findViewById(R.id.layout_scoreboard_expanded);
 
+        calculateScoreboardDimensions(view);
         initOnClicks(view);
         initCollapsedScoreboard(view);
         initExpandedScoreboard(view);
     }
 
+    private void calculateScoreboardDimensions(View view) {
+        final View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
+
+        // Needed this, because you must get current width and height AFTER it is drawn on screen
+        scoreboard.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mScoreboardWidth = scoreboard.getMeasuredWidth();
+                mScoreboardHeight = scoreboard.getMeasuredHeight();
+
+                Resources r = mFPS.getResources();
+                DisplayMetrics metrics = new DisplayMetrics();
+                mFPS.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+
+                float margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCOREBOARD_MARGIN, r.getDisplayMetrics());
+                float width = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCOREBOARD_EXPANDED_WIDTH, r.getDisplayMetrics());
+                mScoreboardExpandedWidth = Math.round(width);
+                mScoreboardExpandedHeight = Math.round(metrics.heightPixels - 2*margin);
+                scoreboard.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+    }
+
     private void initOnClicks(View view){
         minimizeButton = (Button) view.findViewById(R.id.button_scoreboard_minimize);
-        View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
+        final View scoreboard = view.findViewById(R.id.layout_hud_scoreboard);
 
         scoreboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!expanded) {
-                    playerStatus.setVisibility(View.GONE);
-                    collapsedScoreboard.setVisibility(View.GONE);
-                    expandedScoreboard.setVisibility(View.VISIBLE);
-                    expanded = true;
-                    mExpandedScoreboardAdapter.notifyDataSetChanged();
+                    ResizeAnimation anim = new ResizeAnimation(scoreboard, mScoreboardExpandedWidth, mScoreboardExpandedHeight);
+                    anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
+                    anim.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                            playerStatus.setVisibility(View.GONE);
+                            collapsedScoreboard.setVisibility(View.GONE);
+                            expandedScoreboard.setVisibility(View.VISIBLE);
+                            expanded = true;
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            mExpandedScoreboardAdapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {}
+                    });
+                    scoreboard.startAnimation(anim);
                 }
             }
         });
@@ -84,10 +137,25 @@ public class Scoreboard{
             @Override
             public void onClick(View v) {
                 if (expanded) {
-                    expandedScoreboard.setVisibility(View.GONE);
-                    collapsedScoreboard.setVisibility(View.VISIBLE);
-                    playerStatus.setVisibility(View.VISIBLE);
-                    expanded = false;
+                    ResizeAnimation anim = new ResizeAnimation(scoreboard, mScoreboardWidth, mScoreboardHeight);
+                    anim.setDuration(SCOREBOARD_ANIMATION_DURATION);
+                    anim.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                            expandedScoreboard.setVisibility(View.GONE);
+                            collapsedScoreboard.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            playerStatus.setVisibility(View.VISIBLE);
+                            expanded = false;
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {}
+                    });
+                    scoreboard.startAnimation(anim);
                 }
             }
         });
