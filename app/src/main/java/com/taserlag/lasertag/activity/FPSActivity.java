@@ -102,7 +102,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             hideSystemUI();
             //wait for game to load
         } else {
-            startTimer();
+            returnToGame();
         }
 
         mHUD = findViewById(R.id.layout_fps_hud);
@@ -264,7 +264,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                 editor.putLong("gameStartTime"+Game.getInstance().getKey(), System.currentTimeMillis());
                 editor.apply();
 
-                startTimer();
+                returnToGame();
             }
         };
         timer.start();
@@ -325,14 +325,17 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }.start();
     }
 
-    private void startTimer(){
+    private void returnToGame(){
         //load local start time, shots, and hits
+        ColorShooterTask.resetColorMap();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         Player.getInstance().setTotalHits(settings.getInt("totalHits"+Game.getInstance().getKey(),0));
         Player.getInstance().setTotalShots(settings.getInt("totalShots" + Game.getInstance().getKey(), 0));
 
-        long time = settings.getLong("gameStartTime"+Game.getInstance().getKey(), 0L);
+        startGameTime(settings.getLong("gameStartTime"+Game.getInstance().getKey(), 0L));
+    }
 
+    private void startGameTime(long time){
         if (Game.getInstance().getTimeEnabled()){
             long timeLeft = Game.getInstance().getEndMinutes()*60*1000 - (System.currentTimeMillis() - time);
             new CountDownTimer(timeLeft, 1000) {
