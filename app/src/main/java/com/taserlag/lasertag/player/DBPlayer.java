@@ -1,5 +1,6 @@
 package com.taserlag.lasertag.player;
 
+import android.location.Location;
 import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
@@ -23,6 +24,10 @@ public class DBPlayer implements Comparable<DBPlayer>{
     private boolean loaded = false;
 
     private DBPlayerStats playerStats = new DBPlayerStats();
+
+    private double latitude = 0;
+
+    private double longitude = 0;
 
     public DBPlayer() {}
 
@@ -62,6 +67,21 @@ public class DBPlayer implements Comparable<DBPlayer>{
 
     public DBPlayerStats getPlayerStats() {
         return playerStats;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void saveLocation(Location location, Firebase reference) {
+        this.latitude = location.getLatitude();
+        this.longitude = location.getLongitude();
+        reference.child("latitude").setValue(this.latitude);
+        reference.child("longitude").setValue(this.longitude);
     }
 
     public void resetReady(Firebase reference){

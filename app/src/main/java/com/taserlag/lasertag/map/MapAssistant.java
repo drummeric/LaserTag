@@ -9,6 +9,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
@@ -23,14 +24,26 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.Player;
+import com.taserlag.lasertag.team.Team;
+import com.taserlag.lasertag.team.TeamIterator;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
     private final int MAP_SIZE = 125;
     private final int MAP_MARGIN = 10;
     private final int MAP_ANIMATION_DURATION = 100;
+    private final long REFRESH_TIME = 5000L;
 
     private Activity activity;
     private GoogleMap googleMap;
@@ -44,6 +57,8 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
     private int mapExpandedWidth;
     private int mapExpandedHeight;
     private int mapMargin;
+
+    private Map<String, Marker> markers = new HashMap<>();
 
     public static MapAssistant getInstance(Activity activity){
         if (instance == null) {
@@ -62,7 +77,6 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-
         Location location = null;
         // Request location updates if location permission is granted
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -93,6 +107,32 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
                     ((MapHandler) activity).handleMapClick(latLng);
             }
         });
+
+        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if (mapExpanded) {
+                    minimizeMap();
+                } else {
+                    maximizeMap();
+                }
+                return true;
+            }
+        });
+
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask mapRefreshTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        refreshMap();
+                    }
+                });
+            }
+        };
+        timer.schedule(mapRefreshTask, 0, REFRESH_TIME); //execute in every 15000 ms
     }
 
     @Override
@@ -129,6 +169,12 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         }
     }
 
+    public void cleanup(){
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.removeUpdates(this);
+        }
+    }
+
     private void calculateMapDimensions() {
         // Convert MAP_SIZE to px
         Resources r = activity.getResources();
@@ -162,14 +208,52 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
     }
 
     public void clearGoogleMap(){
-        googleMap.clear();
+        if (googleMap!=null) {
+            googleMap.clear();
+        }
+        markers.clear();
     }
 
-    public void addMarker(Location location){
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+    public void refreshMap(){
+        TeamIterator<DBPlayer> iterator = Game.getInstance().makeIterator();
+
+        while (iterator.hasNext()){
+            DBPlayer player = iterator.next();
+
+            if (!player.getName().equals(Player.getInstance().getName()) && player.getLongitude() != 0 && player.getLatitude() != 0) {
+                if (Team.getInstance().getName().equals(iterator.currentTeam())) {
+                    updateOtherMarker(player.getName(), player.getLatitude(), player.getLongitude(), R.drawable.map_marker_team);
+                } else {
+                    updateOtherMarker(player.getName(), player.getLatitude(), player.getLongitude(), R.drawable.map_marker_enemy);
+                }
+            }
+        }
+    }
+
+    public void updateOtherMarker(String name, double lat, double lng, int drawableID){
+        Marker myMarker = markers.get(name);
+        if (myMarker == null){
+            addMarker(name, lat, lng, drawableID);
+        } else {
+            myMarker.setPosition(new LatLng(lat, lng));
+        }
+    }
+
+    public void updateMyMarker(double lat, double lng){
+        Marker myMarker = markers.get(Player.getInstance().getName());
+        if (myMarker == null){
+            addMarker(Player.getInstance().getName(), lat, lng, R.drawable.map_marker_me);
+        } else {
+            myMarker.setPosition(new LatLng(lat, lng));
+        }
+    }
+
+    private void addMarker(String name, double lat, double lng, int resource){
+        LatLng latLng = new LatLng(lat, lng);
         MarkerOptions mp = new MarkerOptions();
-        mp.position(latLng).title("Current Location").flat(false).icon(BitmapDescriptorFactory.fromResource(R.drawable.maps_arrow));
-        googleMap.addMarker(mp);
+
+        mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(resource));
+        markers.put(name, googleMap.addMarker(mp));
     }
 
     public void animateCamera(Location location){

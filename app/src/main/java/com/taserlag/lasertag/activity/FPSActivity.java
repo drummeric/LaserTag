@@ -171,6 +171,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     protected void onDestroy(){
         super.onDestroy();
         mScoreboard.cleanup();
+        mapAss.cleanup();
     }
 
     //Clears back stack and finishes activity. Returns to new MenuActivity
@@ -328,6 +329,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void returnToGame(){
         //load local start time, shots, and hits
         ColorShooterTask.resetColorMap();
+        mapAss.clearGoogleMap();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         Player.getInstance().setTotalHits(settings.getInt("totalHits"+Game.getInstance().getKey(),0));
         Player.getInstance().setTotalShots(settings.getInt("totalShots" + Game.getInstance().getKey(), 0));
@@ -560,8 +562,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void handleLocChanged(Location location) {
-        mapAss.clearGoogleMap();
-        mapAss.addMarker(location);
+        Player.getInstance().saveLocation(location);
+        mapAss.updateMyMarker(location.getLatitude(),location.getLongitude());
         if (!mapAss.getMapExpanded())
             mapAss.animateCamera(location);
     }

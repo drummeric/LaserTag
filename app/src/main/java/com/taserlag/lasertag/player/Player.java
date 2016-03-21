@@ -1,5 +1,6 @@
 package com.taserlag.lasertag.player;
 
+import android.location.Location;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ import java.util.List;
 public class Player{
 
     private static final String TAG = "Player";
+    private final long LOC_REFRESH_RATE = 5000L;
 
     //health in DB is actually realHealth + shieldStrength
     private int realHealth = 100;
@@ -30,6 +32,8 @@ public class Player{
 
     private int mTotalShots;
     private int mTotalHits;
+
+    private long lastLocationUpdate = 0L;
 
     private Weapon mPrimaryWeapon = new FastWeapon();
     private Weapon mSecondaryWeapon = new StrongWeapon();
@@ -144,6 +148,14 @@ public class Player{
 
     public int[] getColor() {
         return dbUser.getColor();
+    }
+
+    public void saveLocation(Location location){
+        long now = System.currentTimeMillis();
+        if (now - LOC_REFRESH_RATE > lastLocationUpdate) {
+            dbPlayer.saveLocation(location, dbPlayerReference);
+            lastLocationUpdate = now;
+        }
     }
 
     public void archiveGame(String gameKey){
