@@ -197,7 +197,9 @@ public class Player{
     }
 
     public void readyUp() {
-        dbPlayer.readyUp(dbPlayerReference);
+        if (dbPlayer!=null) {
+            dbPlayer.readyUp(dbPlayerReference);
+        }
     }
 
     public void resetReady(){
