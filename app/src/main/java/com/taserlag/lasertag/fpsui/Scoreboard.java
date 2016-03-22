@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Typeface;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -181,8 +182,20 @@ public class Scoreboard{
             @Override
             public void populateViewHolder(final TeamScoreboardViewHolder holder, final DBTeam dbTeam, final int position) {
                 if (expanded) {
+
                     holder.teamName.setText(dbTeam.getName());
                     holder.teamScore.setText(String.valueOf(dbTeam.getScore()));
+
+                    if (Team.getInstance().getName().equals(dbTeam.getName())){
+                        holder.teamName.setTypeface(null, Typeface.BOLD_ITALIC);
+                        holder.teamScore.setTypeface(null, Typeface.BOLD_ITALIC);
+
+                    } else {
+                        holder.teamName.setTypeface(null, Typeface.NORMAL);
+                        holder.teamScore.setTypeface(null, Typeface.NORMAL);
+
+                    }
+
                     ArrayList<DBPlayer> players = new ArrayList<>(dbTeam.getPlayers().values());
                     Collections.sort(players);
                     holder.playerListView.setAdapter(new PlayerScoreAdapter(mFPS, players));
@@ -346,6 +359,15 @@ public class Scoreboard{
             viewHolder.playerKD.setText(dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
             viewHolder.layout.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
 
+            if (Player.getInstance().getName().equals(dbPlayer.getName())){
+                viewHolder.playerName.setTypeface(null, Typeface.BOLD_ITALIC);
+                viewHolder.playerScore.setTypeface(null, Typeface.BOLD_ITALIC);
+                viewHolder.playerKD.setTypeface(null, Typeface.BOLD_ITALIC);
+            } else {
+                viewHolder.playerName.setTypeface(null, Typeface.NORMAL);
+                viewHolder.playerScore.setTypeface(null, Typeface.NORMAL);
+                viewHolder.playerKD.setTypeface(null, Typeface.NORMAL);
+            }
             return view;
         }
 

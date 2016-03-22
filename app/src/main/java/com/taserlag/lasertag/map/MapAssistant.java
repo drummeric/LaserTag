@@ -49,6 +49,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
     private GoogleMap googleMap;
     private LocationManager locationManager;
     private View mMapView;
+    private Timer refreshTimer;
     private static MapAssistant instance;
 
     private boolean mapExpanded = false;
@@ -121,7 +122,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         });
 
         final Handler handler = new Handler();
-        Timer timer = new Timer();
+        refreshTimer = new Timer();
         TimerTask mapRefreshTask = new TimerTask() {
             @Override
             public void run() {
@@ -132,7 +133,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
                 });
             }
         };
-        timer.schedule(mapRefreshTask, 0, REFRESH_TIME); //execute in every 15000 ms
+        refreshTimer.schedule(mapRefreshTask, 0, REFRESH_TIME); //execute in every 15000 ms
     }
 
     @Override
@@ -173,6 +174,7 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager.removeUpdates(this);
         }
+        refreshTimer.cancel();
     }
 
     private void calculateMapDimensions() {
