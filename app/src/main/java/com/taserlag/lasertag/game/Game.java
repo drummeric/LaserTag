@@ -197,6 +197,7 @@ public class Game {
     }
 
     public void deleteGame() {
+        LaserTagApplication.firebaseReference.child("gameLocations").child(mDBGameReference.getKey()).setValue(null);
         mDBGameReference.setValue(null);
         mDBGameReference.removeEventListener(mGameListener);
         mDBGame = null;

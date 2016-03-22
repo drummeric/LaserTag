@@ -19,7 +19,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/text_view_game_name"
                 android:layout_marginBottom="4dp"
-                android:text="Game Name"
+                android:text="Loading..."
                 android:textSize="30sp"/>
 
             <TextView
@@ -28,7 +28,7 @@
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:id="@+id/text_view_game_description"
-                android:text="This is a game"/>
+                android:text=""/>
 
     </LinearLayout>
 

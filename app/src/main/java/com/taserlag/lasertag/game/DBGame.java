@@ -1,15 +1,23 @@
 package com.taserlag.lasertag.game;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
+import com.firebase.geofire.GeoLocation;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.player.DBPlayer;
-import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
-import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamIterator;
 
 import java.util.Date;
@@ -221,7 +229,7 @@ public class DBGame{
     //adds new team to game and puts me on it
     // updates static Team class with new DBTeam
     // updates User's activeGameKey
-    public boolean createTeamWithPlayer(final DBTeam dbTeam, final Firebase reference){
+    public boolean createTeamWithPlayer(final DBTeam dbTeam, final Firebase reference) {
 
         reference.child("teams").runTransaction(new Transaction.Handler() {
             @Override
@@ -247,14 +255,65 @@ public class DBGame{
         return true;
     }
 
-    public void saveGameOver(Firebase reference){
+    public void saveGameOver(Firebase reference) {
         reference.child("gameOver").setValue(true);
     }
 
-    public Firebase saveNewGame(){
-        Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
+    public Firebase saveNewGame() {
+        final Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
         ref.setValue(this);
+
+        if (!storeLocation(ref.getKey(), LocationManager.GPS_PROVIDER)){
+            storeLocation(ref.getKey(),LocationManager.NETWORK_PROVIDER);
+        }
         return ref;
+    }
+
+    // stores GeoFire Location with key using provider
+    // initially uses lastKnownLocation and then updates once when updated location available
+    private boolean storeLocation(final String key, String provider){
+        final LocationManager locationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
+        // Request location updates if location permission is granted
+        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (locationManager.isProviderEnabled(provider)) {
+
+                //set lastKnownLocation as Game location so friends can join immediately
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (location!=null) {
+                    LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                }
+
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        if (Game.getInstance().getKey().equals(key)) {
+                            //update the Game location to real current location when available and close listener so only store once
+                            LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                        }
+                        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            locationManager.removeUpdates(this);
+                        }
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                    }
+
+                    @Override
+                    public void onProviderEnabled(String provider) {
+
+                    }
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+
+                    }
+                });
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
