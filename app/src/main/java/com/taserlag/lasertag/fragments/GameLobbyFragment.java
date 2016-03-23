@@ -115,11 +115,7 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
         Game.getInstance().leaveGame();
         Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
         Toast.makeText(LaserTagApplication.getAppContext(), "The game host has left the lobby!", Toast.LENGTH_SHORT).show();
-        getActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
-                .commit();
-        getActivity().getSupportFragmentManager().popBackStack();
+        getActivity().getSupportFragmentManager().popBackStack(MenuActivity.MenuFragId, 0);
     }
 
     private void init(final View view){
@@ -146,19 +142,14 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
                     Game.getInstance().unregisterForUpdates(GameLobbyFragment.this);
-                    if (Game.getInstance().getHost().equals(Player.getInstance().getName())){
+                    if (Game.getInstance().getReference()!= null && Game.getInstance().getHost().equals(Player.getInstance().getName())){
                         Game.getInstance().deleteGame();
                     } else if (Team.getInstance().getDBTeam()!=null){
                         Team.getInstance().removeDBPlayer();
                     }
 
                     Game.getInstance().leaveGame();
-
-                    getActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .remove(getActivity().getSupportFragmentManager().findFragmentByTag("game_lobby_fragment"))
-                            .commit();
-                    getActivity().getSupportFragmentManager().popBackStack();
+                    getActivity().getSupportFragmentManager().popBackStack(MenuActivity.MenuFragId, 0);
                 }
                 return true;
             }

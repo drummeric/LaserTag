@@ -1,31 +1,18 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="@dimen/activity_vertical_margin"
-    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-    android:layout_marginRight="@dimen/activity_horizontal_margin"
-    android:layout_marginTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
     tools:context="com.taserlag.lasertag.fragments.GameLobbyFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
-        android:text="Select Game"
-        android:textSize="50sp"
-        android:layout_gravity="center_horizontal"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="*Only displaying games found within 1 mile*"
-        android:textSize="15sp"
-        android:layout_gravity="center_horizontal"/>
-
-    <android.support.v7.widget.RecyclerView
+    <fragment
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:id="@+id/map_join_game"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/recycler_view_game"/>
+        android:layout_height="match_parent"
+        map:mapType="normal"
+        map:uiMapToolbar="false"
+        />
 
-</LinearLayout>
+</RelativeLayout>

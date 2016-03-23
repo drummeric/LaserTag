@@ -1,29 +1,34 @@
 package com.taserlag.lasertag.fragments;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.firebase.geofire.GeoLocation;
-import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryEventListener;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
@@ -33,19 +38,17 @@ import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class JoinGameFragment extends Fragment{
+public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
 
     private final String TAG = "JoinGameFragment";
-    //1.609 KM = 1 Mile
-    private final double SEARCH_RADIUS = 1.60934;
 
-    private RecyclerView.Adapter mAdapter;
-    private GeoQuery mGeoQuery;
+    private Map<String, Marker> gameMarkers = new HashMap<>();
 
-    private List<String> nearbyGames = new ArrayList<>();
+    private GoogleMap mGoogleMap;
+    private SupportMapFragment mMapFragment;
 
     public JoinGameFragment() {
         // Required empty public constructor
@@ -62,101 +65,103 @@ public class JoinGameFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_join_game, container, false);
         //just in case
         Game.getInstance().leaveGame();
-        init(view);
+        init();
         return view;
     }
 
     @Override
-    public void onDestroyView(){
-        super.onDestroyView();
-        mGeoQuery.removeAllListeners();
+    public void onResume(){
+        super.onResume();
+
+        try {
+            if (mMapFragment == null) {
+                mMapFragment = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_join_game));
+                getChildFragmentManager().beginTransaction().add(mMapFragment, "join_game_map").commit();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        init();
     }
 
-    private void init(View view){
-        //init GeoQuery w/ bs location within 1 mile
-        mGeoQuery = LaserTagApplication.geoFire.queryAtLocation(new GeoLocation(0,0), SEARCH_RADIUS);
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
 
-        //resets center of GeoQuery
-        if (!updateQueryLocation(LocationManager.GPS_PROVIDER)){
-            updateQueryLocation(LocationManager.NETWORK_PROVIDER);
+        try {
+            getChildFragmentManager().beginTransaction().remove(mMapFragment).commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        mMapFragment = null;
+        gameMarkers.clear();
+    }
 
-        //keeps nearbyGames updated when games are added/deleted
-        mGeoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+    private void init() {
+        mMapFragment = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_join_game));
+        mMapFragment.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(final GoogleMap googleMap) {
+        mGoogleMap = googleMap;
+
+        mGoogleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
             @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                if (!nearbyGames.contains(key)) {
-                    nearbyGames.add(key);
-                    mAdapter.notifyDataSetChanged();
-                }
+            public View getInfoWindow(Marker arg0) {
+                return null;
             }
 
             @Override
-            public void onKeyExited(String key) {
-                nearbyGames.remove(key);
-                mAdapter.notifyDataSetChanged();
-            }
+            public View getInfoContents(final Marker marker) {
 
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-                // no op
-            }
+                LinearLayout info = new LinearLayout(getContext());
+                info.setOrientation(LinearLayout.VERTICAL);
+                int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
 
-            @Override
-            public void onGeoQueryReady() {
-                // no op
-            }
+                info.setLayoutParams(new LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT));
 
-            @Override
-            public void onGeoQueryError(FirebaseError error) {
-                // no op
+                TextView title = new TextView(getContext());
+                title.setTextColor(Color.BLACK);
+                title.setGravity(Gravity.CENTER);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setText(marker.getTitle().split(":~")[0]);
+
+                TextView description = new TextView(getContext());
+                description.setTextColor(Color.GRAY);
+                description.setText(marker.getSnippet());
+
+                info.addView(title);
+                info.addView(description);
+
+                return info;
             }
         });
 
-        //init Recycler
-        // uses the list that gets updated by GeoQuery
-        RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_game);
-        recycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        mAdapter = new RecyclerView.Adapter() {
+        mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
-            public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_game,parent,false);
-                return new GameViewHolder(view);
-            }
-
-            @Override
-            public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, final int position) {
-                final GameViewHolder holder = (GameViewHolder) viewHolder;
-                LaserTagApplication.firebaseReference.child("games").child(nearbyGames.get(position)).addValueEventListener(new ValueEventListener() {
+            public void onInfoWindowClick(Marker marker) {
+                LaserTagApplication.firebaseReference.child("games").child(marker.getTitle().split(":~")[1]).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        final DBGame dbGame = dataSnapshot.getValue(DBGame.class);
-                        if (dbGame != null) {
-                            LaserTagApplication.firebaseReference.child("games").child(nearbyGames.get(position)).removeEventListener(this);
-                            holder.gameName.setText(dbGame.getHost() + "'s Game");
-                            holder.gameDescription.setText(dbGame.toString());
 
-                            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Game.getInstance(dbGame, LaserTagApplication.firebaseReference.child("games").child(nearbyGames.get(position)));
-                                    DBTeam foundTeam = Game.getInstance().findPlayer(Player.getInstance().getName());
-                                    if (Game.getInstance().isGameOver()) {
-                                        Toast.makeText(LaserTagApplication.getAppContext(), "This game is over!", Toast.LENGTH_SHORT).show();
-                                    } else if (Game.getInstance().isGameReady()) {
-                                        if (foundTeam != null) {
-                                            Team.getInstance(foundTeam);
-                                            Player.getInstance().join();
-                                            ((MenuActivity) getActivity()).launchFPS();
-                                        } else {
-                                            Toast.makeText(LaserTagApplication.getAppContext(), "This game has started already!", Toast.LENGTH_SHORT).show();
-                                        }
-                                    } else {
-                                        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
-                                    }
-                                }
-                            });
-                        }
+                        DBGame dbGame = dataSnapshot.getValue(DBGame.class);
+
+                        Game.getInstance(dbGame, dataSnapshot.getRef());
+                        DBTeam foundTeam = Game.getInstance().findPlayer(Player.getInstance().getName());
+                        if (Game.getInstance().isGameOver()) {
+                            Toast.makeText(LaserTagApplication.getAppContext(), "This game is over!", Toast.LENGTH_SHORT).show();
+                        } else if (Game.getInstance().isGameReady()) {
+                            if (foundTeam != null) {
+                                Team.getInstance(foundTeam);
+                                Player.getInstance().join();
+                                ((MenuActivity) getActivity()).launchFPS();
+                            } else {
+                                Toast.makeText(LaserTagApplication.getAppContext(), "This game has started already!", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");                        }
                     }
 
                     @Override
@@ -165,63 +170,79 @@ public class JoinGameFragment extends Fragment{
                     }
                 });
             }
+        });
+
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //please no
+            return;
+        }
+
+        //centers camera on Gainesville
+        mGoogleMap.setMyLocationEnabled(true);
+        mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+        CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(29.652,-82.325),10);
+        mGoogleMap.animateCamera(centerGainesville);
+
+        //adds marks
+        LaserTagApplication.firebaseReference.child("gameLocations").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                if (!gameMarkers.containsKey(dataSnapshot.getKey())) {
+                    double lat = dataSnapshot.child("l").child("0").getValue(Double.class);
+                    double lng = dataSnapshot.child("l").child("1").getValue(Double.class);
+                    addGameMarker(dataSnapshot.getKey(), lat, lng);
+                }
+            }
 
             @Override
-            public int getItemCount() {
-                return nearbyGames.size();
-            }
-        };
-        recycler.setAdapter(mAdapter);
-    }
-
-    public static class GameViewHolder extends RecyclerView.ViewHolder {
-        CardView cv;
-        TextView gameName;
-        TextView gameDescription;
-
-        public GameViewHolder(View itemView) {
-            super(itemView);
-            cv = (CardView)itemView.findViewById(R.id.card_view_game);
-            gameName = (TextView)itemView.findViewById(R.id.text_view_game_name);
-            gameDescription = (TextView)itemView.findViewById(R.id.text_view_game_description);
-        }
-    }
-
-    // stores GeoFire Location with key using provider
-    // initially uses lastKnownLocation and then updates once when updated location available
-    private boolean updateQueryLocation(String provider){
-        final LocationManager locationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
-        // Request location updates if location permission is granted
-        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (locationManager.isProviderEnabled(provider)) {
-
-                //set lastKnownLocation as Game location so friends can join immediately
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location!=null) {
-                    mGeoQuery.setCenter(new GeoLocation(location.getLatitude(), location.getLongitude()));
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                if (gameMarkers.containsKey(dataSnapshot.getKey())) {
+                    double lat = dataSnapshot.child("l").child("0").getValue(Double.class);
+                    double lng = dataSnapshot.child("l").child("1").getValue(Double.class);
+                    gameMarkers.get(dataSnapshot.getKey()).setPosition(new LatLng(lat, lng));
                 }
-
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
-                        mGeoQuery.setCenter(new GeoLocation(location.getLatitude(), location.getLongitude()));
-                        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                            locationManager.removeUpdates(this);
-                        }
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-                    @Override
-                    public void onProviderEnabled(String provider) {}
-
-                    @Override
-                    public void onProviderDisabled(String provider) {}
-                });
-                return true;
             }
-        }
-        return false;
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                if (gameMarkers.containsKey(dataSnapshot.getKey())) {
+                    gameMarkers.remove(dataSnapshot.getKey()).remove();
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                //no op
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    private void addGameMarker(final String gameKey, double lat, double lng){
+        final LatLng latLng = new LatLng(lat, lng);
+        final MarkerOptions mp = new MarkerOptions();
+
+        LaserTagApplication.firebaseReference.child("games").child(gameKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                DBGame dbGame = dataSnapshot.getValue(DBGame.class);
+                if (dbGame != null) {
+                    LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
+                    mp.title(dbGame.getGameType().toString() + " Game:~" + gameKey).snippet(dbGame.toString());
+                    mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(R.drawable.gamemapicon));
+                    gameMarkers.put(gameKey, mGoogleMap.addMarker(mp));
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 }

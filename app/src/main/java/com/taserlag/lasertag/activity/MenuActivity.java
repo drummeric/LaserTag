@@ -25,17 +25,18 @@ public class MenuActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
 
+    public static int MenuFragId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Player.getInstance();
 
         setContentView(R.layout.activity_menu);
 
         if (getSupportFragmentManager().findFragmentById(R.id.menu_frame) == null) {
             MainMenuFragment mf = new MainMenuFragment();
-            addFragment(R.id.menu_frame, mf, "main_menu_fragment");
+            MenuFragId = addFragment(R.id.menu_frame, mf, "main_menu_fragment");
         }
     }
 
@@ -81,10 +82,11 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
-    protected void addFragment(int containerViewID, Fragment fragment, String tag) {
-        getSupportFragmentManager()
+    public int addFragment(int containerViewID, Fragment fragment, String tag) {
+        return getSupportFragmentManager()
                 .beginTransaction()
                 .add(containerViewID, fragment, tag)
+                .addToBackStack(tag)
                 .commit();
     }
 
@@ -92,7 +94,7 @@ public class MenuActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(containerViewID, fragment, tag)
-                .addToBackStack(null)
+                .addToBackStack(tag)
                 .commit();
     }
 
@@ -140,4 +142,19 @@ public class MenuActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    public void onBackPressed(){
+        if (getActiveFragment().equals("main_menu_fragment")){
+            System.exit(1);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    public String getActiveFragment() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            return null;
+        }
+        return getSupportFragmentManager().getBackStackEntryAt(getSupportFragmentManager().getBackStackEntryCount() - 1).getName();
+    }
 }

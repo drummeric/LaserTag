@@ -286,7 +286,7 @@ public class DBGame{
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
                     @Override
                     public void onLocationChanged(Location location) {
-                        if (Game.getInstance().getKey().equals(key)) {
+                        if (Game.getInstance().getReference()!=null && Game.getInstance().getKey().equals(key)) {
                             //update the Game location to real current location when available and close listener so only store once
                             LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
                         }
