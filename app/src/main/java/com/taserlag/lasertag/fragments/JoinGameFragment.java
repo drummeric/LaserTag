@@ -232,10 +232,12 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 DBGame dbGame = dataSnapshot.getValue(DBGame.class);
                 if (dbGame != null) {
-                    LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
-                    mp.title(dbGame.getGameType().toString() + " Game:~" + gameKey).snippet(dbGame.toString());
-                    mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(R.drawable.gamemapicon));
-                    gameMarkers.put(gameKey, mGoogleMap.addMarker(mp));
+                    if (!gameMarkers.containsKey(gameKey)) {
+                        LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
+                        mp.title(dbGame.getGameType().toString() + " Game:~" + gameKey).snippet(dbGame.toString());
+                        mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(R.drawable.gamemapicon));
+                        gameMarkers.put(gameKey, mGoogleMap.addMarker(mp));
+                    }
                 }
             }
 
