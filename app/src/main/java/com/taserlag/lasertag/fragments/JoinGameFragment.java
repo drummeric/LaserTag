@@ -48,6 +48,7 @@ import java.util.Map;
 public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
 
     private final String TAG = "JoinGameFragment";
+    private final int INITIAL_ZOOM = 15;
 
     private Map<String, Marker> gameMarkers = new HashMap<>();
 
@@ -74,7 +75,7 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
 
         try {
@@ -165,7 +166,8 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
                                 Toast.makeText(LaserTagApplication.getAppContext(), "This game has started already!", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");                        }
+                            ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
+                        }
                     }
 
                     @Override
@@ -278,19 +280,20 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (locationManager.isProviderEnabled(provider)) {
 
-                //set lastKnownLocation as Game location so friends can join immediately
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location!=null) {
-                    CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),13);
-                    mGoogleMap.animateCamera(centerGainesville);
+                if (location != null) {
+                    CameraUpdate centerMe = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), INITIAL_ZOOM);
+                    mGoogleMap.animateCamera(centerMe);
                 }
-
 
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
                     @Override
                     public void onLocationChanged(Location location) {
-                        CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),13);
-                        mGoogleMap.animateCamera(centerGainesville);
+                        CameraUpdate centerMe = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), INITIAL_ZOOM);
+                        mGoogleMap.animateCamera(centerMe);
+                        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                            locationManager.removeUpdates(this);
+                        }
                     }
 
                     @Override
