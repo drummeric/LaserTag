@@ -118,6 +118,11 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
         getActivity().getSupportFragmentManager().popBackStack(MenuActivity.MenuFragId, 0);
     }
 
+    @Override
+    public void notifyGameScoreUpdated() {
+        //will not happen in this screen
+    }
+
     private void init(final View view){
         if (view != null && Game.getInstance().getDBGame() != null) {
             initBackButton(view);

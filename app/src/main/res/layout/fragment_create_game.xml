@@ -198,25 +198,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
                         android:gravity="center"
-                        android:id="@+id/switch_private" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:text="Private Match (requires invite to join)"
-                        android:textSize="15sp"/>
-
-                </TableRow>
-
-                <TableRow
-                    android:layout_marginBottom="15dp">
-
-                    <Switch
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:gravity="center"
                         android:id="@+id/switch_friendly_fire" />
 
                     <TextView

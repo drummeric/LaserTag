@@ -45,7 +45,7 @@ import com.taserlag.lasertag.team.Team;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
+public class JoinGameFragment extends Fragment implements OnMapReadyCallback, LocationListener {
 
     private final String TAG = "JoinGameFragment";
     private final int INITIAL_ZOOM = 15;
@@ -54,6 +54,7 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap mGoogleMap;
     private SupportMapFragment mMapFragment;
+    private LocationManager mLocationManager;
 
     public JoinGameFragment() {
         // Required empty public constructor
@@ -100,9 +101,13 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
         }
         mMapFragment = null;
         gameMarkers.clear();
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+            mLocationManager.removeUpdates(this);
+        }
     }
 
     private void init() {
+        mLocationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
         mMapFragment = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_join_game));
         mMapFragment.getMapAsync(this);
     }
@@ -275,42 +280,41 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private boolean centerMapOnMyLocation(String provider){
-        final LocationManager locationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
         // Request location updates if location permission is granted
         if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (locationManager.isProviderEnabled(provider)) {
+            if (mLocationManager.isProviderEnabled(provider)) {
 
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                Location location = mLocationManager.getLastKnownLocation(provider);
                 if (location != null) {
                     CameraUpdate centerMe = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), INITIAL_ZOOM);
                     mGoogleMap.animateCamera(centerMe);
                 }
 
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
-                        CameraUpdate centerMe = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), INITIAL_ZOOM);
-                        mGoogleMap.animateCamera(centerMe);
-                        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                            locationManager.removeUpdates(this);
-                        }
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {
-                    }
-
-                    @Override
-                    public void onProviderEnabled(String provider) {
-                    }
-
-                    @Override
-                    public void onProviderDisabled(String provider) {
-                    }
-                });
+                mLocationManager.requestLocationUpdates(provider, 0, 0, this);
                 return true;
             }
         }
         return false;
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        CameraUpdate centerMe = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), INITIAL_ZOOM);
+        mGoogleMap.animateCamera(centerMe);
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocationManager.removeUpdates(this);
+        }
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
     }
 }

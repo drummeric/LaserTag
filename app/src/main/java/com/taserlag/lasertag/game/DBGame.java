@@ -41,7 +41,7 @@ public class DBGame{
 
     private int maxTeamSize;
 
-    private boolean privateMatch;
+    private int totalScore = 0;
 
     private boolean friendlyFire;
 
@@ -113,12 +113,8 @@ public class DBGame{
         this.maxTeamSize = size;
     }
 
-    public boolean getPrivateMatch() {
-        return privateMatch;
-    }
-
-    public void setPrivateMatch(boolean privateMatch) {
-        this.privateMatch = privateMatch;
+    public int getTotalScore() {
+        return totalScore;
     }
 
     public boolean getFriendlyFire() {
@@ -226,6 +222,25 @@ public class DBGame{
         });
     }
 
+    //increment running game score to keep scoreboard updated
+    public void incrementTotalScore(final int value, final Firebase reference) {
+        reference.child("totalScore").runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                if (mutableData.getValue(Integer.class) == null) {
+                    mutableData.setValue(0);
+                } else {
+                    mutableData.setValue(mutableData.getValue(Integer.class) + value);
+                }
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
+            }
+        });
+    }
+
     //adds new team to game and puts me on it
     // updates static Team class with new DBTeam
     // updates User's activeGameKey
@@ -278,12 +293,12 @@ public class DBGame{
             if (locationManager.isProviderEnabled(provider)) {
 
                 //set lastKnownLocation as Game location so friends can join immediately
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                Location location = locationManager.getLastKnownLocation(provider);
                 if (location!=null) {
                     LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
                 }
 
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
+                locationManager.requestLocationUpdates(provider, 0, 0, new LocationListener() {
                     @Override
                     public void onLocationChanged(Location location) {
                         if (Game.getInstance().getReference()!=null && Game.getInstance().getKey().equals(key)) {
@@ -321,10 +336,6 @@ public class DBGame{
         StringBuilder description = new StringBuilder();
 
         description.append(getHost()).append("'s ");
-
-        if (getPrivateMatch()) {
-            description.append("private ");
-        }
 
         description.append(getGameType()).append(" game ");
 

@@ -100,7 +100,6 @@ public class CreateGameFragment extends Fragment {
         dbGame.setEndMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
         dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
         dbGame.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
-        dbGame.setPrivateMatch(((Switch) getView().findViewById(R.id.switch_private)).isChecked());
         dbGame.setDate(new Date());
 
         //save new game to DB (with push) and start game lobby

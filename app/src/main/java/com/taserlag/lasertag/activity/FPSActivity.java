@@ -278,6 +278,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void notifyGameOver(){
+        mapAss.cleanup();
         //save a reference to this game for viewing stats
         Player.getInstance().archiveGame(Game.getInstance().getKey());
 
@@ -295,6 +296,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     public void notifyGameDeleted(){
         //better not happen
+    }
+
+    @Override
+    public void notifyGameScoreUpdated() {
+        mScoreboard.notifyScoreUpdated();
     }
 
     private void startRespawnDialog(){

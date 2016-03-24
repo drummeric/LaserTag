@@ -48,7 +48,7 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     @Override
     protected String doInBackground(byte[]... data) {
         byte[] cameraData = data[0];
-        if (isCancelled()){
+        if (isCancelled() || cameraData == null){
             return "";
         }
 

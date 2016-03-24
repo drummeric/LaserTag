@@ -14,6 +14,7 @@ import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamIterator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +57,11 @@ public class Game {
                     if (!mDBGame.isGameOver()&&newDBGame.isGameOver()){
                         notifyFollowersOver();
                     }
+
+                    if (mDBGame.getTotalScore()!=newDBGame.getTotalScore()){
+                        notifyFollowersScoreUpdated();
+                    }
+
                 } else if (newDBGame==null && !Player.getInstance().getName().equals(mDBGame.getHost())) {
                     notifyFollowersDeleted();
                 }
@@ -121,10 +127,6 @@ public class Game {
         return mDBGame.getMaxTeamSize();
     }
 
-    public boolean getPrivateMatch() {
-        return mDBGame.getPrivateMatch();
-    }
-
     public boolean getFriendlyFire() {
         return mDBGame.getFriendlyFire();
     }
@@ -159,6 +161,10 @@ public class Game {
 
     public void saveGameOver(){
         mDBGame.saveGameOver(mDBGameReference);
+    }
+
+    public void incrementTotalScore(int value){
+        mDBGame.incrementTotalScore(value, mDBGameReference);
     }
 
     // finds player in game (call as little as possible)
@@ -240,6 +246,12 @@ public class Game {
         }
     }
 
+    private static void notifyFollowersScoreUpdated() {
+        for (GameFollower follower : followers) {
+            follower.notifyGameScoreUpdated();
+        }
+    }
+
     private static void notifyFollowersDeleted() {
         for (GameFollower follower : followers) {
             follower.notifyGameDeleted();
@@ -267,6 +279,12 @@ public class Game {
                 mDBGameReference.removeEventListener(mGameListener);
             }
         }
+    }
+
+    public List<DBTeam> getSortedTeams(){
+        List<DBTeam> teamList = new ArrayList<>(mDBGame.getTeams().values());
+        Collections.sort(teamList);
+        return teamList;
     }
 
     @Override

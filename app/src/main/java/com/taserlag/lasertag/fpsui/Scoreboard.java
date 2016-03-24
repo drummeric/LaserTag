@@ -58,7 +58,8 @@ public class Scoreboard{
 
     private Query mTeamQuery;
     private ValueEventListener mTeamListener;
-    private FirebaseRecyclerAdapter mExpandedScoreboardAdapter;
+    private RecyclerView.Adapter mExpandedScoreboardAdapter;
+    private RecyclerView mRecycler;
 
     private View mScoreboard;
     private View playerStatus;
@@ -176,38 +177,10 @@ public class Scoreboard{
     }
 
     private void initExpandedScoreboard(View view){
-        RecyclerView recycler = (RecyclerView) view.findViewById(R.id.recycler_view_fps_scoreboard);
-        mExpandedScoreboardAdapter = new FirebaseRecyclerAdapter<DBTeam, TeamScoreboardViewHolder>(DBTeam.class, R.layout.card_team_scoreboard, TeamScoreboardViewHolder.class, Game.getInstance().getReference().child("teams").orderByChild("score")) {
-
-            @Override
-            public void populateViewHolder(final TeamScoreboardViewHolder holder, final DBTeam dbTeam, final int position) {
-                if (expanded) {
-
-                    holder.teamName.setText(dbTeam.getName());
-                    holder.teamScore.setText(String.valueOf(dbTeam.getScore()));
-
-                    if (Team.getInstance().getName().equals(dbTeam.getName())){
-                        holder.teamName.setTypeface(null, Typeface.BOLD_ITALIC);
-                        holder.teamScore.setTypeface(null, Typeface.BOLD_ITALIC);
-
-                    } else {
-                        holder.teamName.setTypeface(null, Typeface.NORMAL);
-                        holder.teamScore.setTypeface(null, Typeface.NORMAL);
-
-                    }
-
-                    ArrayList<DBPlayer> players = new ArrayList<>(dbTeam.getPlayers().values());
-                    Collections.sort(players);
-                    holder.playerListView.setAdapter(new PlayerScoreAdapter(mFPS, players));
-                    setListViewHeightBasedOnItems(holder.playerListView);
-                }
-            }
-        };
-        LinearLayoutManager manager = new LinearLayoutManager(mFPS);
-        manager.setReverseLayout(true);
-        manager.setStackFromEnd(true);
-        recycler.setLayoutManager(manager);
-        recycler.setAdapter(mExpandedScoreboardAdapter);
+        mRecycler = (RecyclerView) view.findViewById(R.id.recycler_view_fps_scoreboard);
+        mExpandedScoreboardAdapter = new TeamScoreAdapter();
+        mRecycler.setLayoutManager(new LinearLayoutManager(mFPS));
+        mRecycler.setAdapter(mExpandedScoreboardAdapter);
     }
 
     private void expandScoreboard(){
@@ -262,7 +235,7 @@ public class Scoreboard{
 
     public void cleanup(){
         mTeamQuery.removeEventListener(mTeamListener);
-        mExpandedScoreboardAdapter.cleanup();
+        mRecycler.setAdapter(null);
     }
 
     public void endGame(){
@@ -284,7 +257,7 @@ public class Scoreboard{
         expandScoreboard();
 
         //make sure scoreboard no longer updates: game about to get deleted
-        cleanup();
+        mTeamQuery.removeEventListener(mTeamListener);
     }
 
     //returns semi transparent form of passed color
@@ -316,16 +289,62 @@ public class Scoreboard{
         }
     }
 
-    public static class TeamScoreboardViewHolder extends RecyclerView.ViewHolder {
-        TextView teamName;
-        TextView teamScore;
-        ListView playerListView;
+    public void notifyScoreUpdated(){
+        mExpandedScoreboardAdapter.notifyDataSetChanged();
+    }
 
-        public TeamScoreboardViewHolder(View itemView) {
-            super(itemView);
-            teamName = (TextView) itemView.findViewById(R.id.text_team_scoreboard_name);
-            teamScore = (TextView) itemView.findViewById(R.id.text_team_scoreboard_score);
-            playerListView = (ListView) itemView.findViewById(R.id.list_view_scoreboard_players);
+    public class TeamScoreAdapter extends RecyclerView.Adapter<TeamScoreAdapter.TeamScoreboardViewHolder>{
+
+        @Override
+        public TeamScoreboardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_team_scoreboard,parent,false);
+            return new TeamScoreboardViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(TeamScoreboardViewHolder holder, int position) {
+            DBTeam dbTeam = Game.getInstance().getSortedTeams().get(position);
+            if (expanded) {
+
+                holder.teamName.setText(dbTeam.getName());
+                holder.teamScore.setText(String.valueOf(dbTeam.getScore()));
+
+                if (Team.getInstance().getName().equals(dbTeam.getName())){
+                    holder.teamName.setTypeface(null, Typeface.BOLD_ITALIC);
+                    holder.teamScore.setTypeface(null, Typeface.BOLD_ITALIC);
+
+                } else {
+                    holder.teamName.setTypeface(null, Typeface.NORMAL);
+                    holder.teamScore.setTypeface(null, Typeface.NORMAL);
+
+                }
+
+                ArrayList<DBPlayer> players = new ArrayList<>(dbTeam.getPlayers().values());
+                Collections.sort(players);
+                holder.playerListView.setAdapter(new PlayerScoreAdapter(mFPS, players));
+                setListViewHeightBasedOnItems(holder.playerListView);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            if (Game.getInstance().getDBGame()!=null){
+                return Game.getInstance().getSortedTeams().size();
+            }
+            return 0;
+        }
+
+        public class TeamScoreboardViewHolder extends RecyclerView.ViewHolder {
+            TextView teamName;
+            TextView teamScore;
+            ListView playerListView;
+
+            public TeamScoreboardViewHolder(View itemView) {
+                super(itemView);
+                teamName = (TextView) itemView.findViewById(R.id.text_team_scoreboard_name);
+                teamScore = (TextView) itemView.findViewById(R.id.text_team_scoreboard_score);
+                playerListView = (ListView) itemView.findViewById(R.id.list_view_scoreboard_players);
+            }
         }
     }
 

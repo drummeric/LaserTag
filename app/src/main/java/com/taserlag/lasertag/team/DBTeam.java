@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class DBTeam {
+public class DBTeam implements Comparable<DBTeam>{
 
     private final static String TAG = "DBTeam";
 
@@ -255,6 +255,7 @@ public class DBTeam {
             @Override
             public void onComplete(FirebaseError firebaseError, boolean b, DataSnapshot dataSnapshot) {
                 Log.i(TAG, "Successfully incremented score for team " + reference.getKey());
+                Game.getInstance().incrementTotalScore(value);
             }
         });
     }
@@ -270,5 +271,16 @@ public class DBTeam {
 
     public Iterator<DBPlayer> makeIterator() {
         return players.values().iterator();
+    }
+
+    @Override
+    public int compareTo(DBTeam other) {
+        if (name.equals(other.getName())) {
+            return 0;
+        } else if (getScore() != other.getScore()) {
+            return other.getScore() - getScore();
+        } else {
+            return 0;
+        }
     }
 }

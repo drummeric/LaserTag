@@ -11,4 +11,6 @@ public interface GameFollower {
     void notifyGameOver();
 
     void notifyGameDeleted();
+
+    void notifyGameScoreUpdated();
 }
