@@ -1,9 +1,13 @@
 package com.taserlag.lasertag.fragments;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -180,8 +184,10 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
         //centers camera on Gainesville
         mGoogleMap.setMyLocationEnabled(true);
         mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
-        CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(29.652,-82.325),10);
-        mGoogleMap.animateCamera(centerGainesville);
+
+        if (!centerMapOnMyLocation(LocationManager.GPS_PROVIDER)){
+            centerMapOnMyLocation(LocationManager.NETWORK_PROVIDER);
+        }
 
         //adds marks
         LaserTagApplication.firebaseReference.child("gameLocations").addChildEventListener(new ChildEventListener() {
@@ -232,11 +238,29 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 DBGame dbGame = dataSnapshot.getValue(DBGame.class);
                 if (dbGame != null) {
+                    int resource;
+
                     if (!gameMarkers.containsKey(gameKey)) {
-                        LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
+                        if (dbGame.isGameReady()) {
+                            resource = R.drawable.gamemapiconinprogress;
+                            LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
+                        } else {
+                            resource = R.drawable.gamemapicon;
+                        }
+
                         mp.title(dbGame.getGameType().toString() + " Game:~" + gameKey).snippet(dbGame.toString());
-                        mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(R.drawable.gamemapicon));
+                        mp.position(latLng).flat(true).icon(BitmapDescriptorFactory.fromResource(resource));
                         gameMarkers.put(gameKey, mGoogleMap.addMarker(mp));
+
+                    } else {
+                        if (dbGame.isGameReady()) {
+                            resource = R.drawable.gamemapiconinprogress;
+                            LaserTagApplication.firebaseReference.child("games").child(gameKey).removeEventListener(this);
+                        } else {
+                            resource = R.drawable.gamemapicon;
+                        }
+
+                        gameMarkers.get(gameKey).setIcon(BitmapDescriptorFactory.fromResource(resource));
                     }
                 }
             }
@@ -246,5 +270,44 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback {
 
             }
         });
+    }
+
+    private boolean centerMapOnMyLocation(String provider){
+        final LocationManager locationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
+        // Request location updates if location permission is granted
+        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (locationManager.isProviderEnabled(provider)) {
+
+                //set lastKnownLocation as Game location so friends can join immediately
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (location!=null) {
+                    CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),13);
+                    mGoogleMap.animateCamera(centerGainesville);
+                }
+
+
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        CameraUpdate centerGainesville= CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),13);
+                        mGoogleMap.animateCamera(centerGainesville);
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                    }
+
+                    @Override
+                    public void onProviderEnabled(String provider) {
+                    }
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+                    }
+                });
+                return true;
+            }
+        }
+        return false;
     }
 }
