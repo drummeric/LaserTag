@@ -55,6 +55,7 @@ public class Scoreboard{
     private int mScoreboardExpandedHeight;
 
     private boolean expanded = false;
+    private boolean dimensionsCalculated = false;
 
     private Query mTeamQuery;
     private ValueEventListener mTeamListener;
@@ -100,7 +101,10 @@ public class Scoreboard{
                 float width = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCOREBOARD_EXPANDED_WIDTH, r.getDisplayMetrics());
                 mScoreboardExpandedWidth = Math.round(width);
                 mScoreboardExpandedHeight = Math.round(metrics.heightPixels - 2 * margin);
-                mScoreboard.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                if (dimensionsCalculated) {
+                    mScoreboard.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+                dimensionsCalculated = true;
             }
         });
     }
