@@ -90,7 +90,7 @@ public class Scoreboard{
         mScoreboard.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                mScoreboardWidth = mScoreboard.getMeasuredWidth();
+                mScoreboardWidth = mScoreboard.getMeasuredWidth() + 50;
                 mScoreboardHeight = mScoreboard.getMeasuredHeight();
 
                 Resources r = mFPS.getResources();
