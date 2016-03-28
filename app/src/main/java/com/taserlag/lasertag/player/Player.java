@@ -142,8 +142,8 @@ public class Player{
         return dbPlayer.getPlayerStats().isCaptain();
     }
 
-    public void setCaptain(boolean captain) {
-        dbPlayer.getPlayerStats().setCaptain(captain);
+    public void saveCaptain(boolean captain) {
+        dbPlayer.getPlayerStats().saveCaptain(captain, dbPlayerReference.child("playerStats"));
     }
 
     public int[] getColor() {
@@ -299,5 +299,4 @@ public class Player{
     public void unregisterForUpdates(PlayerFollower follower) {
         followers.remove(follower);
     }
-
 }

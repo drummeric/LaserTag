@@ -11,9 +11,12 @@ import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class DBTeam implements Comparable<DBTeam>{
 
@@ -26,6 +29,8 @@ public class DBTeam implements Comparable<DBTeam>{
     private boolean ready = false;
 
     private boolean loaded = false;
+
+    private boolean captainDead = false;
 
     private Map<String, DBPlayer> players = new HashMap<>();
 
@@ -57,6 +62,15 @@ public class DBTeam implements Comparable<DBTeam>{
 
     private void setLoaded(){
         loaded = true;
+    }
+
+    public boolean isCaptainDead() {
+        return captainDead;
+    }
+
+    public void saveCaptainDead(boolean captainDead, Firebase reference) {
+        this.captainDead = captainDead;
+        reference.child("captainDead").setValue(captainDead);
     }
 
     public Map<String, DBPlayer> getPlayers() {
@@ -265,8 +279,18 @@ public class DBTeam implements Comparable<DBTeam>{
         return (dbTeam instanceof DBTeam) && (((DBTeam) dbTeam).getName().equals(name));
     }
 
-    public void setCaptain(){
-        //todo write this function
+    //resets calling player's captain boolean and selects new captain
+    public void resetTeamCaptain(){
+        Player.getInstance().saveCaptain(false);
+        setTeamCaptain();
+    }
+
+    //only called directly at the start of the game
+    public void setTeamCaptain(){
+        Random random = new Random();
+        List<String> keys = new ArrayList<String>(players.keySet());
+        String randomKey = keys.get(random.nextInt(keys.size()));
+        players.get(randomKey).getPlayerStats().saveCaptain(true, Game.getInstance().getReference().child("teams").child(name).child("players").child(randomKey).child("playerStats"));
     }
 
     public Iterator<DBPlayer> makeIterator() {

@@ -37,8 +37,9 @@ public class DBPlayerStats {
         return captain;
     }
 
-    public void setCaptain(boolean captain) {
+    public void saveCaptain(boolean captain, Firebase reference) {
         this.captain = captain;
+        reference.child("captain").setValue(captain);
     }
 
     public int getKills() {

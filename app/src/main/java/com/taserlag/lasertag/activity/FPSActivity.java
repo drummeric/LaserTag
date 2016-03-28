@@ -35,6 +35,7 @@ import com.taserlag.lasertag.fpsui.GameOver;
 import com.taserlag.lasertag.fpsui.Scoreboard;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameFollower;
+import com.taserlag.lasertag.game.GameType;
 import com.taserlag.lasertag.map.MapAssistant;
 import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.R;
@@ -75,6 +76,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private Scoreboard mScoreboard;
     private GameOver mGameOver;
     private AlertDialog mGameLoadingAlertDialog;
+    private AlertDialog mVIPRespawnDialog;
 
     private MapAssistant mapAss = MapAssistant.getInstance(this);
 
@@ -93,13 +95,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
         // waiting on players countdown
         if (!Game.getInstance().isLoaded()) {
-            mGameLoadingAlertDialog = new AlertDialog.Builder(this).create();
-            mGameLoadingAlertDialog.setTitle("Game Starting in:");
-            mGameLoadingAlertDialog.setMessage("Waiting on players...");
-            mGameLoadingAlertDialog.setCancelable(false);
-            mGameLoadingAlertDialog.show();
-            Player.getInstance().loadUp();
-            hideSystemUI();
+            startLoading();
             //wait for game to load
         } else {
             returnToGame();
@@ -194,7 +190,11 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void initUI(){
         //if you left FPS and someone killed you while out of FPS
         if (Player.getInstance().getRealHealth()<=0){
-            startRespawnDialog();
+            if (Game.getInstance().getGameType() == GameType.VIP && !Team.getInstance().isCaptainDead()) {
+                showVIPRespawnDialog();
+            } else {
+                startRespawnDialog("You Died!");
+            }
         }
         Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
         updateHealthText();
@@ -209,11 +209,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         updateHealthText();
         updateAmmoText();
         updateWeaponText();
-    }
-
-    @Override
-    public void notifyTeamUpdated(){
-        //update UI accordingly
     }
 
     @Override
@@ -238,7 +233,19 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }, 500);
 
         if (Player.getInstance().getRealHealth()<=0){
-            startRespawnDialog();
+            if (Game.getInstance().getGameType() != GameType.VIP) {
+                //regular death
+                startRespawnDialog("You Died!");
+            } else if (!Player.getInstance().isCaptain()){
+                //vip, not captain died
+                showVIPRespawnDialog();
+            } else {
+                //captain died - this gets reset by new captain on respawn
+                Team.getInstance().saveCaptainDead(true);
+                //I will no longer be the captain (maybe)
+                Team.getInstance().resetTeamCaptain();
+                startRespawnDialog("You Died!");
+            }
         }
     }
 
@@ -303,14 +310,39 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         mScoreboard.notifyScoreUpdated();
     }
 
-    private void startRespawnDialog(){
+    @Override
+    public void notifyTeamUpdated(){
+        //update UI accordingly
+    }
+
+    @Override
+    public void notifyTeamCaptainDied() {
+        startVIPRespawnTimer();
+    }
+
+    private void showVIPRespawnDialog(){
+        mVIPRespawnDialog = new AlertDialog.Builder(FPSActivity.this).create();
+        mVIPRespawnDialog.setTitle("You Died!");
+        mVIPRespawnDialog.setMessage("Cannot respawn until team captain is eliminated.");
+        mVIPRespawnDialog.setCancelable(false);
+        mVIPRespawnDialog.show();
+        hideSystemUI();
+    }
+
+    private void startVIPRespawnTimer(){
+        if (mVIPRespawnDialog!=null && mVIPRespawnDialog.isShowing()) {
+            mVIPRespawnDialog.dismiss();
+        }
+        startRespawnDialog("Your team captain died!");
+    }
+
+    private void startRespawnDialog(String deathMessage){
         final AlertDialog alertDialog = new AlertDialog.Builder(FPSActivity.this).create();
-        alertDialog.setTitle("You Died!");
+        alertDialog.setTitle(deathMessage);
         alertDialog.setMessage("Respawning in " + (RESPAWN_TIMER_LENGTH_MS / 1000) + " seconds");
         alertDialog.setCancelable(false);
         alertDialog.show();
         hideSystemUI();
-
         new CountDownTimer(RESPAWN_TIMER_LENGTH_MS, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -324,12 +356,33 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             public void onFinish() {
                 if (!Game.getInstance().isGameOver()) {
                     alertDialog.dismiss();
+
+                    //reset team's captainDead if I'm the new captain
+                    if (Game.getInstance().getGameType() == GameType.VIP && Player.getInstance().isCaptain()){
+                        Team.getInstance().saveCaptainDead(false);
+                    }
+
                     //reset health, weapons and shields
                     respawn();
                     hideSystemUI();
                 }
             }
         }.start();
+    }
+
+    private void startLoading(){
+        mGameLoadingAlertDialog = new AlertDialog.Builder(this).create();
+        mGameLoadingAlertDialog.setTitle("Game Starting in:");
+        mGameLoadingAlertDialog.setMessage("Waiting on players...");
+        mGameLoadingAlertDialog.setCancelable(false);
+        mGameLoadingAlertDialog.show();
+
+        if (Game.getInstance().getGameType() == GameType.VIP && Game.getInstance().getHost().equals(Player.getInstance().getName())){
+            Game.getInstance().initGameCaptains();
+        }
+
+        Player.getInstance().loadUp();
+        hideSystemUI();
     }
 
     private void returnToGame(){

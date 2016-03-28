@@ -9,6 +9,8 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.taserlag.lasertag.application.LaserTagApplication;
+import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.game.GameType;
 import com.taserlag.lasertag.team.Team;
 // player stuff stored in DB for use IN game (not after game)
 public class DBPlayer implements Comparable<DBPlayer>{
@@ -42,6 +44,10 @@ public class DBPlayer implements Comparable<DBPlayer>{
 
     public int getHealth() {
         return health;
+    }
+
+    private void setHealth(int health){
+        this.health = health;
     }
 
     public boolean isReady() {
@@ -135,23 +141,29 @@ public class DBPlayer implements Comparable<DBPlayer>{
         boolean hitYourself = Player.getInstance().getName().equals(reference.getKey());
 
         if (!hitYourself) {
-            reference.child("health").runTransaction(new Transaction.Handler() {
+            reference.runTransaction(new Transaction.Handler() {
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {
-                    if (mutableData.getValue(Integer.class) == null) {
-                        mutableData.setValue(100);
-                    } else if (mutableData.getValue(Integer.class)!=0){
-                        int health = mutableData.getValue(Integer.class);
+
+                    DBPlayer dbPlayer = mutableData.getValue(DBPlayer.class);
+                    int health = dbPlayer.getHealth();
+                    boolean isCaptain = dbPlayer.getPlayerStats().isCaptain();
+                    if (health > 0) {
                         health -= value;
                         if (health > 0) {
-                            mutableData.setValue(health);
+                            dbPlayer.setHealth(health);
                         } else {
                             //they're dead, inc my score and kills by 1
-                            playerStats.incrementScore(1, myReference.child("playerStats"));
+                            // if !(VIP mode && they're not a captain)
+                            if (!(Game.getInstance().getGameType() == GameType.VIP && !isCaptain) && !reference.getParent().getParent().getKey().equals(Team.getInstance().getName())) {
+                                playerStats.incrementScore(10, myReference.child("playerStats"));
+                            }
                             playerStats.incrementKills(myReference.child("playerStats"));
-                            mutableData.setValue(0);
+                            dbPlayer.setHealth(0);
+
                         }
                     }
+                    mutableData.setValue(dbPlayer);
 
                     return Transaction.success(mutableData);
                 }

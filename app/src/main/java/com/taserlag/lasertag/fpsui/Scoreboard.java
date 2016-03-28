@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Typeface;
-import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +17,7 @@ import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -27,7 +28,6 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
-import com.firebase.ui.FirebaseRecyclerAdapter;
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.activity.MenuActivity;
@@ -239,10 +239,22 @@ public class Scoreboard{
 
     public void cleanup(){
         mTeamQuery.removeEventListener(mTeamListener);
+        mExpandedScoreboardAdapter = null;
         mRecycler.setAdapter(null);
     }
 
     public void endGame(){
+        mExpandedScoreboardAdapter.notifyDataSetChanged();
+        Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                if (mExpandedScoreboardAdapter!=null) {
+                    mExpandedScoreboardAdapter.notifyDataSetChanged();
+                }
+            }
+        }, 2000);
+
         minimizeButton.setText("EXIT GAME");
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -368,6 +380,7 @@ public class Scoreboard{
                 viewHolder = new PlayerScoreboardViewHolder();
                 LayoutInflater inflater = LayoutInflater.from(getContext());
                 view = inflater.inflate(R.layout.list_item_player_scoreboard, parent, false);
+                viewHolder.captainImg = (ImageView) view.findViewById(R.id.image_view_player_scoreboard_captain);
                 viewHolder.playerName = (TextView) view.findViewById(R.id.text_player_scoreboard_name);
                 viewHolder.playerScore = (TextView) view.findViewById(R.id.text_player_scoreboard_score);
                 viewHolder.playerKD = (TextView) view.findViewById(R.id.text_player_scoreboard_kd);
@@ -391,10 +404,18 @@ public class Scoreboard{
                 viewHolder.playerScore.setTypeface(null, Typeface.NORMAL);
                 viewHolder.playerKD.setTypeface(null, Typeface.NORMAL);
             }
+
+            if (dbPlayer.getPlayerStats().isCaptain()){
+                viewHolder.captainImg.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.captainImg.setVisibility(View.INVISIBLE);
+            }
+
             return view;
         }
 
         private class PlayerScoreboardViewHolder {
+            ImageView captainImg;
             TextView playerName;
             TextView playerScore;
             TextView playerKD;

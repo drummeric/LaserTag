@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:id="@+id/layout_player_scoreboard">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/captaincrown"
+        android:id="@+id/image_view_player_scoreboard_captain"
+        android:adjustViewBounds="true"
+        android:layout_gravity="center_vertical"
+        android:maxWidth="10dp"
+        android:maxHeight="10dp"
+        android:scaleType="fitCenter"
+        android:visibility="invisible"/>
 
     <TextView
         android:layout_width="0dp"

@@ -7,6 +7,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.taserlag.lasertag.game.Game;
+import com.taserlag.lasertag.game.GameType;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
 
@@ -37,7 +38,13 @@ public class Team{
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (mDBTeamReference!=null) {
                     Log.i(TAG, "Team has been successfully updated for team: " + mDBTeamReference.getKey());
-                    mDBTeam = dataSnapshot.getValue(DBTeam.class);
+                    DBTeam newTeam = dataSnapshot.getValue(DBTeam.class);
+
+                    if (newTeam!=null && mDBTeam !=null && newTeam.isCaptainDead()&&!mDBTeam.isCaptainDead()){
+                        notifyFollowersCaptainDead();
+                    }
+
+                    mDBTeam = newTeam;
                     notifyFollowers();
                 }
             }
@@ -85,6 +92,18 @@ public class Team{
         mDBTeam.checkLoaded(mDBTeamReference);
     }
 
+    public void saveCaptainDead(boolean captainDead){
+        mDBTeam.saveCaptainDead(captainDead, mDBTeamReference);
+    }
+
+    public boolean isCaptainDead(){
+        return mDBTeam.isCaptainDead();
+    }
+
+    public void resetTeamCaptain(){
+        mDBTeam.resetTeamCaptain();
+    }
+
     public Firebase getDBTeamReference(){
         return mDBTeamReference;
     }
@@ -116,6 +135,12 @@ public class Team{
     private static void notifyFollowers() {
         for (TeamFollower follower : followers) {
             follower.notifyTeamUpdated();
+        }
+    }
+
+    private static void notifyFollowersCaptainDead() {
+        for (TeamFollower follower : followers) {
+            follower.notifyTeamCaptainDied();
         }
     }
 

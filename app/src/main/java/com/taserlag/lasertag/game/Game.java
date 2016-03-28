@@ -287,6 +287,12 @@ public class Game {
         return teamList;
     }
 
+    public void initGameCaptains(){
+        for (DBTeam dbTeam : getTeams().values()){
+            dbTeam.setTeamCaptain();
+        }
+    }
+
     @Override
     public String toString(){
         return mDBGame.toString();
