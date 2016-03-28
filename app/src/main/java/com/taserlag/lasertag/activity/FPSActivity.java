@@ -173,11 +173,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     //Clears back stack and finishes activity. Returns to new MenuActivity
     @Override
     public void onBackPressed(){
-        //if I'm the host and the game is over
-        if (Game.getInstance()!=null && Game.getInstance().isGameOver() && Player.getInstance().getName().equals(Game.getInstance().getHost())){
-            Game.getInstance().endGame();
-        }
-
         Player.getInstance().unregisterForUpdates(this);
         Team.getInstance().unregisterForUpdates(this);
         Game.getInstance().unregisterForUpdates(this);
@@ -294,6 +289,19 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         Game.getInstance().unregisterForUpdates(this);
         mScoreboard.endGame();
         mGameOver.endGame();
+
+        //if I'm the host and the game is over, move the game to finished games
+        // table after other devices have had a chance to refresh their Games
+        if (Game.getInstance() != null && Player.getInstance().getName().equals(Game.getInstance().getHost())) {
+            Handler handler = new Handler();
+
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    Game.getInstance().endGame();
+                }
+            }, 2000);
+        }
+
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         settings.edit().remove("gameStartTime"+Game.getInstance().getKey()).apply();
         settings.edit().remove("totalHits"+Game.getInstance().getKey()).apply();

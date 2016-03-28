@@ -259,9 +259,6 @@ public class Scoreboard{
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (Game.getInstance().getHost().equals(Player.getInstance().getName())) {
-                    Game.getInstance().endGame();
-                }
                 Toast.makeText(LaserTagApplication.getAppContext(), "Thanks for playing!", Toast.LENGTH_SHORT).show();
                 mFPS.getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 Intent intent = new Intent(mFPS, MenuActivity.class);
