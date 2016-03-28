@@ -3,6 +3,7 @@ package com.taserlag.lasertag.fragments;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
@@ -23,6 +24,7 @@ import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.player.DBPlayer;
+import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 
 import java.util.ArrayList;
@@ -159,6 +161,18 @@ public class StatsDialogFragment extends DialogFragment {
             viewHolder.playerKD.setText(dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
             viewHolder.playerHP.setText(String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
             viewHolder.layout.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
+
+            if (Player.getInstance().getName().equals(dbPlayer.getName())){
+                viewHolder.playerName.setTypeface(null, Typeface.BOLD_ITALIC);
+                viewHolder.playerScore.setTypeface(null, Typeface.BOLD_ITALIC);
+                viewHolder.playerKD.setTypeface(null, Typeface.BOLD_ITALIC);
+                viewHolder.playerHP.setTypeface(null, Typeface.BOLD_ITALIC);
+            } else {
+                viewHolder.playerName.setTypeface(null, Typeface.NORMAL);
+                viewHolder.playerScore.setTypeface(null, Typeface.NORMAL);
+                viewHolder.playerKD.setTypeface(null, Typeface.NORMAL);
+                viewHolder.playerHP.setTypeface(null, Typeface.NORMAL);
+            }
 
             return view;
         }
