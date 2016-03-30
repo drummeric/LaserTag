@@ -12,7 +12,7 @@
     <application
         android:name=".application.LaserTagApplication"
         android:allowBackup="true"
-        android:icon="@drawable/lasericon"
+        android:icon="@drawable/laserappicon"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
