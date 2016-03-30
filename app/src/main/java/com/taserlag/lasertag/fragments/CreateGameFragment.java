@@ -90,9 +90,11 @@ public class CreateGameFragment extends Fragment {
 
             if (button.getText().equals(GameType.FFA.toString())){
                 spinner.setEnabled(false);
+                spinner.setBackground(null);
                 spinner.setSelection(0); // 1 player team for FFA
             } else {
                 spinner.setEnabled(true);
+                spinner.setBackground(getResources().getDrawable(R.drawable.rectangle));
             }
 
             gameType = GameType.decodeType(button.getText().toString());

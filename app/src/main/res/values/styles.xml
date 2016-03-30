@@ -73,4 +73,11 @@
         </item>
 
     </style>
+
+    <style name="MainMenuTheme" parent = "@style/AppTheme">
+
+        <item name="colorControlActivated">@color/brightGreen</item>
+        <item name="colorControlHighlight">@color/brightGreen</item>
+
+    </style>
 </resources>
