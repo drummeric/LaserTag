@@ -2,14 +2,15 @@ package com.taserlag.lasertag.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.StickyButton;
-import android.widget.Switch;
 
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
@@ -41,6 +42,16 @@ public class CreateGameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_game, container, false);
+
+        ArrayAdapter teamSizeAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.array_players, R.layout.spinner_item);
+        ((Spinner) view.findViewById(R.id.spinner_team_size)).setAdapter(teamSizeAdapter);
+
+        ArrayAdapter scoreAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.array_scores, R.layout.spinner_item);
+        ((Spinner) view.findViewById(R.id.spinner_score)).setAdapter(scoreAdapter);
+
+        ArrayAdapter timeAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.array_times, R.layout.spinner_item);
+        ((Spinner) view.findViewById(R.id.spinner_time)).setAdapter(timeAdapter);
+
         //just in case
         Game.getInstance().leaveGame();
 
@@ -94,12 +105,12 @@ public class CreateGameFragment extends Fragment {
         DBGame dbGame = new DBGame();
         dbGame.setHost(Player.getInstance().getName());
         dbGame.setGameType(gameType);
-        dbGame.setScoreEnabled(((Switch) getView().findViewById(R.id.switch_score)).isChecked());
+        dbGame.setScoreEnabled(((SwitchCompat) getView().findViewById(R.id.switch_score)).isChecked());
         dbGame.setEndScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
-        dbGame.setTimeEnabled(((Switch) getView().findViewById(R.id.switch_time)).isChecked());
+        dbGame.setTimeEnabled(((SwitchCompat) getView().findViewById(R.id.switch_time)).isChecked());
         dbGame.setEndMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
         dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
-        dbGame.setFriendlyFire(((Switch) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
+        dbGame.setFriendlyFire(((SwitchCompat) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
         dbGame.setDate(new Date());
 
         //save new game to DB (with push) and start game lobby

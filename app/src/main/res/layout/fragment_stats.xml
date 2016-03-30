@@ -16,6 +16,7 @@
         android:text="Name's Stats"
         android:id="@+id/text_view_stats_fragment_title"
         android:textSize="50sp"
+        android:textColor="@android:color/holo_blue_bright"
         android:layout_gravity="center_horizontal"/>
 
     <android.support.v7.widget.RecyclerView

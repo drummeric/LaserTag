@@ -174,7 +174,6 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
 
     private void initReadyButton(View view){
         final StickyButton readyButton = (StickyButton) view.findViewById(R.id.button_ready_up);
-        readyButton.setStickyColor(Color.GREEN);
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

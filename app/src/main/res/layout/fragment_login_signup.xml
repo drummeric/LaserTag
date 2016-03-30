@@ -13,7 +13,7 @@
         android:layout_gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/laserlogo"
+        android:src="@drawable/laserlogobright"
         android:contentDescription="Logo" />
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -28,6 +28,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
+            android:textColor="@android:color/holo_blue_bright"
+            android:textColorHint="@color/white"
             android:hint="Username" />
 
         <EditText
@@ -39,7 +41,9 @@
             android:fontFamily="sans-serif"
             android:hint="Password"
             android:inputType="textPassword"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:textColor="@android:color/holo_blue_bright"
+            android:textColorHint="@color/white"/>
 
         <EditText
             android:id="@+id/edit_text_signup_password_confirm"
@@ -50,7 +54,9 @@
             android:fontFamily="sans-serif"
             android:hint="Re-enter Password"
             android:inputType="textPassword"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:textColor="@android:color/holo_blue_bright"
+            android:textColorHint="@color/white"/>
 
         <EditText
             android:id="@+id/edit_text_signup_email"
@@ -59,7 +65,9 @@
             android:singleLine="true"
             android:layout_marginTop="8dp"
             android:hint="Email"
-            android:inputType="textEmailAddress" />
+            android:inputType="textEmailAddress"
+            android:textColor="@android:color/holo_blue_bright"
+            android:textColorHint="@color/white"/>
 
         <Button
             android:id="@+id/button_signup_create_account"
@@ -69,7 +77,9 @@
             android:layout_marginTop="8dp"
             android:textAllCaps="false"
             android:text="Create Account"
-            android:onClick="signup" />
+            android:onClick="signup"
+            android:textColor="@android:color/holo_blue_bright"
+            android:background="@drawable/rectangle"/>
 
     </LinearLayout>
 

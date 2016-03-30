@@ -24,6 +24,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="25dp"
                 android:textSize="50sp"
+                android:textColor="@android:color/holo_blue_bright"
                 android:text="Create Game"/>
 
             <TextView
@@ -32,6 +33,7 @@
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="10dp"
                 android:textSize="20sp"
+                android:textColor="@android:color/holo_blue_bright"
                 android:text="Please select the desired game type:" />
 
             <LinearLayout
@@ -46,8 +48,12 @@
                     android:layout_height="60dp"
                     android:layout_weight="1"
                     android:id="@+id/button_tdm"
-                    android:text="Team Deathmatch"
-                    android:textSize="15sp"
+                    android:text="TDM"
+                    android:textSize="25sp"
+                    android:background="@drawable/rectangle"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_gravity="center"/>
 
                 <android.widget.StickyButton
@@ -55,8 +61,12 @@
                     android:layout_height="60dp"
                     android:layout_weight="1"
                     android:id="@+id/button_ffa"
-                    android:text="Free For All"
-                    android:textSize="15sp"
+                    android:text="FFA"
+                    android:textSize="25sp"
+                    android:background="@drawable/rectangle"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_gravity="center"/>
 
                 <android.widget.StickyButton
@@ -65,7 +75,11 @@
                     android:layout_weight="1"
                     android:id="@+id/button_vip"
                     android:text="VIP"
-                    android:textSize="15sp"
+                    android:textSize="25sp"
+                    android:background="@drawable/rectangle"
+                    android:textColor="@android:color/holo_blue_bright"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_gravity="center"/>
             </LinearLayout>
 
@@ -75,6 +89,7 @@
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="10dp"
                 android:textSize="20sp"
+                android:textColor="@android:color/holo_blue_bright"
                 android:text="Enable the desired win conditions:" />
 
             <TableLayout
@@ -85,7 +100,7 @@
                 <TableRow
                     android:layout_marginBottom="15dp">
 
-                    <Switch
+                    <android.support.v7.widget.SwitchCompat
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
@@ -96,8 +111,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:text="Score:"
+                        android:text="Score: "
                         android:textStyle="bold"
+                        android:textColor="@android:color/holo_blue_bright"
                         android:textSize="15sp"/>
 
                     <Spinner
@@ -105,6 +121,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/spinner_score"
                         android:gravity="center"
+                        android:background="@drawable/rectangle"
                         android:entries="@array/array_scores"/>
 
                     <TextView
@@ -118,7 +135,7 @@
 
                 <TableRow>
 
-                    <Switch
+                    <android.support.v7.widget.SwitchCompat
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
@@ -129,8 +146,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:text="Time:"
+                        android:text="Time: "
                         android:textStyle="bold"
+                        android:textColor="@android:color/holo_blue_bright"
                         android:textSize="15sp"/>
 
                     <Spinner
@@ -138,6 +156,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/spinner_time"
                         android:gravity="center"
+                        android:background="@drawable/rectangle"
                         android:entries="@array/array_times"/>
 
                     <TextView
@@ -157,6 +176,7 @@
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="10dp"
                 android:textSize="20sp"
+                android:textColor="@android:color/holo_blue_bright"
                 android:text="Set the desired options:" />
 
             <TableLayout
@@ -173,12 +193,14 @@
                         android:layout_marginLeft="10dp"
                         android:id="@+id/spinner_team_size"
                         android:gravity="center"
+                        android:background="@drawable/rectangle"
                         android:entries="@array/array_players"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
+                        android:textColor="@android:color/holo_blue_bright"
                         android:text="Maximum Number of Players per Team"
                         android:textSize="15sp"/>
                 </TableRow>
@@ -193,7 +215,7 @@
                 <TableRow
                     android:layout_marginBottom="15dp">
 
-                    <Switch
+                    <android.support.v7.widget.SwitchCompat
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
@@ -205,6 +227,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
                         android:text="Friendly Fire"
+                        android:textColor="@android:color/holo_blue_bright"
                         android:textSize="15sp"/>
 
                 </TableRow>
@@ -218,6 +241,11 @@
                 android:layout_gravity="center"
                 android:text="Create Game"
                 android:id="@+id/button_create_game"
+                android:background="@drawable/rectangle"
+                android:textColor="@android:color/holo_blue_bright"
+                android:textSize="25sp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
                 android:onClick="showGameLobby"/>
         </LinearLayout>
 

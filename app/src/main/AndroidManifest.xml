@@ -30,20 +30,17 @@
         <activity
             android:name=".activity.LoginActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".activity.MenuActivity"
             android:label="Laser Tag"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".activity.FPSActivity"
             android:label="@string/app_name"
-            android:screenOrientation="landscape"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="landscape">
         </activity>
 
         <meta-data

@@ -11,6 +11,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:text="PlayerName"
+        android:textColor="@android:color/holo_blue_bright"
         android:textSize="14sp"
         android:id="@+id/text_player_name"/>
     
@@ -30,6 +31,7 @@
         android:layout_alignParentRight="true"
         android:text="READY"
         android:visibility="invisible"
+        android:textColor="@color/brightGreen"
         android:textSize="14sp"
         android:id="@+id/text_player_ready"/>
 
