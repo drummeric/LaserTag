@@ -121,6 +121,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/spinner_score"
                         android:gravity="center"
+                        android:popupBackground="@drawable/rectangleblackfill"
                         android:background="@drawable/rectangle"
                         android:entries="@array/array_scores"/>
 
@@ -156,6 +157,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/spinner_time"
                         android:gravity="center"
+                        android:popupBackground="@drawable/rectangleblackfill"
                         android:background="@drawable/rectangle"
                         android:entries="@array/array_times"/>
 
@@ -193,6 +195,7 @@
                         android:layout_marginLeft="10dp"
                         android:id="@+id/spinner_team_size"
                         android:gravity="center"
+                        android:popupBackground="@drawable/rectangleblackfill"
                         android:background="@drawable/rectangle"
                         android:entries="@array/array_players"/>
 

@@ -7,5 +7,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transparentWhite">#50FFFFFF</color>
     <color name="transparentCardWhite">#88FFFFFF</color>
+    <color name="black">#FF000000</color>
 
 </resources>
