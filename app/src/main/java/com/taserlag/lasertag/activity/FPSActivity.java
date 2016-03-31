@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
 import com.taserlag.lasertag.fpsui.GameOver;
+import com.taserlag.lasertag.fpsui.Reticle;
 import com.taserlag.lasertag.fpsui.Scoreboard;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameFollower;
@@ -67,14 +68,16 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private static TextView mHealthText;
     private static TextView mShieldText;
     private static ImageView mShieldImage;
-    private ImageView mGunImage;
     private static ImageView mScreenFlash;
     private TextView mTimeText;
     private TextView mZoomText;
+    private ImageView mGunImage;
 
     private View mHUD;
     private Scoreboard mScoreboard;
     private GameOver mGameOver;
+    private Reticle mReticle;
+
     private AlertDialog mGameLoadingAlertDialog;
     private AlertDialog mVIPRespawnDialog;
 
@@ -117,6 +120,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         View content = findViewById(android.R.id.content);
         mScoreboard = new Scoreboard(content,this);
         mGameOver = new GameOver(content, this);
+        mReticle = new Reticle(content, this);
 
         //init UI (health, weapons, ammo, shield)
         initUI();
@@ -485,45 +489,38 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                     mHUD.setVisibility(View.VISIBLE);
                     hudVisible = true;
                 }
-            } else {
-                ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
-
-                    @Override
-                    public void onFinishShoot(String teamPlayerHit) {
-                        Player.getInstance().incTotalShots();
-                        getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalShots" + Game.getInstance().getKey(), Player.getInstance().getTotalShots()).apply();
-                        if (!teamPlayerHit.equals("")) {
-                            String teamName = teamPlayerHit.split(":~")[0];
-                            String playerName = teamPlayerHit.split(":~")[1];
-                            if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
-                                Player.getInstance().incTotalHits();
-                                getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
-                                final ImageView reticle = ((ImageView) FPSActivity.this.findViewById(R.id.reticle_image_view));
-                                reticle.setImageResource(R.drawable.redreticle);
-
-                                //animation lasts 500 ms total
-                                Animation animationGrowShrink = AnimationUtils.loadAnimation(FPSActivity.this, R.anim.growshrink);
-                                reticle.startAnimation(animationGrowShrink);
-
-                                Handler hitHandler = new Handler();
-                                hitHandler.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        reticle.setImageResource(R.drawable.reticle1);
-                                    }
-                                }, 500);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void updateGUI() {
-                        updateGunUI();
-                    }
-                });
-                asyncTask.execute(mPreview.getCameraData());
             }
         }
+
+        ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
+
+            @Override
+            public void onFinishShoot(String teamPlayerHit) {
+                Player.getInstance().incTotalShots();
+                getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalShots" + Game.getInstance().getKey(), Player.getInstance().getTotalShots()).apply();
+                if (!teamPlayerHit.equals("")) {
+                    String teamName = teamPlayerHit.split(":~")[0];
+                    final String playerName = teamPlayerHit.split(":~")[1];
+                    if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
+                        Player.getInstance().incTotalHits();
+                        getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
+
+                        if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
+                            mReticle.showHitAnimation(playerName);
+                        } else {
+                            mReticle.showDeadAnimation();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void updateGUI() {
+                updateGunUI();
+            }
+        });
+        asyncTask.execute(mPreview.getCameraData());
+
         return true;
     }
 
