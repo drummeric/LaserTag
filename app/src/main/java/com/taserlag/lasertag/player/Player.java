@@ -146,7 +146,7 @@ public class Player{
         dbPlayer.getPlayerStats().saveCaptain(captain, dbPlayerReference.child("playerStats"));
     }
 
-    public int[] getColor() {
+    public float[] getColor() {
         return dbUser.getColor();
     }
 

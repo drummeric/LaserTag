@@ -37,7 +37,7 @@
         android:textColor="@android:color/holo_red_light"
         android:textStyle="bold"
         android:layout_above="@+id/reticle_image_view"
-        android:layout_toRightOf="@+id/reticle_image_view"
+        android:layout_toRightOf="@+id/image_view_fps_dead_icon"
         android:visibility="invisible"/>
 
     <ImageView
@@ -47,7 +47,7 @@
         android:src="@drawable/deadicon"
         android:layout_above="@+id/reticle_image_view"
         android:layout_toRightOf="@+id/reticle_image_view"
-        android:visibility="invisible"/>
+        android:visibility="gone"/>
 
     <include layout="@layout/hud"/>
 

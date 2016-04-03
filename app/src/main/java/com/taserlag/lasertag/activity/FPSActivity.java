@@ -508,7 +508,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                         if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
                             mReticle.showHitAnimation(playerName);
                         } else {
-                            mReticle.showDeadAnimation();
+                            mReticle.showDeadAnimation(playerName);
                         }
                     }
                 }

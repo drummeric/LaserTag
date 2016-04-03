@@ -12,7 +12,7 @@ public class DBUser {
 
     private String username;
 
-    private int[] color = new int[4];
+    private float[] color = new float[3];
 
     private List<String> previousGames = new ArrayList<>();
 
@@ -27,16 +27,16 @@ public class DBUser {
         return username;
     }
 
-    public int[] getColor() {
+    public float[] getColor() {
         return color;
     }
 
-    public void saveColor(int[] c) {
+    public void saveColor(float[] c) {
         color = c;
         LaserTagApplication.firebaseReference.child("users").child(LaserTagApplication.getUid()).child("color").setValue(color);
     }
 
-    public void setColor(int[] c){
+    public void setColor(float[] c){
         color = c;
     }
 

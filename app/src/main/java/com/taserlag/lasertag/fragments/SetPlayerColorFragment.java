@@ -1,8 +1,7 @@
 package com.taserlag.lasertag.fragments;
 
-import android.content.Context;
+import android.graphics.Color;
 import android.hardware.Camera;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -29,7 +28,7 @@ public class SetPlayerColorFragment extends Fragment {
     private Camera mCamera;
     private CameraPreview mPreview;
     private int mShots = 0;
-    private int[] mARGB = new int[4];
+    private float[] mHSV = new float[3];
 
     private String mPlayerName = "";
     private String mTeamName = "";
@@ -84,18 +83,19 @@ public class SetPlayerColorFragment extends Fragment {
                         }
 
                         int[] argb = CameraHelper.getInstance().getTargetColor(mPreview.getCameraData());
+                        float[] hsv = new float[3];
+                        Color.RGBToHSV(argb[1],argb[2],argb[3],hsv);
 
                         //running average of colors detected
-                        mARGB[0] = (mARGB[0]*(mShots-1) + argb[0])/(mShots);
-                        mARGB[1] = (mARGB[1]*(mShots-1) + argb[1])/(mShots);
-                        mARGB[2] = (mARGB[2]*(mShots-1) + argb[2])/(mShots);
-                        mARGB[3] = (mARGB[3]*(mShots-1) + argb[3])/(mShots);
+                        mHSV[0] = (mHSV[0]*(mShots-1) + hsv[0])/(mShots);
+                        mHSV[1] = (mHSV[1]*(mShots-1) + hsv[1])/(mShots);
+                        mHSV[2] = (mHSV[2]*(mShots-1) + hsv[2])/(mShots);
 
                         if (mShots == 5) {
-                            Log.i(TAG, "Average recorded argb: "+ mARGB[0] + " " + mARGB[1] + " " + mARGB[2] + " " + mARGB[3] + ".");
+                            Log.i(TAG, "Average recorded HSV: "+ mHSV[0] + " " + mHSV[1] + " " + mHSV[2] + ".");
 
                             //save player color to database and pop back to GameLobby
-                            DBPlayerStats.saveColor(mARGB, Game.getInstance().getReference().child("teams").child(mTeamName).child("players").child(mPlayerName).child("playerStats"));
+                            DBPlayerStats.saveColor(mHSV, Game.getInstance().getReference().child("teams").child(mTeamName).child("players").child(mPlayerName).child("playerStats"));
                             Toast.makeText(getContext(), mPlayerName + "'s color updated!", Toast.LENGTH_SHORT).show();
                             getActivity().getSupportFragmentManager().popBackStack();
                         }

@@ -130,7 +130,7 @@ public class LoginSignupFragment extends Fragment {
                 Log.i(TAG, "Signed up a user with id: " + stringObjectMap.get("uid"));
 
                 DBUser newUser = new DBUser(username);
-                newUser.setColor(new int[]{255, 0, 0, 0});
+                newUser.setColor(new float[]{0, 0, 0});//new users get black set as initial color
                 LaserTagApplication.firebaseReference.child("users").child((String) stringObjectMap.get("uid")).setValue(newUser);
 
                 CharSequence text = username + ", your account has been created.";

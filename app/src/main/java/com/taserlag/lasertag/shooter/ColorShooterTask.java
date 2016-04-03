@@ -1,5 +1,6 @@
 package com.taserlag.lasertag.shooter;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -18,10 +19,18 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     protected ShooterCallback fpsCallback;
     private static final String TAG = "ColorShooterTask";
     private final int INITWEIGHT = 5;
-    private final int TOLERANCE = 40;
 
-    //{a, r, g, b, shotCount}
-    private static Map<String, int[]> playerColors;
+    private final float H_TOLERANCE = 13;
+
+    private final float SV_MIN = 0.15f;
+    private final float S_WHITE = .15f;
+    private final float V_BLACK = 0.15f;
+    private final float V_GRAYMAX = .75f;
+    private final float V_GRAYMIN = .25f;
+
+
+    //{h,s,v, shotCount}
+    private static Map<String, float[]> playerColors;
 
     public ColorShooterTask(ShooterCallback fps){
         fpsCallback = fps;
@@ -53,17 +62,18 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
         }
 
         int[] hitColor = CameraHelper.getInstance().getTargetColor(cameraData);
+        float[] hitHSV = new float[3];
+        Color.RGBToHSV(hitColor[1], hitColor[2], hitColor[3], hitHSV);
 
-        Log.i(TAG, "Shot argb: " + hitColor[0] + " " + hitColor[1] + " " + hitColor[2] + " " + hitColor[3] + ".");
-
-        return checkColors(hitColor);
+        Log.i(TAG, "Shot hsv: " + hitHSV[0] + " " + hitHSV[1] + " " + hitHSV[2] + ".");
+        return checkColors(hitHSV);
     }
 
     // returns "TeamName"+":~"+"PlayerName" with the closest color within tolerance or ""
-    private String checkColors(int[] hitColor){
+    private String checkColors(float[] hitHSV){
         String smallestTeamPlayer = "";
-        int distance = TOLERANCE *3;
-        int totalDiff;
+        float smallestDiff = H_TOLERANCE;
+        float currentDiff;
         TeamIterator<DBPlayer> iterator = Game.getInstance().makeIterator();
         while (iterator.hasNext()){
             DBPlayer dbPlayer = iterator.next();
@@ -73,38 +83,38 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
             if (!dbPlayer.getName().equals(Player.getInstance().getName())) {
                 //if friendly fire is on or they aren't on my team
                 if (!(Team.getInstance().getName().equals(iterator.currentTeam()) && !Game.getInstance().getFriendlyFire())) {
-                    int[] colors = playerColors.get(playerKey);
+                    float[] colors = playerColors.get(playerKey);
 
                     //first time hitting player
                     if (colors == null){
-                        colors = new int[5];
+                        colors = new float[4];
                         for (int i = 0; i < colors.length - 1; i++){
                             colors[i] = dbPlayer.getPlayerStats().getColor()[i];
                         }
                         // give initial measurement some weight
-                        colors[4] = INITWEIGHT;
+                        colors[3] = INITWEIGHT;
                         playerColors.put(playerKey, colors);
                     }
 
                     //calc color difference
-                    totalDiff = checkPlayerColors(hitColor, colors);
+                    currentDiff = checkPlayerColors(hitHSV, colors);
 
                     //current player has smaller color distance from hitColor
-                    if (totalDiff <= distance) {
+                    if (currentDiff <= smallestDiff) {
                         smallestTeamPlayer = playerKey;
-                        distance = totalDiff;
+                        smallestDiff = currentDiff;
                     }
                 }
             }
         }
         if (!smallestTeamPlayer.equals("")) {
-            int[] colorArray = playerColors.get(smallestTeamPlayer);
+            float[] colorArray = playerColors.get(smallestTeamPlayer);
 
-            //length = 5, only want to loop through first 4 positions (i = 0-3)
+            //length = 4, only want to loop through first 3 positions (i = 0-2)
             for (int i = 0; i < colorArray.length - 1; i++) {
-                colorArray[i] = ((colorArray[i] * colorArray[4]) + hitColor[i]) / (colorArray[4] + 1);
+                colorArray[i] = ((colorArray[i] * colorArray[3]) + hitHSV[i]) / (colorArray[3] + 1);
             }
-            colorArray[4]++;
+            colorArray[3]++;
 
             playerColors.put(smallestTeamPlayer, colorArray);
         }
@@ -113,18 +123,40 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     }
 
     //returns MAX integer value on no match
-    // returns total color difference across rgb values for player and hit color
-    private int checkPlayerColors(int[] hitColor, int[] playerColor){
+    // returns hue difference for player and hit color
+    private float checkPlayerColors(float[] hitHSV, float[] playerHSV){
         boolean colorMatch = true;
-        int colorDiff = 0;
-        for (int i = 0; i<hitColor.length; i++){
-            colorMatch &= Math.abs(hitColor[i]-playerColor[i]) <= TOLERANCE;
-            colorDiff += Math.abs(hitColor[i]-playerColor[i]);
-        }
-        if (colorMatch) {
-            return colorDiff;
+
+        if (playerHSV[1]<S_WHITE && playerHSV[2] < V_GRAYMAX && playerHSV[2] > V_GRAYMIN){
+            //low sat & med val = gray
+            if (hitHSV[1]<S_WHITE && hitHSV[2] < V_GRAYMAX && hitHSV[2] > V_GRAYMIN){
+                return 0;
+            }
+        } else if (playerHSV[1] < S_WHITE && playerHSV[2] > V_GRAYMAX) {
+            //high val & low sat = white
+            if (hitHSV[1] < S_WHITE && hitHSV[2] > V_GRAYMAX) {
+                return 0;
+            }
+        } else if (playerHSV[2]<V_BLACK){
+            //low value = black
+            if (hitHSV[2]<V_BLACK){
+                return 0;
+            }
         } else {
-            return Integer.MAX_VALUE;
+            float colorDiff = Math.abs(hitHSV[0] - playerHSV[0]);
+
+            //check hue within tolerance
+            colorMatch &= colorDiff <= H_TOLERANCE;
+
+            //check saturation and value within tolerance
+            colorMatch &= hitHSV[1] > SV_MIN;
+            colorMatch &= hitHSV[2] > SV_MIN;
+
+            if (colorMatch) {
+                return colorDiff;
+            }
         }
+
+        return Integer.MAX_VALUE;
     }
 }

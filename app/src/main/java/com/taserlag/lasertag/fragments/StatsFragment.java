@@ -1,5 +1,6 @@
 package com.taserlag.lasertag.fragments;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -70,7 +71,7 @@ public class StatsFragment extends Fragment {
                             holder.playerScore.setText("Score: " + dbPlayer.getPlayerStats().getScore());
                             holder.playerKD.setText("KD: " + dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
                             holder.playerHP.setText("HP: " + String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
-                            holder.playerStatsView.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
+                            holder.playerStatsView.setBackgroundColor(Color.HSVToColor(136,dbPlayer.getPlayerStats().getColor()));
 
                             holder.itemView.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -90,15 +91,6 @@ public class StatsFragment extends Fragment {
             }
         };
         recycler.setAdapter(mAdapter);
-    }
-
-    //returns semi transparent form of passed color
-    private int getIntFromColor(int[] color){
-        int red = (color[1] << 16) & 0x00FF0000; //Shift red 16-bits and mask out other stuff
-        int green = (color[2] << 8) & 0x0000FF00; //Shift Green 8-bits and mask out other stuff
-        int blue = color[3] & 0x000000FF; //Mask out anything not blue.
-
-        return 0x88000000 | red | green | blue; //0x88000000 for 50% Alpha. Bitwise OR everything together.
     }
 
     public static class GameStatsViewHolder extends RecyclerView.ViewHolder {

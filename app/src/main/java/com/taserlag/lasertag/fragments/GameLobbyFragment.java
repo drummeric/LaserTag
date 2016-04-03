@@ -291,8 +291,8 @@ public class GameLobbyFragment extends Fragment implements GameFollower {
             }
 
             viewHolder.playerName.setText(dbPlayer.getName());
-            int[] color = dbPlayer.getPlayerStats().getColor();
-            viewHolder.colorButton.setBackgroundColor(Color.argb(color[0], color[1], color[2], color[3]));
+            float[] color = dbPlayer.getPlayerStats().getColor();
+            viewHolder.colorButton.setBackgroundColor(Color.HSVToColor(color));
 
             if (dbPlayer.isReady()) {
                 viewHolder.playerReady.setVisibility(View.VISIBLE);

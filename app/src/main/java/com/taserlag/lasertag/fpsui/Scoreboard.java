@@ -3,6 +3,7 @@ package com.taserlag.lasertag.fpsui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
@@ -273,15 +274,6 @@ public class Scoreboard{
         mTeamQuery.removeEventListener(mTeamListener);
     }
 
-    //returns semi transparent form of passed color
-    private int getIntFromColor(int[] color){
-        int red = (color[1] << 16) & 0x00FF0000; //Shift red 16-bits and mask out other stuff
-        int green = (color[2] << 8) & 0x0000FF00; //Shift Green 8-bits and mask out other stuff
-        int blue = color[3] & 0x000000FF; //Mask out anything not blue.
-
-        return 0x88000000 | red | green | blue; //0x88000000 for 50% Alpha. Bitwise OR everything together.
-    }
-
     private void setListViewHeightBasedOnItems(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
         if (listAdapter != null) {
@@ -390,7 +382,7 @@ public class Scoreboard{
             viewHolder.playerName.setText(dbPlayer.getName());
             viewHolder.playerScore.setText(String.valueOf(dbPlayer.getPlayerStats().getScore()));
             viewHolder.playerKD.setText(dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
-            viewHolder.layout.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
+            viewHolder.layout.setBackgroundColor(Color.HSVToColor(136,dbPlayer.getPlayerStats().getColor()));
 
             if (Player.getInstance().getName().equals(dbPlayer.getName())){
                 viewHolder.playerName.setTypeface(null, Typeface.BOLD_ITALIC);

@@ -69,7 +69,7 @@ public class Reticle {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                mSkullImage.setVisibility(View.INVISIBLE);
+                mSkullImage.setVisibility(View.GONE);
             }
 
             @Override
@@ -84,7 +84,9 @@ public class Reticle {
         mReticle.startAnimation(mAnimationGrowShrink);
     }
 
-    public void showDeadAnimation(){
+    public void showDeadAnimation(String playerName){
         mSkullImage.startAnimation(mFadeOut);
+        mPlayerName = playerName;
+        mHitPlayerText.startAnimation(mShrinkFadeOut);
     }
 }

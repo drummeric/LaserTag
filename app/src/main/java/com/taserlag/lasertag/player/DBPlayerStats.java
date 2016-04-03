@@ -25,7 +25,7 @@ public class DBPlayerStats {
 
     private double hitPercentage = 0;
 
-    private int[] color = {255,0,0,0};
+    private float[] color = {0,0,0};
 
     public DBPlayerStats(){}
 
@@ -66,16 +66,16 @@ public class DBPlayerStats {
         this.hitPercentage = hitPercentage;
     }
 
-    public int[] getColor() {
+    public float[] getColor() {
         return color;
     }
 
-    public void setColor(int[] color){
+    public void setColor(float[] color){
         this.color = color;
     }
 
     //used to set someone else's color
-    public static void saveColor(final int[] color, Firebase reference) {
+    public static void saveColor(final float[] color, Firebase reference) {
         reference.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData playerStatsData) {

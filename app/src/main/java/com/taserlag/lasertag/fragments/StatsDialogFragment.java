@@ -3,6 +3,7 @@ package com.taserlag.lasertag.fragments;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -88,15 +89,6 @@ public class StatsDialogFragment extends DialogFragment {
         return d;
     }
 
-    //returns semi transparent form of passed color
-    private int getIntFromColor(int[] color){
-        int red = (color[1] << 16) & 0x00FF0000; //Shift red 16-bits and mask out other stuff
-        int green = (color[2] << 8) & 0x0000FF00; //Shift Green 8-bits and mask out other stuff
-        int blue = color[3] & 0x000000FF; //Mask out anything not blue.
-
-        return 0x88000000 | red | green | blue; //0x88000000 for 50% Alpha. Bitwise OR everything together.
-    }
-
     private void setListViewHeightBasedOnItems(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
         if (listAdapter != null) {
@@ -160,7 +152,7 @@ public class StatsDialogFragment extends DialogFragment {
             viewHolder.playerScore.setText(String.valueOf(dbPlayer.getPlayerStats().getScore()));
             viewHolder.playerKD.setText(dbPlayer.getPlayerStats().getKills() + " / " + dbPlayer.getPlayerStats().getDeaths());
             viewHolder.playerHP.setText(String.format("%.2f", dbPlayer.getPlayerStats().getHitPercentage() * 100) + "%");
-            viewHolder.layout.setBackgroundColor(getIntFromColor(dbPlayer.getPlayerStats().getColor()));
+            viewHolder.layout.setBackgroundColor(Color.HSVToColor(136,dbPlayer.getPlayerStats().getColor()));
 
             if (Player.getInstance().getName().equals(dbPlayer.getName())){
                 viewHolder.playerName.setTypeface(null, Typeface.BOLD_ITALIC);
