@@ -61,21 +61,39 @@
         android:id="@+id/layout_scoreboard_expanded"
         android:visibility="gone">
 
-        <Button
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/button_scoreboard_minimize"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentTop="true"
+            android:id="@+id/layout_button_scoreboard"
+            android:orientation="horizontal"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:text="Minimize"
-            />
+            >
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:id="@+id/button_scoreboard_endgame"
+                android:layout_alignParentTop="true"
+                android:text="End Game"
+                />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:id="@+id/button_scoreboard_minimize"
+                android:layout_toRightOf="@id/button_scoreboard_endgame"
+                android:layout_alignParentTop="true"
+                android:text="Minimize"
+                />
+        </LinearLayout>
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/button_scoreboard_minimize"
+            android:layout_below="@id/layout_button_scoreboard"
             android:id="@+id/recycler_view_fps_scoreboard"
             />
     </RelativeLayout>

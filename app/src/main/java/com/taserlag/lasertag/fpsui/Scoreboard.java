@@ -68,6 +68,7 @@ public class Scoreboard{
     private View collapsedScoreboard;
     private View expandedScoreboard;
     private Button minimizeButton;
+    private Button endgameButton;
 
     private FPSActivity mFPS;
 
@@ -111,12 +112,20 @@ public class Scoreboard{
     }
 
     private void initOnClicks(View view){
+        endgameButton = (Button) view.findViewById(R.id.button_scoreboard_endgame);
         minimizeButton = (Button) view.findViewById(R.id.button_scoreboard_minimize);
 
         mScoreboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 expandScoreboard();
+            }
+        });
+
+        endgameButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Game.getInstance().saveGameOver();
             }
         });
 
@@ -198,6 +207,13 @@ public class Scoreboard{
                     playerStatus.setVisibility(View.GONE);
                     collapsedScoreboard.setVisibility(View.GONE);
                     expandedScoreboard.setVisibility(View.VISIBLE);
+
+                    if (Game.getInstance().getHost().equals(Player.getInstance().getName())) {
+                        endgameButton.setVisibility(View.VISIBLE);
+                    } else {
+                        endgameButton.setVisibility(View.GONE);
+                    }
+
                     expanded = true;
                 }
 
@@ -207,7 +223,8 @@ public class Scoreboard{
                 }
 
                 @Override
-                public void onAnimationRepeat(Animation animation) {}
+                public void onAnimationRepeat(Animation animation) {
+                }
             });
             mScoreboard.startAnimation(anim);
         }
@@ -246,6 +263,7 @@ public class Scoreboard{
 
     public void endGame(){
         mExpandedScoreboardAdapter.notifyDataSetChanged();
+        endgameButton.setVisibility(View.GONE);
         Handler handler = new Handler();
 
         handler.postDelayed(new Runnable() {

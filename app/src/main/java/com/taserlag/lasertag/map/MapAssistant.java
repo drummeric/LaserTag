@@ -121,7 +121,7 @@ public class MapAssistant implements OnMapReadyCallback, GoogleApiClient.OnConne
 
             @Override
             public void onMapClick(LatLng latLng) {
-                if(activity instanceof MapHandler)
+                if (activity instanceof MapHandler)
                     ((MapHandler) activity).handleMapClick(latLng);
             }
         });
@@ -222,7 +222,11 @@ public class MapAssistant implements OnMapReadyCallback, GoogleApiClient.OnConne
     }
 
     public void cleanup(){
-        refreshTimer.cancel();
+        if (refreshTimer!=null) {
+            refreshTimer.cancel();
+        }
+        //stop listening for updates
+        onPause();
     }
 
     private void calculateMapDimensions() {
