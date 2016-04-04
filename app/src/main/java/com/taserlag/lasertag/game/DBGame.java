@@ -274,61 +274,14 @@ public class DBGame{
         reference.child("gameOver").setValue(true);
     }
 
-    public Firebase saveNewGame() {
+    public Firebase saveNewGame(Location location) {
         final Firebase ref = LaserTagApplication.firebaseReference.child("games").push();
         ref.setValue(this);
 
-        if (!storeLocation(ref.getKey(), LocationManager.GPS_PROVIDER)){
-            storeLocation(ref.getKey(),LocationManager.NETWORK_PROVIDER);
-        }
+        // stores GeoFire Location with key
+        LaserTagApplication.geoFire.setLocation(ref.getKey(), new GeoLocation(location.getLatitude(), location.getLongitude()));
+
         return ref;
-    }
-
-    // stores GeoFire Location with key using provider
-    // initially uses lastKnownLocation and then updates once when updated location available
-    private boolean storeLocation(final String key, String provider){
-        final LocationManager locationManager = (LocationManager) LaserTagApplication.getAppContext().getSystemService(Context.LOCATION_SERVICE);
-        // Request location updates if location permission is granted
-        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (locationManager.isProviderEnabled(provider)) {
-
-                //set lastKnownLocation as Game location so friends can join immediately
-                Location location = locationManager.getLastKnownLocation(provider);
-                if (location!=null) {
-                    LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
-                }
-
-                locationManager.requestLocationUpdates(provider, 0, 0, new LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
-                        if (Game.getInstance().getReference()!=null && Game.getInstance().getKey().equals(key)) {
-                            //update the Game location to real current location when available and close listener so only store once
-                            LaserTagApplication.geoFire.setLocation(key, new GeoLocation(location.getLatitude(), location.getLongitude()));
-                        }
-                        if (ActivityCompat.checkSelfPermission(LaserTagApplication.getAppContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                            locationManager.removeUpdates(this);
-                        }
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                    }
-
-                    @Override
-                    public void onProviderEnabled(String provider) {
-
-                    }
-
-                    @Override
-                    public void onProviderDisabled(String provider) {
-
-                    }
-                });
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

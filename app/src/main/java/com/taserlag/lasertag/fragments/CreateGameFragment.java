@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.StickyButton;
+import android.widget.Toast;
 
 import com.taserlag.lasertag.R;
 import com.taserlag.lasertag.activity.MenuActivity;
@@ -21,7 +22,7 @@ import com.taserlag.lasertag.player.Player;
 
 import java.util.Date;
 
-public class CreateGameFragment extends Fragment {
+public class CreateGameFragment extends Fragment{
 
     private final String TAG = "CreateGameFragment";
 
@@ -104,20 +105,24 @@ public class CreateGameFragment extends Fragment {
     }
 
     public void saveGame() {
-        DBGame dbGame = new DBGame();
-        dbGame.setHost(Player.getInstance().getName());
-        dbGame.setGameType(gameType);
-        dbGame.setScoreEnabled(((SwitchCompat) getView().findViewById(R.id.switch_score)).isChecked());
-        dbGame.setEndScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
-        dbGame.setTimeEnabled(((SwitchCompat) getView().findViewById(R.id.switch_time)).isChecked());
-        dbGame.setEndMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
-        dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
-        dbGame.setFriendlyFire(((SwitchCompat) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
-        dbGame.setDate(new Date());
+        if (MenuActivity.mCurrentLocation != null) {
+            DBGame dbGame = new DBGame();
+            dbGame.setHost(Player.getInstance().getName());
+            dbGame.setGameType(gameType);
+            dbGame.setScoreEnabled(((SwitchCompat) getView().findViewById(R.id.switch_score)).isChecked());
+            dbGame.setEndScore(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_score)).getSelectedItem().toString()));
+            dbGame.setTimeEnabled(((SwitchCompat) getView().findViewById(R.id.switch_time)).isChecked());
+            dbGame.setEndMinutes(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_time)).getSelectedItem().toString()));
+            dbGame.setMaxTeamSize(Integer.parseInt(((Spinner) getView().findViewById(R.id.spinner_team_size)).getSelectedItem().toString()));
+            dbGame.setFriendlyFire(((SwitchCompat) getView().findViewById(R.id.switch_friendly_fire)).isChecked());
+            dbGame.setDate(new Date());
 
-        //save new game to DB (with push) and start game lobby
-        Game.getInstance(dbGame, dbGame.saveNewGame());
-        ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
+            //save new game to DB (with push) and start game lobby
+            Game.getInstance(dbGame, dbGame.saveNewGame(MenuActivity.mCurrentLocation));
+            ((MenuActivity) getActivity()).replaceFragment(R.id.menu_frame, GameLobbyFragment.newInstance(), "game_lobby_fragment");
+        } else {
+            Toast.makeText(getContext(),"No location detected! Please try again in a few seconds. \nIf the problem persists, check your location settings.",Toast.LENGTH_LONG).show();
+        }
     }
 
 }
