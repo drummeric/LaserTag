@@ -48,6 +48,9 @@ import com.taserlag.lasertag.shooter.ShooterCallback;
 import com.taserlag.lasertag.team.Team;
 import com.taserlag.lasertag.team.TeamFollower;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class FPSActivity extends AppCompatActivity implements MapHandler, GameFollower, TeamFollower, PlayerFollower{
 
     private final String TAG = "FPSActivity";
@@ -57,10 +60,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 2;
     private final int TIMER_LENGTH_MS = 3000;
     private final int RESPAWN_TIMER_LENGTH_MS = 5000;
+    private final int COLOR_SHOOTER_REFRESH_TIME = 500;
 
     private Camera mCamera;
     private CameraPreview mPreview;
     private Zoom mCameraZoom = Zoom.NONE;
+    private Timer mColorShooterTimer;
 
     private TextView mClipAmmoText;
     private TextView mTotalAmmoText;
@@ -166,6 +171,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     protected void onPause() {
         super.onPause();
         mapAss.onPause();
+        if (mColorShooterTimer!=null) {
+            mColorShooterTimer.cancel();
+        }
         releaseCamera();
     }
 
@@ -287,6 +295,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     public void notifyGameOver(){
         mapAss.cleanup();
+        mColorShooterTimer.cancel();
         //save a reference to this game for viewing stats
         Player.getInstance().archiveGame(Game.getInstance().getKey());
 
@@ -404,10 +413,44 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         ColorShooterTask.resetColorMap();
         mapAss.clearGoogleMap();
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        Player.getInstance().setTotalHits(settings.getInt("totalHits"+Game.getInstance().getKey(),0));
+        Player.getInstance().setTotalHits(settings.getInt("totalHits" + Game.getInstance().getKey(), 0));
         Player.getInstance().setTotalShots(settings.getInt("totalShots" + Game.getInstance().getKey(), 0));
 
-        startGameTime(settings.getLong("gameStartTime"+Game.getInstance().getKey(), 0L));
+        startGameTime(settings.getLong("gameStartTime" + Game.getInstance().getKey(), 0L));
+
+        final Handler handler = new Handler();
+        mColorShooterTimer = new Timer();
+        TimerTask mapRefreshTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        ColorShooterTask asyncTask = new ColorShooterTask(false, new ShooterCallback() {
+
+                            @Override
+                            public void onFinishShoot(String teamPlayerHit) {
+                                if (!teamPlayerHit.equals("")) {
+                                    String teamName = teamPlayerHit.split(":~")[0];
+                                    final String playerName = teamPlayerHit.split(":~")[1];
+                                    if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
+                                        mReticle.showHitDetected(playerName);
+                                    } else {
+                                        mReticle.showDeadDetected(playerName);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void updateGUI() {
+                                //no op
+                            }
+                        });
+                        asyncTask.execute(mPreview.getCameraData());
+                    }
+                });
+            }
+        };
+        mColorShooterTimer.schedule(mapRefreshTask, 0, COLOR_SHOOTER_REFRESH_TIME); //execute in every 15000 ms
     }
 
     private void startGameTime(long time){
@@ -494,7 +537,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             }
         }
 
-        ColorShooterTask asyncTask = new ColorShooterTask(new ShooterCallback() {
+        ColorShooterTask asyncTask = new ColorShooterTask(true, new ShooterCallback() {
 
             @Override
             public void onFinishShoot(String teamPlayerHit) {

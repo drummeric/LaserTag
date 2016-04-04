@@ -28,11 +28,12 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     private final float V_GRAYMAX = .75f;
     private final float V_GRAYMIN = .25f;
 
-
     //{h,s,v, shotCount}
     private static Map<String, float[]> playerColors;
+    private boolean shooting;
 
-    public ColorShooterTask(ShooterCallback fps){
+    public ColorShooterTask(boolean shooting, ShooterCallback fps){
+        this.shooting = shooting;
         fpsCallback = fps;
     }
 
@@ -47,10 +48,12 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
 
     @Override
     protected void onPreExecute() {
-        if (!Player.getInstance().retrieveActiveWeapon().fire()){
-            cancel(true);
-        } else {
-            fpsCallback.updateGUI();
+        if (shooting) {
+            if (!Player.getInstance().retrieveActiveWeapon().fire()) {
+                cancel(true);
+            } else {
+                fpsCallback.updateGUI();
+            }
         }
     }
 
@@ -107,7 +110,7 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
                 }
             }
         }
-        if (!smallestTeamPlayer.equals("")) {
+        if (!smallestTeamPlayer.equals("") && shooting) {
             float[] colorArray = playerColors.get(smallestTeamPlayer);
 
             //length = 4, only want to loop through first 3 positions (i = 0-2)

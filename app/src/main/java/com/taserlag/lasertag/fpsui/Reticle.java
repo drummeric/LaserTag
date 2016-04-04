@@ -19,8 +19,10 @@ public class Reticle {
     private TextView mHitPlayerText;
     private ImageView mSkullImage;
 
-    public Reticle(View view, Context context){
+    private Context mContext;
 
+    public Reticle(View view, Context context){
+        mContext = context;
         mHitPlayerText = (TextView) view.findViewById(R.id.text_view_fps_hit_name);
         mReticle = (ImageView) view.findViewById(R.id.reticle_image_view);
         mSkullImage = (ImageView) view.findViewById(R.id.image_view_fps_dead_icon);
@@ -80,6 +82,7 @@ public class Reticle {
 
     public void showHitAnimation(String playerName){
         mPlayerName = playerName;
+        mHitPlayerText.setTextColor(mContext.getResources().getColor(android.R.color.holo_red_light));
         mHitPlayerText.startAnimation(mShrinkFadeOut);
         mReticle.startAnimation(mAnimationGrowShrink);
     }
@@ -88,5 +91,22 @@ public class Reticle {
         mSkullImage.startAnimation(mFadeOut);
         mPlayerName = playerName;
         mHitPlayerText.startAnimation(mShrinkFadeOut);
+    }
+
+    public void showHitDetected(String playerName) {
+        if (mHitPlayerText.getVisibility()!=View.VISIBLE) {
+            mPlayerName = playerName;
+            mHitPlayerText.setTextColor(mContext.getResources().getColor(R.color.black));
+            mHitPlayerText.startAnimation(mShrinkFadeOut);
+        }
+    }
+
+    public void showDeadDetected(String playerName){
+        if (mHitPlayerText.getVisibility()!=View.VISIBLE) {
+            mSkullImage.startAnimation(mFadeOut);
+            mPlayerName = playerName;
+            mHitPlayerText.setTextColor(mContext.getResources().getColor(R.color.black));
+            mHitPlayerText.startAnimation(mShrinkFadeOut);
+        }
     }
 }
