@@ -2,12 +2,10 @@ package com.taserlag.lasertag.map;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -16,7 +14,20 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -27,6 +38,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.player.DBPlayer;
 import com.taserlag.lasertag.player.Player;
@@ -38,7 +50,9 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MapAssistant implements OnMapReadyCallback, LocationListener {
+public class MapAssistant implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
+
+    protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     private final int MAP_SIZE = 125;
     private final int MAP_MARGIN = 10;
@@ -47,7 +61,9 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
     private Activity activity;
     private GoogleMap googleMap;
-    private LocationManager locationManager;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
     private View mMapView;
     private Timer refreshTimer;
     private static MapAssistant instance;
@@ -61,12 +77,18 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
 
     private Map<String, Marker> markers = new HashMap<>();
 
+    public MapAssistant(Activity activity){
+        this.activity = activity;
+        initLocation();
+    }
+
     public static MapAssistant getInstance(Activity activity){
         if (instance == null) {
-            instance = new MapAssistant();
+            instance = new MapAssistant(activity);
         }
 
         instance.activity = activity;
+
         return instance;
     }
 
@@ -74,30 +96,25 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         return mapExpanded;
     }
 
+    public void onPause() {
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient, this);
+        }
+    }
+
+    public void onResume() {
+        if (mGoogleApiClient.isConnected()) {
+            if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
-        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-        Location location = null;
-        // Request location updates if location permission is granted
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            }
-        }
-
-        // Move map to last known location
-        if (location != null){
-            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17f);
-            this.googleMap.moveCamera(cameraUpdate);
-        }
 
         // Set OnMapClickListener after map is ready
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
@@ -136,22 +153,56 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         refreshTimer.schedule(mapRefreshTask, 0, REFRESH_TIME); //execute in every 15000 ms
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        if(activity instanceof MapHandler)
-            ((MapHandler) activity).handleLocChanged(location);
-    }
+    private void initLocation(){
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(LaserTagApplication.getAppContext())
+                    .addOnConnectionFailedListener(this)
+                    .addConnectionCallbacks(this)
+                    .addApi(LocationServices.API)
+                    .build();
 
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-    }
+            mGoogleApiClient.connect();
+        }
 
-    @Override
-    public void onProviderEnabled(String provider) {
-    }
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(2000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-    @Override
-    public void onProviderDisabled(String provider) {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(mLocationRequest);
+
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                final LocationSettingsStates states = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can
+                        // initialize location requests here.
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(
+                                    activity,
+                                    REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
     }
 
     public void initializeMap() {
@@ -171,9 +222,6 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
     }
 
     public void cleanup(){
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.removeUpdates(this);
-        }
         refreshTimer.cancel();
     }
 
@@ -264,4 +312,27 @@ public class MapAssistant implements OnMapReadyCallback, LocationListener {
         googleMap.animateCamera(cameraUpdate);
     }
 
+    @Override
+    public void onLocationChanged(Location location) {
+        if(activity instanceof MapHandler)
+            ((MapHandler) activity).handleLocChanged(location);
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, MapAssistant.this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        //no op
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(activity, "Connection failed. Please try again.", Toast.LENGTH_SHORT).show();
+    }
 } // MapStuff

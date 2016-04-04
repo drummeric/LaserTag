@@ -140,6 +140,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     protected void onResume() {
         super.onResume();
+        mapAss.onResume();
         hideSystemUI();
 
         // Check camera permission
@@ -164,6 +165,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     @Override
     protected void onPause() {
         super.onPause();
+        mapAss.onPause();
         releaseCamera();
     }
 

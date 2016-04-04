@@ -31,7 +31,7 @@ import com.taserlag.lasertag.fragments.CreateGameFragment;
 import com.taserlag.lasertag.fragments.JoinGameFragment;
 import com.taserlag.lasertag.fragments.MainMenuFragment;
 import com.taserlag.lasertag.fragments.StatsFragment;
-import com.taserlag.lasertag.map.LocationCallback;
+import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.player.Player;
 
 public class MenuActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
@@ -273,8 +273,8 @@ public class MenuActivity extends AppCompatActivity implements GoogleApiClient.O
 
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.menu_frame);
 
-        if (currentFragment instanceof LocationCallback) {
-            ((LocationCallback) currentFragment).notifyLocationUpdated(location);
+        if (currentFragment instanceof MapHandler) {
+            ((MapHandler) currentFragment).handleLocChanged(location);
         }
     }
 }

@@ -35,7 +35,7 @@ import com.taserlag.lasertag.activity.MenuActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.DBGame;
 import com.taserlag.lasertag.game.Game;
-import com.taserlag.lasertag.map.LocationCallback;
+import com.taserlag.lasertag.map.MapHandler;
 import com.taserlag.lasertag.player.Player;
 import com.taserlag.lasertag.team.DBTeam;
 import com.taserlag.lasertag.team.Team;
@@ -43,7 +43,7 @@ import com.taserlag.lasertag.team.Team;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JoinGameFragment extends Fragment implements OnMapReadyCallback, LocationCallback {
+public class JoinGameFragment extends Fragment implements OnMapReadyCallback, MapHandler {
 
     private final String TAG = "JoinGameFragment";
     private final int INITIAL_ZOOM = 15;
@@ -187,7 +187,7 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback, Lo
 
         //try to center map
         // - will fail if location in MenuActivity not updated yet
-        notifyLocationUpdated(MenuActivity.mCurrentLocation);
+        handleLocChanged(MenuActivity.mCurrentLocation);
 
         mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
 
@@ -275,7 +275,12 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback, Lo
     }
 
     @Override
-    public void notifyLocationUpdated(Location location){
+    public void handleMapClick(LatLng latLng) {
+        //no op
+    }
+
+    @Override
+    public void handleLocChanged(Location location) {
         //center map one time only
         if (centerGoogleMap && mGoogleMap != null && location != null){
             centerGoogleMap = false;
