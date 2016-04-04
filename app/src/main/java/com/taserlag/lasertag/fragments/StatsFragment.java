@@ -90,6 +90,10 @@ public class StatsFragment extends Fragment {
                 });
             }
         };
+        LinearLayoutManager manager = new LinearLayoutManager(getContext());
+        manager.setReverseLayout(true);
+        manager.setStackFromEnd(true);
+        recycler.setLayoutManager(manager);
         recycler.setAdapter(mAdapter);
     }
 
