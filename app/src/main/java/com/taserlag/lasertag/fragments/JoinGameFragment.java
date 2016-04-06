@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -137,8 +138,12 @@ public class JoinGameFragment extends Fragment implements OnMapReadyCallback, Ma
                 description.setTextColor(Color.GRAY);
                 description.setText(marker.getSnippet());
 
+                Button button = new Button(getContext());
+                button.setText("Join Game");
+
                 info.addView(title);
                 info.addView(description);
+                info.addView(button);
 
                 return info;
             }
