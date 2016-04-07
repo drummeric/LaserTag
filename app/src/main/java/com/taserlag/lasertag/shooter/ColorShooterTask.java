@@ -20,7 +20,16 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     private static final String TAG = "ColorShooterTask";
     private final int INITWEIGHT = 5;
 
-    private final float H_TOLERANCE = 13;
+
+    /*
+    * Through research determined worst case average of 18 different colors
+    * that can be detected in one game with HSV detection.
+    *
+    * (360/18) = 20 (range of H for each color)
+    *
+    * 20/2 = 10 (tolerance)
+     */
+    private final float H_TOLERANCE = 10;
 
     private final float SV_MIN = 0.15f;
     private final float S_WHITE = .15f;
@@ -146,7 +155,12 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
                 return 0;
             }
         } else {
-            float colorDiff = Math.abs(hitHSV[0] - playerHSV[0]);
+            float colorDiffTemp = Math.abs(hitHSV[0] - playerHSV[0]);
+            float colorDiff = 360 - colorDiffTemp;
+
+            if (colorDiff > colorDiffTemp){
+                colorDiff = colorDiffTemp;
+            }
 
             //check hue within tolerance
             colorMatch &= colorDiff <= H_TOLERANCE;
