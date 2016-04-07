@@ -6,6 +6,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.taserlag.lasertag.R;
+import com.taserlag.lasertag.activity.FPSActivity;
+import com.taserlag.lasertag.player.Player;
 
 public class RechargingShieldState extends ShieldState {
     private boolean firstTime = true;
@@ -22,7 +24,11 @@ public class RechargingShieldState extends ShieldState {
             animationHandler.postDelayed(new Runnable() {
 
                 public void run() {
-                    shield.setShieldState(new ReadyShieldState(),shieldTextView,shieldImageView);
+                    if (!(shield.getShieldState() instanceof ReadyShieldState) && Player.getInstance().getRealHealth() != 0) {
+                        FPSActivity.playShieldChargedSound();
+
+                        shield.setShieldState(new ReadyShieldState(), shieldTextView, shieldImageView);
+                    }
                 }
             }, shield.rechargeTime);
         }

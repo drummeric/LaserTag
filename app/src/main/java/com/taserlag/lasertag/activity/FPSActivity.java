@@ -88,13 +88,27 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     private MapAssistant mapAss = MapAssistant.getInstance(this);
 
-    private SoundPool mSoundPool;
+    private static SoundPool mSoundPool;
     private static final int MAX_STREAMS = 1;
     private static final int SOURCE_QUALITY = 0;
-    private int mShootSound;
+    private int mWelcomeSound;
+    private int mGameStartSound;
+    private int mGameOverSound;
+    private static int mShieldsActivatedSound;
+    private static int mShieldsChargedSound;
+    private static int mHealthLowSound;
+    private int mDeadSound;
+    private static int mEnemyEliminatedSound;
+    private int mCaptainKilledSound;
+    private static int mReloadSound;
+    private int mFastWeaponSound;
+    private int mStrongWeaponSound;
+    private static int mNoAmmoSound;
 
     private float touchDownY;
     private boolean hudVisible = true;
+
+    private static boolean mSpawning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +150,26 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
             }
         });
-        mShootSound = mSoundPool.load(this, R.raw.m4a1single, 1);
+
+        mWelcomeSound = mSoundPool.load(this,R.raw.welcometolasertag,1);
+        mGameStartSound = mSoundPool.load(this,R.raw.gamestarted,1);
+        mGameOverSound = mSoundPool.load(this,R.raw.gameover,1);
+
+        mShieldsActivatedSound = mSoundPool.load(this,R.raw.shieldactivated,1);
+        mShieldsChargedSound = mSoundPool.load(this,R.raw.shieldcharged,1);
+
+        mHealthLowSound = mSoundPool.load(this,R.raw.healthlow,1);
+        mDeadSound = mSoundPool.load(this,R.raw.youdied,1);
+        mEnemyEliminatedSound = mSoundPool.load(this,R.raw.enemyeliminated,1);
+        mCaptainKilledSound = mSoundPool.load(this,R.raw.captainkilled,1);
+
+        mReloadSound = mSoundPool.load(this,R.raw.reload,1);
+        mFastWeaponSound = mSoundPool.load(this,R.raw.fastlaser,1);
+        mStrongWeaponSound = mSoundPool.load(this,R.raw.stronglaser,1);
+        mNoAmmoSound = mSoundPool.load(this,R.raw.noammo,1);
+
+        mSoundPool.play(mWelcomeSound, 1, 1, 1, 0, 1);
+
         Player.getInstance().registerForUpdates(this);
         Team.getInstance().registerForUpdates(this);
         Game.getInstance().registerForUpdates(this);
@@ -202,9 +235,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             if (Game.getInstance().getGameType() == GameType.VIP && !Team.getInstance().isCaptainDead()) {
                 showVIPRespawnDialog();
             } else {
+                mSoundPool.play(mDeadSound, 1, 1, 1, 0, 1);
+
                 startRespawnDialog("You Died!");
             }
         }
+        mSpawning = true;
         Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
         updateHealthText();
         updateAmmoText();
@@ -214,6 +250,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void respawn(){
         //reset health, weapons and shield
         Player.respawn();
+        mSpawning = true;
         Player.getInstance().getShield().setShieldState(new ReadyShieldState(), mShieldText, mShieldImage);
         updateHealthText();
         updateAmmoText();
@@ -242,6 +279,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         }, 500);
 
         if (Player.getInstance().getRealHealth()<=0){
+            mSoundPool.play(mDeadSound, 1, 1, 1, 0, 1);
+
             if (Game.getInstance().getGameType() != GameType.VIP) {
                 //regular death
                 startRespawnDialog("You Died!");
@@ -274,6 +313,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             @Override
             public void onFinish() {
                 mGameLoadingAlertDialog.dismiss();
+                mSoundPool.play(mGameStartSound, 1, 1, 1, 0, 1);
 
                 //save start time locally
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -294,6 +334,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
 
     @Override
     public void notifyGameOver(){
+        mSoundPool.play(mGameOverSound, 1, 1, 1, 0, 1);
+
         mapAss.cleanup();
         mColorShooterTimer.cancel();
         //save a reference to this game for viewing stats
@@ -356,6 +398,8 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         if (mVIPRespawnDialog!=null && mVIPRespawnDialog.isShowing()) {
             mVIPRespawnDialog.dismiss();
         }
+        mSoundPool.play(mCaptainKilledSound, 1, 1, 1, 0, 1);
+
         startRespawnDialog("Your team captain died!");
     }
 
@@ -493,7 +537,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         rotateAnimation.setFillAfter(false);
 
         mGunImage.startAnimation(rotateAnimation);
-        mSoundPool.play(mShootSound, 1, 1, 1, 0, 1);
+
+        if (Player.getInstance().isPrimaryWeaponActive()){
+            mSoundPool.play(mFastWeaponSound, 1, 1, 1, 0, 1);
+        } else {
+            mSoundPool.play(mStrongWeaponSound, 1, 1, 1, 0, 1);
+        }
         updateAmmoText();
     }
 
@@ -501,7 +550,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     private void updateAmmoText() {
         int clip = Player.getInstance().retrieveActiveWeapon().getCurrentClipAmmo();
         if (clip < 10){
-            mClipAmmoText.setText("0"+String.valueOf(clip));
+            mClipAmmoText.setText("0" + String.valueOf(clip));
         } else {
             mClipAmmoText.setText(String.valueOf(clip));
         }
@@ -509,7 +558,7 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
     }
 
     private void updateWeaponText(){
-        mWeaponText.setText("[ "+Player.getInstance().retrieveActiveWeapon().toString()+" ]");
+        mWeaponText.setText("[ " + Player.getInstance().retrieveActiveWeapon().toString() + " ]");
     }
 
     @Override
@@ -534,37 +583,39 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                     mHUD.setVisibility(View.VISIBLE);
                     hudVisible = true;
                 }
-            }
-        }
+            } else {
 
-        ColorShooterTask asyncTask = new ColorShooterTask(true, new ShooterCallback() {
+                ColorShooterTask asyncTask = new ColorShooterTask(true, new ShooterCallback() {
 
-            @Override
-            public void onFinishShoot(String teamPlayerHit) {
-                Player.getInstance().incTotalShots();
-                getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalShots" + Game.getInstance().getKey(), Player.getInstance().getTotalShots()).apply();
-                if (!teamPlayerHit.equals("")) {
-                    String teamName = teamPlayerHit.split(":~")[0];
-                    final String playerName = teamPlayerHit.split(":~")[1];
-                    if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
-                        Player.getInstance().incTotalHits();
-                        getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
+                    @Override
+                    public void onFinishShoot(String teamPlayerHit) {
+                        Player.getInstance().incTotalShots();
+                        getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalShots" + Game.getInstance().getKey(), Player.getInstance().getTotalShots()).apply();
+                        if (!teamPlayerHit.equals("")) {
+                            String teamName = teamPlayerHit.split(":~")[0];
+                            final String playerName = teamPlayerHit.split(":~")[1];
+                            if (Player.getInstance().decrementHealthAndIncMyScore(Player.getInstance().retrieveActiveWeapon().getStrength(), Game.getInstance().getReference().child("teams").child(teamName).child("players").child(playerName))) {
+                                Player.getInstance().incTotalHits();
+                                getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
 
-                        if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
-                            mReticle.showHitAnimation(playerName);
-                        } else {
-                            mReticle.showDeadAnimation(playerName);
+                                if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
+                                    mReticle.showHitAnimation(playerName);
+                                } else {
+                                    mReticle.showDeadAnimation(playerName);
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            @Override
-            public void updateGUI() {
-                updateGunUI();
+                    @Override
+                    public void updateGUI() {
+                        updateGunUI();
+                    }
+                });
+
+                asyncTask.execute(mPreview.getCameraData());
             }
-        });
-        asyncTask.execute(mPreview.getCameraData());
+        }
 
         return true;
     }
@@ -583,6 +634,43 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
         Player.getInstance().swapWeapon();
         updateAmmoText();
         updateWeaponText();
+    }
+
+    public static void playEnemyEliminatedSound(){
+        if (mSoundPool!=null) {
+            mSoundPool.play(mEnemyEliminatedSound, 1, 1, 1, 0, 1);
+        }    }
+
+    public static void playShieldActivatedSound(){
+        if (mSoundPool!=null) {
+            mSoundPool.play(mShieldsActivatedSound, 1, 1, 1, 0, 1);
+        }
+    }
+
+    public static void playShieldChargedSound(){
+        if (mSoundPool!=null && !mSpawning) {
+            mSoundPool.play(mShieldsChargedSound, 1, 1, 1, 0, 1);
+        }
+        mSpawning = false;
+
+    }
+
+    public static void playHealthLowSound(){
+        if (mSoundPool!=null) {
+            mSoundPool.play(mHealthLowSound, 1, 1, 1, 0, 1);
+        }
+    }
+
+    public static void playReloadSound(){
+        if (mSoundPool!=null) {
+            mSoundPool.play(mReloadSound, 1, 1, 1, 0, 1);
+        }
+    }
+
+    public static void playNoAmmoSound(){
+        if (mSoundPool!=null) {
+            mSoundPool.play(mNoAmmoSound, 1, 1, 1, 0, 1);
+        }
     }
 
     public void scopeClick(View view){

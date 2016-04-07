@@ -1,5 +1,7 @@
 package com.taserlag.lasertag.weapon;
 
+import com.taserlag.lasertag.activity.FPSActivity;
+
 public abstract class Weapon {
 
     protected int strength;
@@ -34,13 +36,17 @@ public abstract class Weapon {
         if (canShoot) {
             lastShotTime = System.currentTimeMillis();
             currentClipAmmo--;
+        } else if (currentClipAmmo == 0){
+            FPSActivity.playNoAmmoSound();
         }
         return canShoot;
     }
 
     public void reload() {
-        // This logic can probably be MUCH better
-        if (excessAmmo > 0) {
+        if (excessAmmo > 0 && currentClipAmmo < clipSize) {
+
+            FPSActivity.playReloadSound();
+
             if (excessAmmo + currentClipAmmo >= clipSize) {
                 excessAmmo -= (clipSize - currentClipAmmo);
                 currentClipAmmo = clipSize;

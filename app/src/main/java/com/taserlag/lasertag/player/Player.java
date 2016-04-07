@@ -9,6 +9,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.shield.Shield;
 import com.taserlag.lasertag.team.Team;
@@ -57,6 +58,11 @@ public class Player{
                     DBPlayer newDBPlayer = dataSnapshot.getValue(DBPlayer.class);
                     if (newDBPlayer!=null && dbPlayer!=null) {
                         if (newDBPlayer.getHealth() < dbPlayer.getHealth()){
+
+                            if (dbPlayer.getHealth()>20 && newDBPlayer.getHealth() <= 20){
+                                FPSActivity.playHealthLowSound();
+                            }
+
                             instance.decrementHealth(newDBPlayer.getHealth());
                             notifyHealthFollowers();
 

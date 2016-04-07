@@ -8,6 +8,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
+import com.taserlag.lasertag.activity.FPSActivity;
 import com.taserlag.lasertag.application.LaserTagApplication;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameType;
@@ -159,6 +160,9 @@ public class DBPlayer implements Comparable<DBPlayer>{
                                 playerStats.incrementScore(10, myReference.child("playerStats"));
                             }
                             playerStats.incrementKills(myReference.child("playerStats"));
+
+                            FPSActivity.playEnemyEliminatedSound();
+
                             dbPlayer.setHealth(0);
 
                         }

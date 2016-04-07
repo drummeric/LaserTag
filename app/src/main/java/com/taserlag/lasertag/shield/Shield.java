@@ -40,6 +40,10 @@ public class Shield {
         updateUI(shieldTextView, shieldImageView);
     }
 
+    public ShieldState getShieldState() {
+        return mShieldState;
+    }
+
     public void updateUI(TextView shieldTextView, ImageView shieldImageView){
         mShieldState.updateUI(this, shieldTextView, shieldImageView);
     }
