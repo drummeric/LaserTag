@@ -15,6 +15,10 @@ public class Reticle {
     private Animation mFadeOut;
 
     private String mPlayerName;
+    private boolean mDead;
+
+    private ReticleState mState = new DefaultReticleState();
+
     private ImageView mReticle;
     private TextView mHitPlayerText;
     private ImageView mSkullImage;
@@ -26,87 +30,49 @@ public class Reticle {
         mHitPlayerText = (TextView) view.findViewById(R.id.text_view_fps_hit_name);
         mReticle = (ImageView) view.findViewById(R.id.reticle_image_view);
         mSkullImage = (ImageView) view.findViewById(R.id.image_view_fps_dead_icon);
-
-        mAnimationGrowShrink = AnimationUtils.loadAnimation(context, R.anim.growshrink);
-        mAnimationGrowShrink.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                mReticle.setImageResource(R.drawable.redreticle);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mReticle.setImageResource(R.drawable.reticle1);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-
-        mShrinkFadeOut = AnimationUtils.loadAnimation(context, R.anim.fadeoutandshrink);
-        mShrinkFadeOut.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                mHitPlayerText.setText(mPlayerName);
-                mHitPlayerText.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mHitPlayerText.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-
-        mFadeOut = AnimationUtils.loadAnimation(context, R.anim.fadeout);
-        mFadeOut.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                mSkullImage.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mSkullImage.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
     }
 
-    public void showHitAnimation(String playerName){
+    public void setPlayerName(String playerName) {
         mPlayerName = playerName;
-        mHitPlayerText.setTextColor(mContext.getResources().getColor(android.R.color.holo_red_light));
-        mHitPlayerText.startAnimation(mShrinkFadeOut);
-        mReticle.startAnimation(mAnimationGrowShrink);
     }
 
-    public void showDeadAnimation(String playerName){
-        mSkullImage.startAnimation(mFadeOut);
+    public void setState(ReticleState state, String playerName, boolean dead) {
         mPlayerName = playerName;
-        mHitPlayerText.startAnimation(mShrinkFadeOut);
-    }
+        mDead = dead;
 
-    public void showHitDetected(String playerName) {
-        if (mHitPlayerText.getVisibility()!=View.VISIBLE) {
-            mPlayerName = playerName;
-            mHitPlayerText.setTextColor(mContext.getResources().getColor(R.color.black));
-            mHitPlayerText.startAnimation(mShrinkFadeOut);
+        boolean update = !(state instanceof TargetReticleState && (mState instanceof TargetReticleState || mState instanceof HitReticleState));
+
+        if (update) {
+            transitionState(state);
         }
     }
 
-    public void showDeadDetected(String playerName){
-        if (mHitPlayerText.getVisibility()!=View.VISIBLE) {
-            mSkullImage.startAnimation(mFadeOut);
-            mPlayerName = playerName;
-            mHitPlayerText.setTextColor(mContext.getResources().getColor(R.color.black));
-            mHitPlayerText.startAnimation(mShrinkFadeOut);
-        }
+    public void transitionState(ReticleState state) {
+        mState = state;
+        mState.updateUI(this);
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public String getPlayerName() {
+        return mPlayerName;
+    }
+
+    public boolean isDead() {
+        return mDead;
+    }
+
+    public ImageView getReticle() {
+        return mReticle;
+    }
+
+    public TextView getHitPlayerText() {
+        return mHitPlayerText;
+    }
+
+    public ImageView getSkullImage() {
+        return mSkullImage;
     }
 }

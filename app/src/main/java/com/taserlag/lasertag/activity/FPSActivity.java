@@ -32,8 +32,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.taserlag.lasertag.camera.CameraPreview;
 import com.taserlag.lasertag.camera.Zoom;
 import com.taserlag.lasertag.fpsui.GameOver;
+import com.taserlag.lasertag.fpsui.HitReticleState;
 import com.taserlag.lasertag.fpsui.Reticle;
 import com.taserlag.lasertag.fpsui.Scoreboard;
+import com.taserlag.lasertag.fpsui.TargetReticleState;
 import com.taserlag.lasertag.game.Game;
 import com.taserlag.lasertag.game.GameFollower;
 import com.taserlag.lasertag.game.GameType;
@@ -235,8 +237,6 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
             if (Game.getInstance().getGameType() == GameType.VIP && !Team.getInstance().isCaptainDead()) {
                 showVIPRespawnDialog();
             } else {
-                mSoundPool.play(mDeadSound, 1, 1, 1, 0, 1);
-
                 startRespawnDialog("You Died!");
             }
         }
@@ -477,10 +477,12 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                                     String teamName = teamPlayerHit.split(":~")[0];
                                     final String playerName = teamPlayerHit.split(":~")[1];
                                     if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
-                                        mReticle.showHitDetected(playerName);
+                                        mReticle.setState(new TargetReticleState(), playerName, false);
                                     } else {
-                                        mReticle.showDeadDetected(playerName);
+                                        mReticle.setState(new TargetReticleState(), playerName, true);
                                     }
+                                } else {
+                                    mReticle.setPlayerName("");
                                 }
                             }
 
@@ -599,9 +601,9 @@ public class FPSActivity extends AppCompatActivity implements MapHandler, GameFo
                                 getSharedPreferences(PREFS_NAME, 0).edit().putInt("totalHits" + Game.getInstance().getKey(), Player.getInstance().getTotalHits()).apply();
 
                                 if (Game.getInstance().getTeams().get(teamName).getPlayers().get(playerName).getHealth() != 0) {
-                                    mReticle.showHitAnimation(playerName);
+                                    mReticle.setState(new HitReticleState(), playerName, false);
                                 } else {
-                                    mReticle.showDeadAnimation(playerName);
+                                    mReticle.setState(new HitReticleState(), playerName, true);
                                 }
                             }
                         }

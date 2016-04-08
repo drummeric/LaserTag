@@ -313,7 +313,9 @@ public class Scoreboard{
     }
 
     public void notifyScoreUpdated(){
-        mExpandedScoreboardAdapter.notifyDataSetChanged();
+        if (mExpandedScoreboardAdapter != null) {
+            mExpandedScoreboardAdapter.notifyDataSetChanged();
+        }
     }
 
     public class TeamScoreAdapter extends RecyclerView.Adapter<TeamScoreAdapter.TeamScoreboardViewHolder>{
