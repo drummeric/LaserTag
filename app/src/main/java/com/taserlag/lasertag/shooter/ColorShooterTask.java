@@ -32,10 +32,9 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     private final float H_TOLERANCE = 10;
 
     private final float SV_MIN = 0.15f;
-    private final float S_WHITE = .15f;
-    private final float V_BLACK = 0.15f;
-    private final float V_GRAYMAX = .75f;
-    private final float V_GRAYMIN = .25f;
+    private final float S_WHITE = .25f;
+    private final float V_BLACK = 0.2f;
+    private final float V_GRAYMAX = .65f;
 
     //{h,s,v, shotCount}
     private static Map<String, float[]> playerColors;
@@ -139,19 +138,19 @@ public class ColorShooterTask extends AsyncTask<byte[], Void, String> {
     private float checkPlayerColors(float[] hitHSV, float[] playerHSV){
         boolean colorMatch = true;
 
-        if (playerHSV[1]<S_WHITE && playerHSV[2] < V_GRAYMAX && playerHSV[2] > V_GRAYMIN){
+        if (playerHSV[2]<V_BLACK){
+            //low value = black
+            if (hitHSV[2]<V_BLACK){
+                return 0;
+            }
+        } else if (playerHSV[1]<S_WHITE && playerHSV[2] < V_GRAYMAX){
             //low sat & med val = gray
-            if (hitHSV[1]<S_WHITE && hitHSV[2] < V_GRAYMAX && hitHSV[2] > V_GRAYMIN){
+            if (hitHSV[1]<S_WHITE && hitHSV[2] < V_GRAYMAX){
                 return 0;
             }
         } else if (playerHSV[1] < S_WHITE && playerHSV[2] > V_GRAYMAX) {
             //high val & low sat = white
             if (hitHSV[1] < S_WHITE && hitHSV[2] > V_GRAYMAX) {
-                return 0;
-            }
-        } else if (playerHSV[2]<V_BLACK){
-            //low value = black
-            if (hitHSV[2]<V_BLACK){
                 return 0;
             }
         } else {
